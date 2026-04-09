@@ -40,18 +40,17 @@ async function runPipeline() {
         console.log(`Target Keyword: ${keyword}`);
 
         // STEP 2: RESEARCH & DRAFTING
-        const writingPrompt = `Research and write a comprehensive, high-authority blog post about '${keyword}' for the entertainment site 'PickMyBinge'.
+        const writingPrompt = `Research and write a professional, high-authority movie/TV show analysis about '${keyword}' for the publication 'PickMyBinge'.
         
-        Brand Context: PickMyBinge is the discovery tool for movies, TV shows, and K-dramas. We focus on "finding your next obsession" and avoiding the scroll. We also have an edgy "Cringe Zone" for intentionally bad movies.
+        Publication Tone: Professional, analytical, and highly informative. Style should match industry-leading publications like Variety or The Hollywood Reporter. Focus on objective facts, critical analysis of performances, and cultural significance.
         
-        Tone: Enthusiastic, witty, expert, and binge-focused. 
         Length: Approx 800 words.
         Include:
-        - A catchy, SEO-optimized title.
-        - An engaging summary (excerpt).
-        - A "Binge Score" out of 10.
-        - Detailed recommendations.
-        - Internal links placeholder to genres.
+        - A professional, SEO-optimized headline.
+        - An authoritative executive summary (excerpt).
+        - Deep-dive analysis of plot, direction, and acting.
+        - Technical details (release date, studio, cast).
+        - Internal links placeholder for relevant categories.
         
         Requirement: The output must ONLY be a JSON object with keys 'title', 'excerpt', and 'content'.`;
 
