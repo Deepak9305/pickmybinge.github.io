@@ -35,15 +35,24 @@ async function runPipeline() {
         }
 
         // STEP 1: KEYWORD RESEARCH
-        const keywordPrompt = "Find a mid-high volume, low competition keyword related to trending movies, TV shows, or K-dramas for April 2026. Return only the keyword.";
+        const keywordPrompt = "Find a mid-high volume, low competition keyword related to 'binge-worthy' movies, TV shows, or K-dramas for April 2026. Focus on 'discovery' (hidden gems). Return only the keyword.";
         const keyword = await callGroq('meta-llama/llama-4-scout-17b-16e-instruct', keywordPrompt);
         console.log(`Target Keyword: ${keyword}`);
 
         // STEP 2: RESEARCH & DRAFTING
-        const writingPrompt = `Research and write a comprehensive, engaging blog post about '${keyword}' for the website PickMyBinge. 
-        Length: Approx 800 words. 
-        Tone: Professional, enthusiastic, and expert.
-        Include: A catchy title, an excerpt, and the main body.
+        const writingPrompt = `Research and write a comprehensive, high-authority blog post about '${keyword}' for the entertainment site 'PickMyBinge'.
+        
+        Brand Context: PickMyBinge is the discovery tool for movies, TV shows, and K-dramas. We focus on "finding your next obsession" and avoiding the scroll. We also have an edgy "Cringe Zone" for intentionally bad movies.
+        
+        Tone: Enthusiastic, witty, expert, and binge-focused. 
+        Length: Approx 800 words.
+        Include:
+        - A catchy, SEO-optimized title.
+        - An engaging summary (excerpt).
+        - A "Binge Score" out of 10.
+        - Detailed recommendations.
+        - Internal links placeholder to genres.
+        
         Requirement: The output must ONLY be a JSON object with keys 'title', 'excerpt', and 'content'.`;
 
         const draftJson = await callGroq('openai/gpt-oss-120b', writingPrompt);
