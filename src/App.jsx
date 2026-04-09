@@ -37,10 +37,26 @@ function App() {
 
     // Blog state
     const [blogs, setBlogs] = useState([]);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [apiError, setApiError] = useState(null);
 
     useEffect(() => {
-        searchEntertainment(null, true);
-        loadBlogs();
+        const init = async () => {
+            console.log("App initializing...");
+            try {
+                await Promise.all([
+                    searchEntertainment(null, true),
+                    loadBlogs()
+                ]);
+                console.log("Initialization complete.");
+            } catch (err) {
+                console.error("Initialization failed:", err);
+                setApiError("Failed to load initial data. Please check your connection.");
+            } finally {
+                setIsInitialLoading(false);
+            }
+        };
+        init();
     }, []);
 
     const loadBlogs = () => {
@@ -214,6 +230,28 @@ function App() {
         setShowModal(false);
         document.body.classList.remove('modal-open');
     };
+
+    if (isInitialLoading) {
+        return (
+            <div className="initial-loader">
+                <div className="loader-content">
+                    <img src="/logo.png" alt="Logo" className="loader-logo" />
+                    <i className="fas fa-spinner fa-spin"></i>
+                    <p>Brewing your perfect binge...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (apiError) {
+        return (
+            <div className="initial-error">
+                <h2>Opps!</h2>
+                <p>{apiError}</p>
+                <button onClick={() => window.location.reload()}>Retry</button>
+            </div>
+        );
+    }
 
     return (
         <div className="container">
