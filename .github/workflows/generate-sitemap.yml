@@ -1,0 +1,26 @@
+name: Manual Sitemap Generator
+
+on:
+  workflow_dispatch: # Run manually via GitHub UI
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Sitemap Generator
+        run: node scripts/generate-sitemap.js
+
+      - name: Commit and Push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add public/sitemap.xml
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Manual Sitemap Update: $(date +'%Y-%m-%d')" && git push)

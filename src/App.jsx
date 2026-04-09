@@ -5,41 +5,20 @@ const TMDB_API_KEY = '5102784aed4d28b56413afea83c2fb50';
 const TMDB_API_URL = 'https://api.themoviedb.org/3';
 const RESULTS_PER_LOAD = 8;
 
-const genreMappings = { 
-    'comedy': {movie: '35', tv: '35'}, 
-    'action': {movie: '28', tv: '10759'}, 
-    'drama': {movie: '18', tv: '18'}, 
-    'sci-fi': {movie: '878', tv: '10765'}, 
-    'thriller': {movie: '53', tv: '80'}, 
-    'animation': {movie: '16', tv: '16'}, 
-    'horror': {movie: '27', tv: '99'}, 
-    'romance': {movie: '10749', tv: '10749'} 
+const genreMappings = {
+    'comedy': { movie: '35', tv: '35' },
+    'action': { movie: '28', tv: '10759' },
+    'drama': { movie: '18', tv: '18' },
+    'sci-fi': { movie: '878', tv: '10765' },
+    'thriller': { movie: '53', tv: '80' },
+    'animation': { movie: '16', tv: '16' },
+    'horror': { movie: '27', tv: '99' },
+    'romance': { movie: '10749', tv: '10749' }
 };
 const languageMappings = { 'korean': 'ko' };
 
-const BLOG_POSTS = [
-    {
-        id: 1,
-        date: 'April 10, 2026',
-        title: 'Top 10 Binge-Worthy Sci-Fi Shows on Netflix',
-        excerpt: 'From mind-bending paradoxes to distant galaxies, these are the shows that will keep you up all night.',
-        link: '#'
-    },
-    {
-        id: 2,
-        date: 'April 08, 2026',
-        title: 'Why Korean Dramas are Taking Over the World',
-        excerpt: 'Exploring the storytelling magic and emotional depth that makes K-Dramas globally addictive.',
-        link: '#'
-    },
-    {
-        id: 3,
-        date: 'April 05, 2026',
-        title: 'The Evolution of Horror: What Makes Us Scared Today?',
-        excerpt: 'How modern horror movies are shifting from jump scares to psychological dread.',
-        link: '#'
-    }
-];
+// Dynamically load all blog posts from src/content/blogs
+const blogModules = import.meta.glob('./content/blogs/*.json', { eager: true });
 
 function App() {
     const [allFetchedResults, setAllFetchedResults] = useState([]);
@@ -56,9 +35,24 @@ function App() {
     const [modalLoading, setModalLoading] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+    // Blog state
+    const [blogs, setBlogs] = useState([]);
+
     useEffect(() => {
         searchEntertainment(null, true);
+        loadBlogs();
     }, []);
+
+    const loadBlogs = () => {
+        const loadedBlogs = Object.entries(blogModules).map(([path, module]) => ({
+            ...module.default,
+            id: path.split('/').pop().replace('.json', '')
+        }));
+
+        // Sort by date descending
+        loadedBlogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setBlogs(loadedBlogs);
+    };
 
     const shuffleArray = (array) => {
         const newArray = [...array];
@@ -70,11 +64,11 @@ function App() {
     };
 
     const fetchData = async (type, query, page, isText) => {
-        const params = new URLSearchParams({ 
-            api_key: TMDB_API_KEY, 
-            page: page, 
-            'vote_count.gte': '150', 
-            'vote_average.gte': '6' 
+        const params = new URLSearchParams({
+            api_key: TMDB_API_KEY,
+            page: page,
+            'vote_count.gte': '150',
+            'vote_average.gte': '6'
         });
 
         let url;
@@ -84,7 +78,7 @@ function App() {
         } else {
             url = `${TMDB_API_URL}/discover/${type}`;
             params.append('sort_by', 'popularity.desc');
-            
+
             const genreIds = [];
             const languageCodes = [];
 
@@ -179,8 +173,6 @@ function App() {
             }
         }
         setActiveFilters(newFilters);
-        // We use a timeout to let the state update or just pass newFilters to search
-        // For simplicity in this migration, we'll let useEffect or a manual call handle it
     };
 
     // Trigger search when filters change
@@ -261,17 +253,17 @@ function App() {
                     <div className="search-container">
                         <div className="search-controls">
                             <div className="search-wrapper">
-                                <input 
-                                    type="text" 
-                                    id="search-input" 
-                                    placeholder="Search for a specific title..." 
+                                <input
+                                    type="text"
+                                    id="search-input"
+                                    placeholder="Search for a specific title..."
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && triggerTextSearch()}
                                 />
                             </div>
-                            <select 
-                                id="type-filter" 
+                            <select
+                                id="type-filter"
                                 value={typeFilter}
                                 onChange={(e) => setTypeFilter(e.target.value)}
                             >
@@ -286,21 +278,21 @@ function App() {
                     </div>
 
                     <div className="recommendation-bubbles">
-                        <div 
-                            className={`bubble ${activeFilters.size === 0 ? 'active' : ''}`} 
+                        <div
+                            className={`bubble ${activeFilters.size === 0 ? 'active' : ''}`}
                             onClick={() => handleBubbleClick('popular')}
                         >🔥 Popular Now</div>
                         {Object.keys(genreMappings).map(genre => (
-                            <div 
+                            <div
                                 key={genre}
-                                className={`bubble ${activeFilters.has(genre) ? 'active' : ''}`} 
+                                className={`bubble ${activeFilters.has(genre) ? 'active' : ''}`}
                                 onClick={() => handleBubbleClick(genre)}
                             >
                                 {genre.charAt(0).toUpperCase() + genre.slice(1)}
                             </div>
                         ))}
-                        <div 
-                            className={`bubble ${activeFilters.has('korean') ? 'active' : ''}`} 
+                        <div
+                            className={`bubble ${activeFilters.has('korean') ? 'active' : ''}`}
                             onClick={() => handleBubbleClick('korean')}
                         >🇰🇷 Korean</div>
                     </div>
@@ -310,8 +302,8 @@ function App() {
                     <h2 className="section-title">Recommended For You</h2>
                     <div className="recommendation-cards">
                         {allFetchedResults.slice(0, displayedResultsCount).map((item, index) => (
-                            <button 
-                                key={`${item.id}-${index}`} 
+                            <button
+                                key={`${item.id}-${index}`}
                                 className="card"
                                 onClick={() => openDetailsModal(item.id, item.type)}
                             >
@@ -331,28 +323,30 @@ function App() {
                             </button>
                         ))}
                     </div>
-                    { (displayedResultsCount < allFetchedResults.length || currentPage < totalApiPages) && (
-                        <button className="load-more" style={{display: 'block'}} onClick={handleLoadMore}>Load More</button>
+                    {(displayedResultsCount < allFetchedResults.length || currentPage < totalApiPages) && (
+                        <button className="load-more" style={{ display: 'block' }} onClick={handleLoadMore}>Load More</button>
                     )}
                     {allFetchedResults.length === 0 && !modalLoading && (
                         <div className="no-results"><h3>No results found</h3><p>Try a different search term or filter combination.</p></div>
                     )}
                 </section>
 
-                {/* Blog Section */}
-                <section className="blog-section">
-                    <h2 className="section-title">Latest Blogs</h2>
-                    <div className="blog-grid">
-                        {BLOG_POSTS.map(post => (
-                            <div key={post.id} className="blog-card">
-                                <span className="blog-date">{post.date}</span>
-                                <h3 className="blog-title">{post.title}</h3>
-                                <p className="blog-excerpt">{post.excerpt}</p>
-                                <a href={post.link} className="blog-read-more">Read More <i className="fas fa-arrow-right"></i></a>
-                            </div>
-                        ))}
-                    </div>
-                </section>
+                {/* Dynamic Blog Section */}
+                {blogs.length > 0 && (
+                    <section className="blog-section">
+                        <h2 className="section-title">Latest Blogs</h2>
+                        <div className="blog-grid">
+                            {blogs.map(post => (
+                                <div key={post.id} className="blog-card">
+                                    <span className="blog-date">{post.date}</span>
+                                    <h3 className="blog-title">{post.title}</h3>
+                                    <p className="blog-excerpt">{post.excerpt}</p>
+                                    <a href={post.link || '#'} className="blog-read-more">Read More <i className="fas fa-arrow-right"></i></a>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 <section className="static-content-section">
                     <h2 className="section-title">Discover Recommendations for Every Mood</h2>
@@ -377,16 +371,16 @@ function App() {
                         {modalLoading ? (
                             <div id="modal-loader"><i className="fas fa-spinner fa-spin"></i> &nbsp; Loading...</div>
                         ) : modalData && (
-                            <div id="modal-content" style={{display: 'block'}}>
+                            <div id="modal-content" style={{ display: 'block' }}>
                                 <div className="modal-header">
                                     {modalData.videos?.results?.find(v => v.type === 'Trailer') ? (
-                                        <iframe 
-                                            className="modal-trailer" 
+                                        <iframe
+                                            className="modal-trailer"
                                             src={`https://www.youtube.com/embed/${modalData.videos.results.find(v => v.type === 'Trailer').key}`}
                                             allowFullScreen
                                         ></iframe>
                                     ) : (
-                                        <div style={{padding: '100px', textAlign: 'center'}}>No trailer available</div>
+                                        <div style={{ padding: '100px', textAlign: 'center' }}>No trailer available</div>
                                     )}
                                 </div>
                                 <div className="modal-body">
@@ -397,10 +391,10 @@ function App() {
                                         ))}
                                     </div>
                                     <p className="modal-overview">{modalData.overview}</p>
-                                    <a 
-                                        className="tmdb-link" 
-                                        href={`https://www.themoviedb.org/${modalData.title ? 'movie' : 'tv'}/${modalData.id}`} 
-                                        target="_blank" 
+                                    <a
+                                        className="tmdb-link"
+                                        href={`https://www.themoviedb.org/${modalData.title ? 'movie' : 'tv'}/${modalData.id}`}
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                     >View full details on TMDB</a>
                                 </div>
