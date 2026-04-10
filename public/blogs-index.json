@@ -1,9 +1,23 @@
 [
     {
+        "id": "2026-04-10-k-dramas-FINAL",
+        "date": "2026-04-10",
+        "title": "5 K‑Dramas You'll Want to Binge-Watch Immediately",
+        "excerpt": "From nostalgic reunions to time-traveling revenge, these five 2024 series are the ultimate retention fuel for your watchlist.",
+        "link": "/blog.html?id=2026-04-10-k-dramas-FINAL"
+    },
+    {
+        "id": "2026-04-10-sci-fi-thrillers-FINAL",
+        "date": "2026-04-10",
+        "title": "The Next Wave of Edge‑of‑Your‑Seat Thrillers Set to Dominate 2025",
+        "excerpt": "From surveillance conspiracies to deadly game shows, a fresh batch of high‑octane thrillers is gearing up to hit screens in 2025. Here's the lowdown on the must‑watch titles you'll want on your radar.",
+        "link": "/blog.html?id=2026-04-10-sci-fi-thrillers-FINAL"
+    },
+    {
+        "id": "2026-04-10-welcome",
         "date": "2026-04-10",
         "title": "Welcome to the PickMyBinge Lab",
         "excerpt": "Discover how we use AI to find you the perfect movie without the endless scroll.",
-        "link": "#",
-        "id": "2026-04-10-welcome"
+        "link": "#"
     }
 ]
