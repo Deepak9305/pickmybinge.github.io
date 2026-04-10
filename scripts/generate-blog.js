@@ -6,7 +6,7 @@ import path from 'path';
  */
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const BLOG_DIR = path.join(process.cwd(), 'src/content/blogs');
+const BLOG_DIR = path.join(process.cwd(), 'public/content/blogs');
 
 async function callGroq(model, prompt) {
     console.log(`Calling Groq with model: ${model}...`);
@@ -94,6 +94,17 @@ async function runPipeline() {
             content: finalPost.content,
             link: `/blog/${slug}`
         }, null, 4));
+
+        // Update manifest.json
+        const manifestPath = path.join(BLOG_DIR, 'manifest.json');
+        let manifest = [];
+        if (fs.existsSync(manifestPath)) {
+            manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+        }
+        if (!manifest.includes(fileName)) {
+            manifest.unshift(fileName);
+            fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+        }
 
         console.log(`Successfully published blog: ${fileName}`);
 
