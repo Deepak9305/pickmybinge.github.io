@@ -268,6 +268,7 @@ function App() {
                         <a href="/" className="active-nav"><i className="fas fa-home"></i> Home</a>
                         <a href="/cringe.html"><i className="fas fa-ghost"></i> Worst Movies</a>
                         <a href="/quiz.html"><i className="fas fa-question-circle"></i> Superhero Quiz</a>
+                        <a href="/blog.html"><i className="fas fa-newspaper"></i> Blog</a>
                     </div>
                 </nav>
             </header>
