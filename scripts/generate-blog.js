@@ -2,17 +2,17 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Autonomous Blog Generation Pipeline (ESM)
- * Updated with robust JSON parsing, retry logic, and high-authority prompts.
+ * Autonomous Blog Generation Pipeline
+ * Grounded with real TMDB data + retry logic + hostile fact-check refinement.
  */
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const BLOG_DIR = path.join(process.cwd(), 'public/content/blogs');
 const BLOGS_INDEX = path.join(process.cwd(), 'public/blogs-index.json');
 
 async function callGroq(model, prompt) {
     if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing from environment.");
-
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -20,7 +20,7 @@ async function callGroq(model, prompt) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: model,
+            model,
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.7
         })
@@ -28,19 +28,6 @@ async function callGroq(model, prompt) {
     const data = await response.json();
     if (data.error) throw new Error(`Groq API Error: ${data.error.message}`);
     return data.choices[0].message.content;
-}
-
-function parseJson(str) {
-    try {
-        const start = str.indexOf('{');
-        const end = str.lastIndexOf('}');
-        if (start === -1 || end === -1) throw new Error("No JSON object found");
-        const jsonStr = str.substring(start, end + 1);
-        return JSON.parse(jsonStr);
-    } catch (e) {
-        console.error("Failed to parse JSON. Raw string snippet:", str.substring(0, 500) + "...");
-        throw new Error(`JSON Parse Error: ${e.message}`);
-    }
 }
 
 async function callGroqWithRetry(model, prompt, retries = 3) {
@@ -55,37 +42,75 @@ async function callGroqWithRetry(model, prompt, retries = 3) {
     }
 }
 
-async function runPipeline(nicheHint = "binge-worthy movies, TV shows, or K-dramas") {
-    try {
-        console.log(`\n--- Starting Pipeline for Niche: ${nicheHint} ---`);
+async function fetchFromTMDB(endpoint, params = {}) {
+    if (!TMDB_API_KEY) throw new Error("TMDB_API_KEY is missing from environment.");
+    const url = new URL(`https://api.themoviedb.org/3/${endpoint}`);
+    url.searchParams.append('api_key', TMDB_API_KEY);
+    Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+    const response = await fetch(url.toString());
+    return await response.json();
+}
 
-        if (!fs.existsSync(BLOG_DIR)) {
-            fs.mkdirSync(BLOG_DIR, { recursive: true });
+function parseJson(str) {
+    try {
+        const start = str.indexOf('{');
+        const end = str.lastIndexOf('}');
+        if (start === -1 || end === -1) throw new Error("No JSON object found");
+        let clean = str.substring(start, end + 1);
+        clean = clean.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        return JSON.parse(clean);
+    } catch (e) {
+        console.error("Failed to parse JSON. Raw snippet:", str.substring(0, 500));
+        throw new Error(`JSON Parse Error: ${e.message}`);
+    }
+}
+
+async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
+    try {
+        console.log(`\n--- Starting Pipeline: ${nicheHint} ---`);
+        if (!fs.existsSync(BLOG_DIR)) fs.mkdirSync(BLOG_DIR, { recursive: true });
+
+        // STEP 1: FETCH REAL DATA FROM TMDB
+        let tmdbData;
+        if (nicheHint === 'K-Dramas') {
+            tmdbData = await fetchFromTMDB('discover/tv', { 'first_air_date_year': 2024, 'with_original_language': 'ko', 'sort_by': 'popularity.desc' });
+        } else {
+            tmdbData = await fetchFromTMDB('discover/movie', { 'primary_release_year': 2025, 'with_genres': '878,53', 'sort_by': 'popularity.desc' });
         }
 
-        // STEP 1: KEYWORD RESEARCH
-        const keywordPrompt = `Find a mid-high volume, low competition keyword related to '${nicheHint}' for 2026. Focus on 'discovery' (long-tail keywords). Return ONLY the keyword.`;
-        const keyword = await callGroqWithRetry('meta-llama/llama-4-scout-17b-16e-instruct', keywordPrompt);
-        const cleanKeyword = keyword.trim().replace(/^"|"$/g, '');
-        console.log(`Target Keyword: ${cleanKeyword}`);
+        const realContent = tmdbData.results.slice(0, 5).map(item => ({
+            title: item.title || item.name,
+            id: item.id,
+            overview: item.overview,
+            release_date: item.release_date || item.first_air_date,
+            tmdb_link: `https://www.themoviedb.org/${item.title ? 'movie' : 'tv'}/${item.id}`
+        }));
 
-        // STEP 2: RESEARCH & DRAFTING (Multi-Agent Simulation)
-        const writingPrompt = `You are a Senior Technical Analyst at a top-tier entertainment publication. 
-        Write a deeply researched, analytical, and authoritative feature article about '${cleanKeyword}'.
-        Focus on:
-        - Critical Analysis: Directorial choices, cinematography (use specific technical terms), and craftsmanship.
-        - Industry Insights: Studio context, box office trends, or cultural significance.
-        - Specificity: Use names of directors, shows, actors, and studios. NO hallucinations.
-        
-        Format in clean HTML (<p>, <h3>, <ul>, <li>). Output ONLY a JSON object with keys 'title', 'excerpt', and 'content'.`;
+        if (realContent.length === 0) throw new Error("No content found on TMDB.");
+        console.log(`Fetched ${realContent.length} titles from TMDB.`);
+
+        // STEP 2: WRITE ARTICLE (grounded in real TMDB titles)
+        const writingPrompt = `You are the Lead Editor at PickMyBinge, a top entertainment publication.
+        Write a VIRAL, high-retention feature article about these real titles: ${JSON.stringify(realContent)}.
+        Guidelines:
+        - Punchy structure (2-3 sentences max per paragraph)
+        - Include a "The PickMyBinge Verdict" section per title
+        - Include "Watch if you liked" recommendation per title
+        - Use blockquotes for memorable lines or insights
+        - Internal headers linked to TMDB URLs provided
+        - Critical analysis: directorial choices, tone, cultural significance
+        - Enthusiastic and expert voice. NO hallucinations — only use the titles provided.
+        Format in clean HTML (<p>, <h3>, <ul>, <li>, <blockquote>).
+        Output ONLY a JSON object with keys 'title', 'excerpt', and 'content'.`;
 
         const draftRaw = await callGroqWithRetry('openai/gpt-oss-120b', writingPrompt);
         const draft = parseJson(draftRaw);
 
         // STEP 3: HOSTILE FACT-CHECK & EDITORIAL REFINE
-        const refinerPrompt = `You are a Hostile Lead Editor. Review this article for technical inaccuracies and AI fluff: 
+        const refinerPrompt = `You are a Hostile Lead Editor at PickMyBinge. Review this article for AI fluff, inaccuracies, and weak writing:
         ${JSON.stringify(draft)}
-        Fix any generic intro/outro. Ensure technical specs are consistent for '${cleanKeyword}'.
+        Fix any generic intro/outro. Ensure all title references match these real titles: ${JSON.stringify(realContent.map(t => t.title))}.
+        Remove any hallucinated titles or facts not grounded in the source data.
         Return the final polished version as a JSON object with keys 'title', 'excerpt', and 'content'. Output ONLY the JSON.`;
 
         const finalRaw = await callGroqWithRetry('meta-llama/llama-4-scout-17b-16e-instruct', refinerPrompt);
@@ -93,13 +118,13 @@ async function runPipeline(nicheHint = "binge-worthy movies, TV shows, or K-dram
 
         // STEP 4: SAVE
         const date = new Date().toISOString().split('T')[0];
-        const slug = cleanKeyword.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const slug = nicheHint.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const fileName = `${date}-${slug}.json`;
         const filePath = path.join(BLOG_DIR, fileName);
 
         const newPost = {
             id: `${date}-${slug}`,
-            date: date,
+            date,
             title: finalPost.title,
             excerpt: finalPost.excerpt,
             content: finalPost.content,
@@ -116,7 +141,7 @@ async function runPipeline(nicheHint = "binge-worthy movies, TV shows, or K-dram
             fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
         }
 
-        // Update index
+        // Update blogs index
         const existingIndex = fs.existsSync(BLOGS_INDEX) ? JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8')) : [];
         if (!existingIndex.find(p => p.id === newPost.id)) {
             const { content: _, ...postMeta } = newPost;
@@ -124,7 +149,7 @@ async function runPipeline(nicheHint = "binge-worthy movies, TV shows, or K-dram
             fs.writeFileSync(BLOGS_INDEX, JSON.stringify(existingIndex, null, 4));
         }
 
-        console.log(`Successfully published blog: ${fileName}`);
+        console.log(`Successfully published: ${fileName}`);
         return true;
     } catch (error) {
         console.error('CRITICAL: Pipeline failed:', error.message);
@@ -132,5 +157,5 @@ async function runPipeline(nicheHint = "binge-worthy movies, TV shows, or K-dram
     }
 }
 
-// Single entry point for daily runs
-runPipeline();
+const targetNiche = process.env.BLOG_NICHE || "Sci-Fi Thrillers";
+runPipeline(targetNiche);

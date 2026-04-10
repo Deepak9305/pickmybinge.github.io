@@ -3,7 +3,7 @@ import path from 'path';
 
 const DOMAIN = 'https://www.pickmybinge.com';
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
-const BLOG_DIR = path.join(process.cwd(), 'src/content/blogs');
+const BLOG_DIR = path.join(process.cwd(), 'public/content/blogs');
 const OUTPUT_FILE = path.join(PUBLIC_DIR, 'sitemap.xml');
 
 function generateSitemap() {
@@ -11,9 +11,10 @@ function generateSitemap() {
 
     const pages = [
         { url: '/', priority: '1.0', changefreq: 'daily' },
-        { url: '/contact.html', priority: '0.5', changefreq: 'monthly' },
+        { url: '/blog.html', priority: '0.9', changefreq: 'daily' },
         { url: '/cringe.html', priority: '0.8', changefreq: 'weekly' },
-        { url: '/quiz.html', priority: '0.8', changefreq: 'weekly' }
+        { url: '/quiz.html', priority: '0.8', changefreq: 'weekly' },
+        { url: '/contact.html', priority: '0.5', changefreq: 'monthly' }
     ];
 
     // Add blog posts
