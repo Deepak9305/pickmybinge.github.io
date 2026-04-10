@@ -3,6 +3,7 @@ import path from 'path';
 
 /**
  * Autonomous Blog Generation Pipeline (ESM)
+ * Updated with robust JSON parsing, retry logic, and high-authority prompts.
  */
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -10,7 +11,8 @@ const BLOG_DIR = path.join(process.cwd(), 'public/content/blogs');
 const BLOGS_INDEX = path.join(process.cwd(), 'public/blogs-index.json');
 
 async function callGroq(model, prompt) {
-    console.log(`Calling Groq with model: ${model}...`);
+    if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing from environment.");
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -28,80 +30,68 @@ async function callGroq(model, prompt) {
     return data.choices[0].message.content;
 }
 
-// Helper to parse JSON from potential markdown code blocks
 function parseJson(str) {
     try {
-        const jsonMatch = str.match(/```json\n([\s\S]*?)\n```/) || str.match(/```([\s\S]*?)```/) || [null, str];
-        return JSON.parse(jsonMatch[1].trim());
+        const start = str.indexOf('{');
+        const end = str.lastIndexOf('}');
+        if (start === -1 || end === -1) throw new Error("No JSON object found");
+        const jsonStr = str.substring(start, end + 1);
+        return JSON.parse(jsonStr);
     } catch (e) {
-        console.error("Failed to parse JSON. Raw string:", str);
-        throw new Error("Mismatched JSON format from LLM");
+        console.error("Failed to parse JSON. Raw string snippet:", str.substring(0, 500) + "...");
+        throw new Error(`JSON Parse Error: ${e.message}`);
     }
 }
 
-async function runPipeline() {
-    try {
-        console.log("Starting Blog Generation Pipeline...");
-        if (!GROQ_API_KEY) {
-            console.error('CRITICAL: GROQ_API_KEY is missing. Environment check failed.');
-            return;
+async function callGroqWithRetry(model, prompt, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await callGroq(model, prompt);
+        } catch (e) {
+            console.error(`Attempt ${i + 1} failed for model ${model}:`, e.message);
+            if (i === retries - 1) throw e;
+            await new Promise(r => setTimeout(r, 2000));
         }
+    }
+}
 
-        // Ensure directories exist
+async function runPipeline(nicheHint = "binge-worthy movies, TV shows, or K-dramas") {
+    try {
+        console.log(`\n--- Starting Pipeline for Niche: ${nicheHint} ---`);
+
         if (!fs.existsSync(BLOG_DIR)) {
-            console.log(`Creating missing directory: ${BLOG_DIR}`);
             fs.mkdirSync(BLOG_DIR, { recursive: true });
         }
 
         // STEP 1: KEYWORD RESEARCH
-        const keywordPrompt = "Find a mid-high volume, low competition keyword related to 'binge-worthy' movies, TV shows, or K-dramas for April 2026. Focus on 'discovery' (hidden gems). Return only the keyword.";
-        const keyword = await callGroq('meta-llama/llama-4-scout-17b-16e-instruct', keywordPrompt);
+        const keywordPrompt = `Find a mid-high volume, low competition keyword related to '${nicheHint}' for 2026. Focus on 'discovery' (long-tail keywords). Return ONLY the keyword.`;
+        const keyword = await callGroqWithRetry('meta-llama/llama-4-scout-17b-16e-instruct', keywordPrompt);
         const cleanKeyword = keyword.trim().replace(/^"|"$/g, '');
         console.log(`Target Keyword: ${cleanKeyword}`);
 
-        // STEP 2: RESEARCH & DRAFTING
-        const writingPrompt = `Research and write a professional, high-authority movie/TV show analysis about '${cleanKeyword}' for the publication 'PickMyBinge'.
+        // STEP 2: RESEARCH & DRAFTING (Multi-Agent Simulation)
+        const writingPrompt = `You are a Senior Technical Analyst at a top-tier entertainment publication. 
+        Write a deeply researched, analytical, and authoritative feature article about '${cleanKeyword}'.
+        Focus on:
+        - Critical Analysis: Directorial choices, cinematography (use specific technical terms), and craftsmanship.
+        - Industry Insights: Studio context, box office trends, or cultural significance.
+        - Specificity: Use names of directors, shows, actors, and studios. NO hallucinations.
         
-        Publication Tone: Professional, analytical, and highly informative. Style should match industry-leading publications like Variety or The Hollywood Reporter. Focus on objective facts, critical analysis of performances, and cultural significance.
-        
-        Length: Approx 800 words.
-        Include:
-        - A professional, SEO-optimized headline.
-        - An authoritative executive summary (excerpt).
-        - Deep-dive analysis of plot, direction, and acting.
-        - Technical details (release date, studio, cast).
-        - Internal links placeholder for relevant categories (Action, Comedy, Horror, Korean).
-        
-        Requirement: The output must ONLY be a JSON object with keys 'title', 'excerpt', and 'content'.`;
+        Format in clean HTML (<p>, <h3>, <ul>, <li>). Output ONLY a JSON object with keys 'title', 'excerpt', and 'content'.`;
 
-        const draftRaw = await callGroq('openai/gpt-oss-120b', writingPrompt);
+        const draftRaw = await callGroqWithRetry('openai/gpt-oss-120b', writingPrompt);
         const draft = parseJson(draftRaw);
 
-        // STEP 3: FACT-CHECK & REFINE
-        const refinerPrompt = `Fact-check and refine the following blog post about '${cleanKeyword}'. 
-        Ensure all movie dates and details are technically accurate for 2026. 
-        Fix any repetitive phrasing. 
-        Return the final version as a JSON object with keys 'title', 'excerpt', and 'content'.
-        Post: ${JSON.stringify(draft)}`;
+        // STEP 3: HOSTILE FACT-CHECK & EDITORIAL REFINE
+        const refinerPrompt = `You are a Hostile Lead Editor. Review this article for technical inaccuracies and AI fluff: 
+        ${JSON.stringify(draft)}
+        Fix any generic intro/outro. Ensure technical specs are consistent for '${cleanKeyword}'.
+        Return the final polished version as a JSON object with keys 'title', 'excerpt', and 'content'. Output ONLY the JSON.`;
 
-        const finalRaw = await callGroq('meta-llama/llama-4-scout-17b-16e-instruct', refinerPrompt);
+        const finalRaw = await callGroqWithRetry('meta-llama/llama-4-scout-17b-16e-instruct', refinerPrompt);
         const finalPost = parseJson(finalRaw);
 
-        // STEP 4: AUTO-LINKER (Internal/External)
-        const linkMappings = {
-            'Comedy': '/?genre=comedy',
-            'Action': '/?genre=action',
-            'Horror': '/?genre=horror',
-            'Korean': '/?genre=korean',
-            'TMDB': 'https://www.themoviedb.org/'
-        };
-
-        Object.keys(linkMappings).forEach(key => {
-            const regex = new RegExp(`\\b${key}\\b`, 'g');
-            finalPost.content = finalPost.content.replace(regex, `<a href="${linkMappings[key]}">${key}</a>`);
-        });
-
-        // STEP 5: SAVE
+        // STEP 4: SAVE
         const date = new Date().toISOString().split('T')[0];
         const slug = cleanKeyword.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const fileName = `${date}-${slug}.json`;
@@ -118,35 +108,29 @@ async function runPipeline() {
 
         fs.writeFileSync(filePath, JSON.stringify(newPost, null, 4));
 
-        // Update manifest.json
+        // Update manifest
         const manifestPath = path.join(BLOG_DIR, 'manifest.json');
-        let manifest = [];
-        if (fs.existsSync(manifestPath)) {
-            manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-        }
+        let manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) : [];
         if (!manifest.includes(fileName)) {
             manifest.unshift(fileName);
             fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
         }
 
-        // Update blogs-index.json so home page and blog.html stay in sync
-        const existingIndex = fs.existsSync(BLOGS_INDEX)
-            ? JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8'))
-            : [];
-
-        // Check if post already in index
+        // Update index
+        const existingIndex = fs.existsSync(BLOGS_INDEX) ? JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8')) : [];
         if (!existingIndex.find(p => p.id === newPost.id)) {
-            const { content: _content, ...postMeta } = newPost;
+            const { content: _, ...postMeta } = newPost;
             existingIndex.unshift(postMeta);
             fs.writeFileSync(BLOGS_INDEX, JSON.stringify(existingIndex, null, 4));
         }
 
         console.log(`Successfully published blog: ${fileName}`);
-
+        return true;
     } catch (error) {
         console.error('CRITICAL: Pipeline failed:', error.message);
-        if (error.stack) console.error(error.stack);
+        return false;
     }
 }
 
+// Single entry point for daily runs
 runPipeline();
