@@ -265,8 +265,7 @@ function App() {
                         <i className={`fas ${isMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
                     </button>
                     <div className="nav-menu">
-                        <a href="/"><i className="fas fa-home"></i> Home</a>
-                        <a href="#" className="active-nav"><i className="fas fa-film"></i> Browse Movies & Shows</a>
+                        <a href="/" className="active-nav"><i className="fas fa-home"></i> Home</a>
                         <a href="/cringe.html"><i className="fas fa-ghost"></i> Worst Movies</a>
                         <a href="/quiz.html"><i className="fas fa-question-circle"></i> Superhero Quiz</a>
                     </div>
