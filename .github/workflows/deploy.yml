@@ -25,11 +25,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare static files
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          VITE_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
         run: |
           mkdir -p dist
-          cp index.html cringe.html quiz.html contact.html terms.html privacy.html dist/
+          cp index.html cringe.html quiz.html contact.html terms.html privacy.html blog.html dist/
           cp -f robots.txt sitemap.xml dist/ 2>/dev/null || true
           cp -r public/. dist/
+          # Substitute TMDB key placeholder in HTML files
+          sed -i "s|__TMDB_API_KEY__|${TMDB_API_KEY}|g" dist/index.html dist/cringe.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

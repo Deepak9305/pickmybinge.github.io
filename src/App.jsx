@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-const TMDB_API_KEY = '5102784aed4d28b56413afea83c2fb50';
+const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const TMDB_API_URL = 'https://api.themoviedb.org/3';
 const RESULTS_PER_LOAD = 8;
 
