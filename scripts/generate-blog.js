@@ -7,6 +7,7 @@ import path from 'path';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const BLOG_DIR = path.join(process.cwd(), 'public/content/blogs');
+const BLOGS_INDEX = path.join(process.cwd(), 'public/blogs-index.json');
 
 async function callGroq(model, prompt) {
     console.log(`Calling Groq with model: ${model}...`);
@@ -87,13 +88,16 @@ async function runPipeline() {
         const fileName = `${date}-${slug}.json`;
         const filePath = path.join(BLOG_DIR, fileName);
 
-        fs.writeFileSync(filePath, JSON.stringify({
+        const newPost = {
+            id: `${date}-${slug}`,
             date: date,
             title: finalPost.title,
             excerpt: finalPost.excerpt,
             content: finalPost.content,
             link: `/blog/${slug}`
-        }, null, 4));
+        };
+
+        fs.writeFileSync(filePath, JSON.stringify(newPost, null, 4));
 
         // Update manifest.json
         const manifestPath = path.join(BLOG_DIR, 'manifest.json');
@@ -105,6 +109,14 @@ async function runPipeline() {
             manifest.unshift(fileName);
             fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
         }
+
+        // Update blogs-index.json so home page and blog.html stay in sync
+        const existingIndex = fs.existsSync(BLOGS_INDEX)
+            ? JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8'))
+            : [];
+        const { content: _content, ...postMeta } = newPost;
+        existingIndex.unshift(postMeta);
+        fs.writeFileSync(BLOGS_INDEX, JSON.stringify(existingIndex, null, 4));
 
         console.log(`Successfully published blog: ${fileName}`);
 

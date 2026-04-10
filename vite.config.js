@@ -9,6 +9,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        blog: resolve(__dirname, 'blog.html'),
         cringe: resolve(__dirname, 'cringe.html'),
         quiz: resolve(__dirname, 'quiz.html'),
         contact: resolve(__dirname, 'contact.html'),
