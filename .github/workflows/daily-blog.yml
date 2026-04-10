@@ -29,5 +29,5 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add public/content/blogs
+          git add public/content/blogs public/blogs-index.json
           git diff --quiet && git diff --staged --quiet || (git commit -m "Autonomous Blog Update: $(date +'%Y-%m-%d')" && git push)
