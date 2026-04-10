@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>Cringiest Movies of All Time | PickMyBinge</title>
+    <title>Worst Movies of All Time | PickMyBinge</title>
     
     <meta name="description" content="Dare to watch? Discover the most cringeworthy, awkward, and 'so bad they're good' movies of all time. Our Cringe Finder helps you find the perfect trainwreck for your next movie night.">
     
     <link rel="canonical" href="https://www.pickmybinge.com/cringe.html" />
     <meta name="robots" content="index, follow">
-    <meta property="og:title" content="Cringiest Movies of All Time | PickMyBinge">
+    <meta property="og:title" content="Worst Movies of All Time | PickMyBinge">
     <meta property="og:description" content="Our Cringe Finder tool helps you discover the most hilariously bad and awkward movies ever made.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.pickmybinge.com/cringe.html">
@@ -152,39 +152,39 @@
         <a href="https://www.pickmybinge.com/"><i class="fas fa-home"></i> Home</a>
         
         <a href="index.html" style="background: rgba(255, 197, 61, 0.2); color: var(--accent); font-weight: bold;">
-            <i class="fas fa-film"></i> Movie Finder
+            <i class="fas fa-film"></i> Browse Movies & Shows
         </a>
 
-        <a href="cringe.html"><i class="fas fa-ghost"></i> Cringe Finder</a>
-        <a href="quiz.html"><i class="fas fa-question-circle"></i> Character Quiz</a>
+        <a href="cringe.html"><i class="fas fa-ghost"></i> Worst Movies</a>
+        <a href="quiz.html"><i class="fas fa-question-circle"></i> Superhero Quiz</a>
     </div>
 </nav>
         </header>
 
         <div class="hero-section">
-            <h1>Cringiest Movies of All Time</h1>
-            <p class="tagline">Discover the most hilariously bad, awkward, and "so bad they're good" films ever made.</p>
+            <h1>Worst Movies of All Time</h1>
+            <p class="tagline">Discover the most hilariously bad and "so bad they're good" films ever made.</p>
         </div>
 
         <main>
             <div class="recommendation-bubbles">
-                <div class="bubble active" data-genre="" role="button">👑 All Cringe</div>
-                <div class="bubble" data-genre="35" role="button">😂 Cringe Comedy</div>
-                <div class="bubble" data-genre="27" role="button">😱 Awkward Horror</div>
-                <div class="bubble" data-genre="28" role="button">💥 Awkward Action</div>
-                <div class="bubble" data-genre="878" role="button">👽 Bizarre Sci-Fi</div>
-                <div class="bubble" data-genre="16" role="button">🤪 Goofy Animation</div>
-                <div class="bubble" data-genre="10751" role="button">👨‍👩‍👧‍👦 Failed Family Films</div>
-                <div class="bubble" data-genre="10749" role="button">💔 Cringe Romance</div>
+                <div class="bubble active" data-genre="" role="button">👑 Show All</div>
+                <div class="bubble" data-genre="35" role="button">😂 Bad Comedy</div>
+                <div class="bubble" data-genre="27" role="button">😱 Bad Horror</div>
+                <div class="bubble" data-genre="28" role="button">💥 Bad Action</div>
+                <div class="bubble" data-genre="878" role="button">👽 Bad Sci-Fi</div>
+                <div class="bubble" data-genre="16" role="button">🤪 Bad Animation</div>
+                <div class="bubble" data-genre="10751" role="button">👨‍👩‍👧‍👦 Bad Family Films</div>
+                <div class="bubble" data-genre="10749" role="button">💔 Bad Romance</div>
             </div>
         
             <section class="results-section" id="results-section" aria-labelledby="results-title">
-                <h2 class="section-title" id="results-title">Cringe-Worthy Recommendations</h2>
+                <h2 class="section-title" id="results-title">Our Worst Movie Picks</h2>
                 <div class="recommendation-cards" id="results" role="list" aria-live="polite"></div>
                 <button class="load-more" id="load-more">Load More</button>
             </section>
         
-            <div class="no-results" id="no-results"><h3>No Cringe Found!</h3><p>We couldn't find any famously bad movies for this category. Please try another one.</p></div>
+            <div class="no-results" id="no-results"><h3>No Movies Found!</h3><p>We couldn't find any bad movies for this category. Please try another one.</p></div>
         </main>
         
         <footer>
@@ -274,12 +274,12 @@
             if (currentGenre) {
                 const activeBubble = document.querySelector('.bubble.active');
                 const genreName = activeBubble.textContent.replace(/^[^\w\s]+/, '').trim();
-                resultsTitle.textContent = `Cringe-Worthy ${genreName} Films`;
+                resultsTitle.textContent = `Worst ${genreName} Films`;
                 baseParams['with_genres'] = currentGenre;
             } else {
                 const currentYear = new Date().getFullYear();
                 const randomYear = Math.floor(Math.random() * (currentYear - 1980 + 1)) + 1980;
-                resultsTitle.textContent = `Cringe-Worthy Films from ${randomYear}`;
+                resultsTitle.textContent = `Worst Movies from ${randomYear}`;
                 baseParams['primary_release_year'] = randomYear;
             }
 

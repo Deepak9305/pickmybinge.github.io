@@ -266,9 +266,9 @@ function App() {
                     </button>
                     <div className="nav-menu">
                         <a href="/"><i className="fas fa-home"></i> Home</a>
-                        <a href="#" className="active-nav"><i className="fas fa-film"></i> Movie Finder</a>
-                        <a href="#"><i className="fas fa-ghost"></i> Cringe Finder</a>
-                        <a href="#"><i className="fas fa-question-circle"></i> Character Quiz</a>
+                        <a href="#" className="active-nav"><i className="fas fa-film"></i> Browse Movies & Shows</a>
+                        <a href="/cringe.html"><i className="fas fa-ghost"></i> Worst Movies</a>
+                        <a href="/quiz.html"><i className="fas fa-question-circle"></i> Superhero Quiz</a>
                     </div>
                 </nav>
             </header>
@@ -278,10 +278,10 @@ function App() {
                 <p className="tagline">The ultimate tool for movie and TV show discovery.</p>
                 <div className="special-features-container">
                     <div className="special-feature-link">
-                        <a href="#">😈 Dare to watch the worst? Enter the Cringe Zone.</a>
+                        <a href="/cringe.html">😈 Dare to watch the worst? See Bad Movies!</a>
                     </div>
                     <div className="special-feature-link">
-                        <a href="#">🦸‍♂️ Which hero (or villain) are you? Take the Quiz!</a>
+                        <a href="/quiz.html">🦸‍♂️ Which hero (or villain) are you? Take the Quiz!</a>
                     </div>
                 </div>
             </div>
