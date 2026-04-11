@@ -395,9 +395,9 @@ function App() {
             <footer>
                 <p>PickMyBinge &copy; 2026</p>
                 <nav>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms & Conditions</a>
-                    <a href="#">Contact Us</a>
+                    <a href="/privacy.html">Privacy Policy</a>
+                    <a href="/terms.html">Terms &amp; Conditions</a>
+                    <a href="/contact.html">Contact Us</a>
                 </nav>
             </footer>
 

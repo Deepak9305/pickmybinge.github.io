@@ -14,7 +14,9 @@ function generateSitemap() {
         { url: '/blog.html', priority: '0.9', changefreq: 'daily' },
         { url: '/cringe.html', priority: '0.8', changefreq: 'weekly' },
         { url: '/quiz.html', priority: '0.8', changefreq: 'weekly' },
-        { url: '/contact.html', priority: '0.5', changefreq: 'monthly' }
+        { url: '/contact.html', priority: '0.5', changefreq: 'monthly' },
+        { url: '/privacy.html', priority: '0.4', changefreq: 'monthly' },
+        { url: '/terms.html', priority: '0.4', changefreq: 'monthly' }
     ];
 
     // Add blog posts
@@ -23,7 +25,7 @@ function generateSitemap() {
         blogFiles.forEach(file => {
             const slug = file.replace('.json', '');
             pages.push({
-                url: `/blog/${slug}`,
+                url: `/blog.html?id=${slug}`,
                 priority: '0.7',
                 changefreq: 'monthly'
             });

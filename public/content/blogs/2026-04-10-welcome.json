@@ -1,6 +1,8 @@
 {
+    "id": "2026-04-10-welcome",
     "date": "2026-04-10",
     "title": "Welcome to the PickMyBinge Lab",
     "excerpt": "Discover how we use AI to find you the perfect movie without the endless scroll.",
-    "link": "#"
+    "content": "<p>Welcome to <strong>PickMyBinge</strong> — where we cut through the noise so you can get straight to watching.</p><p>We built this platform because endless scrolling is a real problem. The average viewer spends 18 minutes just picking something to watch. That's 18 minutes you could spend actually watching.</p><h3>What We Do</h3><p>Our AI-powered engine cross-references mood, genre, and your tolerance for bad CGI to surface exactly what you should watch tonight. No algorithms trained to maximize your screen time — just honest recommendations.</p><h3>The Blog</h3><p>Every day we publish a new deep-dive: hidden gems, genre breakdowns, and honest takes on what's actually worth your time on Netflix, Prime, and beyond.</p><blockquote>Stop scrolling. Start watching. That's the whole pitch.</blockquote><p>Stick around — it's going to be a good watch.</p>",
+    "link": "/blog.html?id=2026-04-10-welcome"
 }
