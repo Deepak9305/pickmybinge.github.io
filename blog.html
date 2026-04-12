@@ -523,7 +523,11 @@
                 </div>
                 <h1 style="font-size: 3rem; margin-bottom: 30px; line-height: 1.1;">${post.title}</h1>
                 <div style="font-size: 1.2rem; line-height: 1.8; color: #d1d1e0;">
-                    ${post.content.replace(/\n/g, '<br>')}
+                    ${post.content
+            .replace(/\n/g, '<br>')
+            .replace(/\[Official Poster Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-film"></i> Official Artwork Incoming</div>')
+            .replace(/\[Trailer Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-play-circle"></i> Trailer Available on TMDB</div>')
+          }
                 </div>
             `;
       } catch (e) {

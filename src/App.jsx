@@ -113,10 +113,10 @@ function App() {
 
         try {
             const response = await fetch(`${url}?${params.toString()}`);
-            if (!response.ok) return [];
+            if (!response.ok) return { results: [], total_results: 0 };
             const data = await response.json();
             setTotalApiPages(data.total_pages);
-            return data.results.map(item => ({
+            const results = data.results.map(item => ({
                 id: item.id,
                 type: type,
                 title: type === 'movie' ? item.title : item.name,
@@ -124,9 +124,10 @@ function App() {
                 poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/300x450/2D3047/8B8BA0?text=No+Image',
                 rating: item.vote_average.toFixed(1)
             }));
+            return { results, total_results: data.total_results };
         } catch (error) {
             console.error('Failed to fetch data:', error);
-            return [];
+            return { results: [], total_results: 0 };
         }
     };
 
@@ -141,21 +142,22 @@ function App() {
             setCurrentPage(targetPage);
         }
 
-        let movies = [];
-        let tvShows = [];
+        let movieData = { results: [], total_results: 0 };
+        let tvData = { results: [], total_results: 0 };
 
         if (typeFilter === 'all') {
-            [movies, tvShows] = await Promise.all([
+            [movieData, tvData] = await Promise.all([
                 fetchData('movie', query, targetPage, isText),
                 fetchData('tv', query, targetPage, isText)
             ]);
         } else if (typeFilter === 'movie') {
-            movies = await fetchData('movie', query, targetPage, isText);
+            movieData = await fetchData('movie', query, targetPage, isText);
         } else if (typeFilter === 'tv') {
-            tvShows = await fetchData('tv', query, targetPage, isText);
+            tvData = await fetchData('tv', query, targetPage, isText);
         }
 
-        const newResults = shuffleArray([...movies, ...tvShows]);
+        const newResults = shuffleArray([...movieData.results, ...tvData.results]);
+
         if (isNewSearch) {
             setAllFetchedResults(newResults);
             setDisplayedResultsCount(Math.min(newResults.length, RESULTS_PER_LOAD));

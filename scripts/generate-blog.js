@@ -113,6 +113,11 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
         const polishedRaw = await callGroqWithRetry('llama-3.1-70b-versatile', refinerPrompt);
         const finalPost = parseJson(polishedRaw);
 
+        // VALIDATION: Ensure all required fields exist
+        if (!finalPost.title || !finalPost.excerpt || !finalPost.content) {
+            throw new Error("Polished post is missing required fields (title, excerpt, or content).");
+        }
+
         // STEP 4: SAVE
         const date = new Date().toISOString().split('T')[0];
         const slug = nicheHint.toLowerCase().replace(/[^a-z0-9]+/g, '-');
