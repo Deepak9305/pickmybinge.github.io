@@ -11,6 +11,178 @@
   --font-main: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-main);
+}
+
+body {
+  background: linear-gradient(135deg, var(--dark), #2D3047);
+  color: var(--light);
+  min-height: 100vh;
+  padding: 0;
+  line-height: 1.6;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* --- Navigation Header --- */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 1000;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-decoration: none;
+}
+
+.logo-container img {
+  height: 40px;
+  transition: transform 0.3s ease;
+}
+
+.logo-container:hover img {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.logo-container .brand-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--light);
+  letter-spacing: -0.5px;
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+}
+
+.nav-menu {
+  display: flex;
+  gap: 25px;
+}
+
+.nav-menu a {
+  color: var(--light);
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.3s ease;
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.nav-menu a:hover,
+.nav-menu a.active-nav {
+  color: var(--primary);
+  opacity: 1;
+}
+
+.menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--light);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.close-btn {
+  display: none;
+}
+
+/* --- Mobile Menu --- */
+@media (max-width: 768px) {
+  .menu-btn {
+    display: block;
+  }
+
+  .nav-menu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--dark2);
+    flex-direction: column;
+    padding: 80px 40px;
+    gap: 30px;
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+  }
+
+  .nav-menu.show {
+    transform: translateX(0);
+  }
+
+  .close-btn {
+    display: block;
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: none;
+    border: none;
+    color: var(--light);
+    font-size: 2rem;
+    cursor: pointer;
+  }
+}
+
+/* --- Footer --- */
+footer {
+  text-align: center;
+  margin-top: 80px;
+  padding: 40px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+footer p {
+  color: var(--gray);
+  font-size: 0.9rem;
+}
+
+footer nav {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  flex-wrap: wrap;
+}
+
+footer a {
+  color: var(--gray);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.3s ease;
+}
+
+footer a:hover {
+  color: var(--light);
+}
+
+/* --- Gradients --- */
 .text-gradient {
   background: linear-gradient(135deg, var(--primary), var(--accent));
   -webkit-background-clip: text;
@@ -23,4 +195,92 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* Initial Loader & Error States */
+.initial-loader,
+.initial-error {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--dark);
+  z-index: 10000;
+}
+
+.loader-content {
+  text-align: center;
+}
+
+.loader-logo {
+  height: 100px;
+  margin-bottom: 20px;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.initial-loader i {
+  font-size: 2.5rem;
+  color: var(--primary);
+  display: block;
+  margin-bottom: 20px;
+}
+
+.initial-loader p {
+  color: var(--gray);
+  font-weight: 500;
+  letter-spacing: 1px;
+  font-size: 1.1rem;
+}
+
+.initial-error {
+  flex-direction: column;
+  text-align: center;
+}
+
+.initial-error h2 {
+  font-size: 3.5rem;
+  color: var(--primary);
+  margin-bottom: 20px;
+  font-weight: 900;
+}
+
+.initial-error button {
+  margin-top: 30px;
+  padding: 15px 40px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.initial-error button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(255, 94, 91, 0.4);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
 }

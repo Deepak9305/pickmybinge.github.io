@@ -264,11 +264,14 @@ function App() {
                     <img src="/logo.png" alt="PickMyBinge Logo" />
                     <span className="brand-name">PickMyBinge</span>
                 </a>
-                <nav className={`main-nav ${isMenuOpen ? 'show' : ''}`}>
-                    <button className="menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                        <i className={`fas ${isMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+                <nav className="main-nav">
+                    <button className="menu-btn" onClick={() => setIsMenuOpen(true)}>
+                        <i className="fas fa-bars"></i>
                     </button>
-                    <div className="nav-menu">
+                    <div className={`nav-menu ${isMenuOpen ? 'show' : ''}`}>
+                        <button className="close-btn" onClick={() => setIsMenuOpen(false)}>
+                            <i className="fas fa-times"></i>
+                        </button>
                         <a href="/" className="active-nav"><i className="fas fa-home"></i> Home</a>
                         <a href="/cringe.html"><i className="fas fa-ghost"></i> Worst Movies</a>
                         <a href="/quiz.html"><i className="fas fa-question-circle"></i> Superhero Quiz</a>

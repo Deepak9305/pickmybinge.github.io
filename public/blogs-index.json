@@ -1,36 +1,25 @@
 [
     {
-        "id": "2026-04-12-sci-fi-thrillers",
-        "date": "2026-04-12",
-        "title": "2025's Must-Watch Blockbusters: From Surveillance Thrills to AI Vengeance",
-        "excerpt": "From a government-run paranoia thriller to a dystopian game show, a gorge-bound spy saga, a patriotic reboot, and a killer-AI sequel—2025's biggest releases are redefining the hype machine.",
-        "link": "/blog.html?id=2026-04-12-sci-fi-thrillers"
-    },
-    {
-        "id": "2026-04-11-sci-fi-thrillers",
-        "date": "2026-04-11",
-        "title": "The Must-Watch Summer Slate 2025: From Surveillance Thrillers to Superhero Showdowns",
-        "excerpt": "From a government-run surveillance nightmare to a deadly TV game, a gorge-side showdown, a patriotic reboot, and a killer AI comeback—2025's biggest releases promise nonstop adrenaline and cultural conversation.",
-        "link": "/blog.html?id=2026-04-11-sci-fi-thrillers"
-    },
-    {
         "id": "2026-04-10-k-dramas-polished",
         "date": "2026-04-10",
-        "title": "Love, Revenge, and Second Chances: 2024’s Must‑Watch Korean Dramas",
-        "excerpt": "From nostalgic reunions to vengeful time‑travel twists, these five upcoming Korean series promise fresh drama, romance, and intrigue for the spring‑to‑fall slate.",
+        "title": "Heartstrings and High Stakes: Why 2024's K-Dramas are Dominating Screens",
+        "category": "korean",
+        "excerpt": "From time-slip romances to high-stakes legal battles, Korean dramas are pushing boundaries in 2024. Here's why you can't stop watching.",
         "link": "/blog.html?id=2026-04-10-k-dramas-polished"
     },
     {
-        "id": "2026-04-10-sci-fi-thrillers-polished",
+        "id": "2026-04-10-sci-fi-thrillers-FINAL",
         "date": "2026-04-10",
         "title": "The Next Wave of Edge‑of‑Your‑Seat Thrillers Set to Dominate 2025",
+        "category": "movies",
         "excerpt": "From surveillance conspiracies to deadly game shows, a fresh batch of high‑octane thrillers is gearing up to hit screens in 2025.",
-        "link": "/blog.html?id=2026-04-10-sci-fi-thrillers-polished"
+        "link": "/blog.html?id=2026-04-10-sci-fi-thrillers-FINAL"
     },
     {
         "id": "2026-04-10-welcome",
         "date": "2026-04-10",
         "title": "Welcome to the PickMyBinge Lab",
+        "category": "hidden",
         "excerpt": "Discover how we use AI to find you the perfect movie without the endless scroll.",
         "link": "/blog.html?id=2026-04-10-welcome"
     }

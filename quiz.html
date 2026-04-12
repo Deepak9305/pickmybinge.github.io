@@ -71,63 +71,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/global.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: var(--font-main);
-        }
-
+        /* Specific overrides for Quiz page */
         :root {
             --dc-blue: #00529B;
             --marvel-red: #ED1D24;
         }
 
-        body {
-            background: linear-gradient(135deg, var(--dark), #2D3047);
-            color: var(--light);
-            min-height: 100vh;
-            padding: 0;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            text-decoration: none;
-        }
-
-        .logo-container img {
-            height: 40px;
-        }
-
-        .logo-container .brand-name {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--light);
-        }
-
         .content-box {
             max-width: 800px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--glass);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
             border-radius: 20px;
             padding: 40px;
             text-align: center;
@@ -135,38 +90,11 @@
             margin: 40px auto;
         }
 
-        #start-screen,
-        #quiz-screen,
-        #result-screen {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         h1,
         .section-title {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            background: linear-gradient(to right, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p {
-            color: var(--gray);
-            font-size: 1.1rem;
-            margin-bottom: 30px;
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+            font-weight: 900;
         }
 
         .btn {
@@ -176,7 +104,7 @@
             border-radius: 50px;
             background: var(--primary);
             color: white;
-            font-weight: bold;
+            font-weight: 800;
             font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -184,363 +112,90 @@
         }
 
         .btn:hover {
-            transform: scale(1.05);
-        }
-
-        #start-choices {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        #start-dc-btn {
-            background-color: var(--dc-blue);
-        }
-
-        #start-dc-btn:hover {
-            box-shadow: 0 5px 15px rgba(0, 82, 155, 0.4);
-        }
-
-        #start-marvel-btn {
-            background-color: var(--marvel-red);
-        }
-
-        #start-marvel-btn:hover {
-            box-shadow: 0 5px 15px rgba(237, 29, 36, 0.4);
-        }
-
-        #question-text {
-            font-size: 1.8rem;
-            margin-bottom: 30px;
-            color: var(--light);
-        }
-
-        #answers {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(255, 94, 91, 0.4);
         }
 
         .answer-btn {
             width: 100%;
             padding: 20px;
-            border: 1px solid var(--gray);
+            border: 1px solid var(--border);
             border-radius: 15px;
-            background: transparent;
+            background: var(--glass);
             color: var(--light);
-            font-size: 1rem;
+            font-size: 1.05rem;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: left;
-            height: 100%;
         }
 
         .answer-btn:hover {
-            background: rgba(255, 197, 61, 0.2);
+            background: rgba(255, 197, 61, 0.15);
             border-color: var(--accent);
-        }
-
-        #progress-text {
-            margin-top: 30px;
-            color: var(--gray);
+            transform: translateX(10px);
         }
 
         #result-card {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 15px;
-            padding: 30px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid var(--border);
             margin-bottom: 30px;
-            transform: scale(0.95);
-            opacity: 0;
-            animation: result-card-anim 0.5s 0.1s ease-out forwards;
         }
+    </style>
 
-        #result-character,
-        #result-description,
-        .result-reveal p {
-            opacity: 0;
-            animation: result-text-anim 0.5s 0.6s ease-out forwards;
-        }
+    @media (max-width: 600px) {
+    .content-box {
+    padding: 25px;
+    }
 
-        #result-character {
-            animation-delay: 0.8s;
-            font-size: 2.2rem;
-            color: var(--accent);
-            margin-bottom: 10px;
-        }
+    h1,
+    .section-title {
+    font-size: 1.8rem;
+    }
 
-        #result-description {
-            animation-delay: 1s;
-            font-size: 1.1rem;
-            line-height: 1.6;
-        }
+    #question-text {
+    font-size: 1.4rem;
+    }
 
-        @keyframes result-card-anim {
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
+    #result-character {
+    font-size: 1.8rem;
+    }
+    }
 
-        @keyframes result-text-anim {
-            to {
-                opacity: 1;
-            }
-        }
+    footer {
+    text-align: center;
+    margin-top: 60px;
+    padding: 30px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-        #result-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+    footer a {
+    color: var(--gray);
+    text-decoration: none;
+    margin: 0 10px;
+    }
 
-        .btn.secondary {
-            background: var(--secondary);
-        }
-
-        .btn.secondary:hover {
-            box-shadow: 0 5px 15px rgba(0, 206, 203, 0.3);
-        }
-
-        .back-link {
-            display: block;
-            margin-top: 20px;
-            color: var(--gray);
-            text-decoration: none;
-        }
-
-        .back-link:hover {
-            color: var(--secondary);
-        }
-
-        .blog-content {
-            text-align: left;
-            line-height: 1.8;
-        }
-
-        .blog-content p {
-            margin-bottom: 20px;
-        }
-
-        .faq-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            text-align: left;
-        }
-
-        .faq-item {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .faq-question {
-            padding: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .faq-question:hover {
-            color: var(--accent);
-        }
-
-        .faq-question::after {
-            content: '+';
-            position: absolute;
-            right: 20px;
-            font-size: 1.5rem;
-            transition: transform 0.2s ease;
-        }
-
-        .faq-item[open] .faq-question::after {
-            transform: rotate(45deg);
-        }
-
-        .faq-answer {
-            padding: 0 20px 20px;
-            color: var(--gray);
-        }
-
-        .faq-answer p {
-            margin-bottom: 0;
-        }
-
-        #summary-section p {
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .main-nav {
-            position: relative;
-        }
-
-        .menu-btn {
-            background: none;
-            border: none;
-            color: var(--light);
-            font-size: 1.5rem;
-            cursor: pointer;
-            z-index: 1001;
-        }
-
-        .nav-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: calc(100% + 10px);
-            background-color: #2D3047;
-            min-width: 220px;
-            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-            z-index: 100;
-            border-radius: 10px;
-            overflow: hidden;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .nav-menu a {
-            color: var(--light);
-            padding: 15px 20px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-menu a i {
-            width: 20px;
-            text-align: center;
-        }
-
-        .nav-menu a:hover {
-            background-color: var(--primary);
-        }
-
-        .main-nav.show .nav-menu {
-            display: block;
-        }
-
-        .close-btn {
-            display: none;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (min-width: 600px) {
-            #answers {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .nav-menu {
-                display: flex;
-                flex-direction: column;
-                position: fixed;
-                top: 0;
-                right: 0;
-                width: 80%;
-                max-width: 300px;
-                height: 100vh;
-                background: var(--dark);
-                z-index: 1000;
-                transform: translateX(100%);
-                transition: transform 0.3s ease-in-out;
-                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
-            }
-
-            .main-nav.show .nav-menu {
-                transform: translateX(0);
-            }
-
-            .nav-menu a {
-                font-size: 1.2rem;
-                padding: 20px;
-                border-bottom: 1px solid var(--gray);
-            }
-
-            .close-btn {
-                display: block;
-                color: var(--light);
-                font-size: 2rem;
-                position: absolute;
-                top: 15px;
-                right: 20px;
-                background: none;
-                border: none;
-                cursor: pointer;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .content-box {
-                padding: 25px;
-            }
-
-            h1,
-            .section-title {
-                font-size: 1.8rem;
-            }
-
-            #question-text {
-                font-size: 1.4rem;
-            }
-
-            #result-character {
-                font-size: 1.8rem;
-            }
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 60px;
-            padding: 30px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        footer a {
-            color: var(--gray);
-            text-decoration: none;
-            margin: 0 10px;
-        }
-
-        footer a:hover {
-            color: var(--secondary);
-        }
+    footer a:hover {
+    color: var(--secondary);
+    }
     </style>
 </head>
 
 <body>
     <div class="container">
         <header>
-            <a href="index.html" class="logo-container">
-                <img src="logo.png" alt="PickMyBinge Logo">
+            <a href="/" class="logo-container">
+                <img src="/logo.png" alt="PickMyBinge Logo">
                 <span class="brand-name">PickMyBinge</span>
             </a>
-            <nav class="main-nav">
-                <button class="menu-btn"><i class="fas fa-bars"></i></button>
-                <div class="nav-menu">
-                    <button class="close-btn">&times;</button>
-
-                    <a href="https://www.pickmybinge.com/"><i class="fas fa-home"></i> Home</a>
-
-                    <a href="cringe.html"><i class="fas fa-ghost"></i> Worst Movies</a>
-                    <a href="quiz.html"><i class="fas fa-question-circle"></i> Superhero Quiz</a>
+            <nav class="main-nav" id="main-nav">
+                <button class="menu-btn" id="menu-btn"><i class="fas fa-bars"></i></button>
+                <div class="nav-menu" id="nav-menu">
+                    <button class="close-btn" id="close-btn"><i class="fas fa-times"></i></button>
+                    <a href="/"><i class="fas fa-home"></i> Home</a>
+                    <a href="/cringe.html"><i class="fas fa-ghost"></i> Worst Movies</a>
+                    <a href="/quiz.html" class="active-nav"><i class="fas fa-question-circle"></i> Superhero Quiz</a>
                     <a href="/blog.html"><i class="fas fa-newspaper"></i> Blog</a>
                 </div>
             </nav>
