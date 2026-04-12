@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { generateSitemap } from './generate-sitemap.js';
 
 /**
  * Autonomous Blog Generation Pipeline
@@ -141,6 +142,7 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
         }
 
         console.log(`Successfully published: ${fileName}`);
+        generateSitemap();
         return true;
     } catch (error) { console.error('Pipeline failed:', error.message); return false; }
 }

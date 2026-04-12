@@ -6,7 +6,7 @@ const PUBLIC_DIR = path.join(process.cwd(), 'public');
 const BLOG_DIR = path.join(process.cwd(), 'public/content/blogs');
 const OUTPUT_FILE = path.join(PUBLIC_DIR, 'sitemap.xml');
 
-function generateSitemap() {
+export function generateSitemap() {
     console.log('Generating sitemap...');
 
     const pages = [
@@ -21,7 +21,7 @@ function generateSitemap() {
 
     // Add blog posts
     if (fs.existsSync(BLOG_DIR)) {
-        const blogFiles = fs.readdirSync(BLOG_DIR).filter(f => f.endsWith('.json'));
+        const blogFiles = fs.readdirSync(BLOG_DIR).filter(f => f.endsWith('.json') && f !== 'manifest.json');
         blogFiles.forEach(file => {
             const slug = file.replace('.json', '');
             pages.push({
@@ -46,4 +46,7 @@ ${pages.map(page => `  <url>
     console.log(`Sitemap generated successfully at ${OUTPUT_FILE}`);
 }
 
-generateSitemap();
+// Run if called directly
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('generate-sitemap.js')) {
+    generateSitemap();
+}
