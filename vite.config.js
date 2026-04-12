@@ -17,5 +17,9 @@ export default defineConfig({
         privacy: resolve(__dirname, 'privacy.html'),
       }
     }
+  },
+  server: {
+    port: 5173,
+    strictPort: true
   }
 })
