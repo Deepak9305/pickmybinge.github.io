@@ -27,20 +27,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: main
 
-      - name: Prepare static files
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build site
+        env:
+          VITE_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        run: npm run build
+
+      - name: Post-build Patching
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-          VITE_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
         run: |
-          mkdir -p dist
-          cp index.html cringe.html quiz.html contact.html terms.html privacy.html blog.html dist/
-          cp -f robots.txt sitemap.xml dist/ 2>/dev/null || true
-          cp -r public/. dist/
-          # Substitute TMDB key placeholder in HTML files
-          sed -i "s|__TMDB_API_KEY__|${TMDB_API_KEY}|g" dist/index.html dist/cringe.html
+          # Inject keys into static pages that Vite just copied/bundled without replacement
+          sed -i "s|__TMDB_API_KEY__|${TMDB_API_KEY}|g" dist/cringe.html
+          # Add any other static pages here if needed
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
