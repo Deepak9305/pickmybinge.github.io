@@ -1,151 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/png" href="/logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>PickMyBinge | Find Your Next Obsession</title>
-  <meta name="description" content="The ultimate tool for movie and TV show discovery. Find your next binge with PickMyBinge." />
+  <meta name="description"
+    content="The ultimate tool for movie and TV show discovery. Find your next binge with PickMyBinge." />
+
+  <!-- Fonts and Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', 'Segoe UI', sans-serif; }
-    :root {
-      --primary: #FF5E5B; --secondary: #00CECB; --dark: #1E1E2E;
-      --light: #FDFFFC; --accent: #FFC53D; --gray: #8B8BA0;
-      --glass: rgba(255,255,255,0.05);
-    }
-    body { background: linear-gradient(135deg, var(--dark), #2D3047); color: var(--light); min-height: 100vh; line-height: 1.6; }
-    body.modal-open { overflow: hidden; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
-    /* Loader */
-    #initial-loader { position: fixed; inset: 0; background: linear-gradient(135deg, var(--dark), #2D3047); display: flex; align-items: center; justify-content: center; z-index: 9999; text-align: center; flex-direction: column; }
-    #initial-loader img { width: 90px; margin-bottom: 20px; }
-    #initial-loader i { font-size: 2.5rem; color: var(--accent); margin: 10px 0; }
-    #initial-loader p { color: var(--gray); font-size: 1.1rem; }
-
-    /* Header */
-    header { display: flex; justify-content: space-between; align-items: center; padding: 25px 0; border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; }
-    .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-    .logo-container img { height: 42px; transition: transform 0.3s ease; }
-    .logo-container:hover img { transform: scale(1.1) rotate(5deg); }
-    .brand-name { font-size: 1.7rem; font-weight: 800; color: var(--light); }
-    .menu-btn { display: none; background: none; border: none; color: var(--light); font-size: 1.5rem; cursor: pointer; padding: 5px; z-index: 101; }
-    .nav-menu { display: flex; align-items: center; gap: 5px; }
-    .nav-menu a { color: var(--gray); text-decoration: none; padding: 8px 14px; border-radius: 20px; font-weight: 500; font-size: 0.95rem; transition: all 0.3s ease; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
-    .nav-menu a:hover, .nav-menu a.active-nav { color: var(--light); background: var(--glass); }
-    @media (max-width: 768px) {
-      .menu-btn { display: block; }
-      .nav-menu { display: none; flex-direction: column; position: absolute; top: 100%; right: 0; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 15px; min-width: 220px; z-index: 100; gap: 5px; }
-      .nav-menu.open { display: flex; }
-    }
-
-    /* Hero */
-    .hero-section { text-align: center; padding: 70px 0 50px; }
-    h1 { font-size: 4rem; margin-bottom: 15px; background: linear-gradient(to right, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
-    .tagline { color: var(--gray); font-size: 1.2rem; margin-bottom: 35px; }
-    .special-features-container { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-    .special-feature-link { padding: 14px 28px; border: 1px solid rgba(255,197,61,0.3); border-radius: 50px; background: rgba(255,197,61,0.05); transition: all 0.3s ease; }
-    .special-feature-link a { color: var(--accent); text-decoration: none; font-weight: 600; }
-    .special-feature-link:hover { background: rgba(255,197,61,0.15); transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 8px 20px rgba(255,197,61,0.2); }
-
-    /* Search */
-    .search-section { max-width: 920px; margin: 0 auto; }
-    .search-container { background: var(--glass); backdrop-filter: blur(20px); padding: 35px; border-radius: 28px; margin: 30px auto; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-    .search-controls { display: flex; gap: 12px; flex-wrap: wrap; }
-    #search-input { flex-grow: 1; min-width: 180px; padding: 18px 28px; border: 1px solid rgba(255,255,255,0.1); border-radius: 50px; font-size: 1rem; background: rgba(30,30,46,0.8); color: var(--light); transition: all 0.3s ease; }
-    #search-input:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 20px rgba(0,206,203,0.25); }
-    #search-input::placeholder { color: var(--gray); }
-    #type-filter { padding: 0 22px; border: 1px solid rgba(255,255,255,0.1); border-radius: 50px; font-size: 0.95rem; background: rgba(30,30,46,0.8); color: var(--light); cursor: pointer; }
-    #search-btn { padding: 0 35px; height: 58px; border: none; border-radius: 50px; background: linear-gradient(135deg, var(--primary), #d94645); color: white; font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(255,94,91,0.3); white-space: nowrap; }
-    #search-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(255,94,91,0.4); }
-
-    /* Bubbles */
-    .recommendation-bubbles { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 25px 0 45px; }
-    .bubble { padding: 12px 24px; border-radius: 50px; background: var(--glass); border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.3s ease; font-weight: 500; font-size: 0.95rem; }
-    .bubble:hover { transform: translateY(-4px); background: rgba(255,255,255,0.12); }
-    .bubble.active { background: linear-gradient(135deg, rgba(255,197,61,0.3), rgba(255,197,61,0.1)); color: var(--accent); border-color: var(--accent); font-weight: 700; }
-
-    /* Cards */
-    .section-title { font-size: 2.2rem; margin-bottom: 30px; font-weight: 800; letter-spacing: -0.5px; }
-    .recommendation-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
-    .card { background: var(--glass); backdrop-filter: blur(10px); border-radius: 22px; overflow: hidden; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 10px 30px rgba(0,0,0,0.3); cursor: pointer; border: 1px solid rgba(255,255,255,0.05); padding: 0; text-align: left; width: 100%; }
-    .card:hover { transform: translateY(-10px) scale(1.02); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-    .card-header { position: relative; overflow: hidden; }
-    .poster { width: 100%; height: 400px; object-fit: cover; display: block; transition: transform 0.5s ease; }
-    .card:hover .poster { transform: scale(1.05); }
-    .type-badge { position: absolute; top: 15px; right: 15px; padding: 6px 14px; border-radius: 50px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-    .movie-type { background: var(--primary); }
-    .tv-type { background: var(--secondary); color: #000; }
-    .info { padding: 22px; }
-    .title { font-size: 1.3rem; margin-bottom: 8px; font-weight: 700; color: var(--light); }
-    .year { color: var(--accent); font-size: 0.95rem; font-weight: 600; }
-    .details { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
-    .rating { background: rgba(0,206,203,0.15); padding: 5px 13px; border-radius: 50px; color: var(--secondary); display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.9rem; }
-    .no-results { text-align: center; padding: 50px; color: var(--gray); }
-    .no-results h3 { font-size: 1.5rem; margin-bottom: 10px; }
-    .load-more { display: block; margin: 35px auto 0; padding: 14px 40px; background: var(--glass); color: var(--light); border: 1px solid rgba(255,255,255,0.2); border-radius: 50px; cursor: pointer; transition: all 0.3s ease; font-size: 1rem; font-weight: 600; }
-    .load-more:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
-
-    /* Blog */
-    .blog-section { padding: 70px 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 50px; }
-    .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
-    .blog-card { background: rgba(255,255,255,0.03); border-radius: 18px; padding: 28px; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
-    .blog-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-4px); border-color: var(--secondary); }
-    .blog-date { color: var(--gray); font-size: 0.85rem; margin-bottom: 12px; display: block; }
-    .blog-title { font-size: 1.4rem; margin-bottom: 12px; color: var(--light); font-weight: 700; }
-    .blog-excerpt { color: var(--gray); font-size: 0.95rem; margin-bottom: 18px; line-height: 1.6; }
-    .blog-read-more { color: var(--secondary); text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 7px; }
-    .blog-read-more:hover { text-decoration: underline; }
-
-    /* Static section */
-    .static-content-section { margin: 60px 0; padding: 35px; background: var(--glass); border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); }
-    .static-content-section h2 { font-size: 1.8rem; margin-bottom: 15px; color: var(--accent); }
-    .static-content-section p { color: var(--gray); line-height: 1.8; }
-
-    /* Footer */
-    footer { text-align: center; margin-top: 80px; padding: 50px 0; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); }
-    footer p { color: var(--gray); margin-bottom: 20px; }
-    footer nav { display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; }
-    footer a { color: var(--gray); text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
-    footer a:hover { color: var(--light); }
-
-    /* Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(15px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.show { display: flex; }
-    .modal { background: #161625; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 880px; max-height: 92vh; border-radius: 28px; overflow-y: auto; position: relative; box-shadow: 0 40px 100px rgba(0,0,0,0.8); }
-    .modal-close { font-size: 2.2rem; color: #fff; position: absolute; top: 18px; right: 25px; cursor: pointer; z-index: 10; opacity: 0.6; transition: opacity 0.3s; line-height: 1; }
-    .modal-close:hover { opacity: 1; }
-    .modal-trailer { width: 100%; aspect-ratio: 16/9; display: block; border-radius: 28px 28px 0 0; border: none; }
-    .no-trailer { padding: 80px 20px; text-align: center; color: var(--gray); font-size: 1.1rem; }
-    .modal-body { padding: 30px; }
-    .modal-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; }
-    .modal-genres { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-    .genre-tag { padding: 5px 14px; background: rgba(255,255,255,0.08); border-radius: 20px; font-size: 0.85rem; color: var(--gray); }
-    .modal-overview { color: rgba(255,255,255,0.8); line-height: 1.7; margin-bottom: 20px; font-size: 1rem; }
-    .tmdb-link { display: inline-flex; align-items: center; gap: 8px; color: var(--secondary); text-decoration: none; font-weight: 700; border: 1px solid var(--secondary); padding: 10px 20px; border-radius: 50px; transition: all 0.3s ease; }
-    .tmdb-link:hover { background: rgba(0,206,203,0.15); }
-    #modal-loader { padding: 80px; text-align: center; color: var(--gray); font-size: 1.5rem; }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      h1 { font-size: 2.8rem; }
-      .search-container { padding: 22px; }
-      .search-controls { flex-direction: column; }
-      #search-btn { justify-content: center; height: 52px; }
-      #type-filter { height: 52px; }
-    }
-    @media (max-width: 480px) {
-      h1 { font-size: 2.2rem; }
-      .section-title { font-size: 1.8rem; }
-      .recommendation-cards { grid-template-columns: 1fr; }
-    }
-  </style>
+  <!-- Global Styles -->
+  <link rel="stylesheet" href="/global.css" />
 </head>
+
 <body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 
   <!-- Initial Loader -->
   <div id="initial-loader">
@@ -233,7 +112,9 @@
 
         <section class="static-content-section">
           <h2>Discover Recommendations for Every Mood</h2>
-          <p>Whether you're looking for a laugh-out-loud comedy, a high-octane action blockbuster, or an addictive Korean drama, PickMyBinge has you covered. Our smart engine filters thousands of titles to bring you the best, top-rated content you can watch right now. Stop scrolling and start watching!</p>
+          <p>Whether you're looking for a laugh-out-loud comedy, a high-octane action blockbuster, or an addictive
+            Korean drama, PickMyBinge has you covered. Our smart engine filters thousands of titles to bring you the
+            best, top-rated content you can watch right now. Stop scrolling and start watching!</p>
         </section>
       </main>
 
@@ -273,14 +154,14 @@
     const PER_LOAD = 8;
 
     const genreMappings = {
-      comedy:    { movie: '35',    tv: '35'    },
-      action:    { movie: '28',    tv: '10759' },
-      drama:     { movie: '18',    tv: '18'    },
-      'sci-fi':  { movie: '878',   tv: '10765' },
-      thriller:  { movie: '53',    tv: '80'    },
-      animation: { movie: '16',    tv: '16'    },
-      horror:    { movie: '27',    tv: '99'    },
-      romance:   { movie: '10749', tv: '10749' }
+      comedy: { movie: '35', tv: '35' },
+      action: { movie: '28', tv: '10759' },
+      drama: { movie: '18', tv: '18' },
+      'sci-fi': { movie: '878', tv: '10765' },
+      thriller: { movie: '53', tv: '80' },
+      animation: { movie: '16', tv: '16' },
+      horror: { movie: '27', tv: '99' },
+      romance: { movie: '10749', tv: '10749' }
     };
     const langMap = { korean: 'ko' };
 
@@ -364,8 +245,8 @@
       if (isNew) { page = 1; allResults = []; shownCount = 0; }
 
       const [movies, tv] = await Promise.all([
-        typeFilter !== 'tv'    ? fetchType('movie', p) : Promise.resolve([]),
-        typeFilter !== 'movie' ? fetchType('tv',    p) : Promise.resolve([])
+        typeFilter !== 'tv' ? fetchType('movie', p) : Promise.resolve([]),
+        typeFilter !== 'movie' ? fetchType('tv', p) : Promise.resolve([])
       ]);
 
       const combined = shuffle([...movies, ...tv]);
@@ -395,7 +276,7 @@
           if (langMap[f]) langs.push(langMap[f]);
         });
         if (genres.length) params.set('with_genres', genres.join(','));
-        if (langs.length)  params.set('with_original_language', langs.join('|'));
+        if (langs.length) params.set('with_original_language', langs.join('|'));
       }
 
       try {
@@ -406,7 +287,7 @@
         return (d.results || []).map(item => ({
           id: item.id, type,
           title: type === 'movie' ? item.title : item.name,
-          year:  (type === 'movie' ? item.release_date : item.first_air_date || '').slice(0, 4),
+          year: (type === 'movie' ? item.release_date : item.first_air_date || '').slice(0, 4),
           poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/300x450/2D3047/8B8BA0?text=No+Image',
           rating: (item.vote_average || 0).toFixed(1)
         }));
@@ -530,8 +411,10 @@
     }
 
     function escHtml(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
   </script>
+  >>>>>>> 126e96c690099b17f948044fb2308b9c3c520d66
 </body>
+
 </html>

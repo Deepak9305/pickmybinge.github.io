@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <title>Worst Movies of All Time | PickMyBinge</title>
-    
-    <meta name="description" content="Dare to watch? Discover the most cringeworthy, awkward, and 'so bad they're good' movies of all time. Our Cringe Finder helps you find the perfect trainwreck for your next movie night.">
-    
-    <link rel="canonical" href="https://www.pickmybinge.com/cringe.html" />
+
+    <meta name="description"
+        content="Dare to watch? Discover the most cringeworthy, awkward, and 'so bad they're good' movies of all time. Our Cringe Finder helps you find the perfect trainwreck for your next movie night.">
+
+    <link rel="canonical" href="/cringe.html" />
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="Worst Movies of All Time | PickMyBinge">
-    <meta property="og:description" content="Our Cringe Finder tool helps you discover the most hilariously bad and awkward movies ever made.">
+    <meta property="og:description"
+        content="Our Cringe Finder tool helps you discover the most hilariously bad and awkward movies ever made.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.pickmybinge.com/cringe.html">
-    <meta property="og:image" content="https://www.pickmybinge.com/social-preview-cringe.png">
+    <meta property="og:url" content="/cringe.html">
+    <meta property="og:image" content="/social-preview-cringe.png">
     <meta name="twitter:card" content="summary_large_image">
 
     <script type="application/ld+json">
@@ -26,7 +29,7 @@
         "description": "A tool to discover the lowest-rated and most cringeworthy movies of all time."
     }
     </script>
-    
+
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -55,88 +58,460 @@
       }]
     }
     </script>
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/global.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        :root { --primary: #FF5E5B; --secondary: #00CECB; --dark: #1E1E2E; --light: #FDFFFC; --accent: #FFC53D; --gray: #8B8BA0; }
-        body { background: linear-gradient(135deg, var(--dark), #2D3047); color: var(--light); min-height: 100vh; padding: 0; line-height: 1.6; }
-        body.modal-open { overflow: hidden; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        .logo-container { display: flex; align-items: center; gap: 15px; text-decoration: none; }
-        .logo-container img { height: 40px; }
-        .logo-container .brand-name { font-size: 1.5rem; font-weight: bold; color: var(--light); }
-        .hero-section { text-align: center; padding: 40px 0; }
-        h1 { font-size: 3.5rem; margin-bottom: 10px; background: linear-gradient(to right, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(255, 197, 61, 0.2); }
-        .tagline { color: var(--gray); font-size: 1.1rem; }
-        .recommendation-bubbles { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin: 20px 0 40px; }
-        .bubble { padding: 12px 25px; border-radius: 30px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: all 0.2s ease-in-out; }
-        .bubble:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.1); }
-        .bubble.active { background: rgba(255, 94, 91, 0.2); color: var(--primary); border-color: var(--primary); font-weight: bold; }
-        .section-title { font-size: 2rem; margin-bottom: 25px; }
-        .recommendation-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
-        .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 15px; overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; border: none; padding: 0;}
-        .card:hover { transform: translateY(-8px); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
-        .poster { width: 100%; height: 380px; object-fit: cover; display: block; }
-        .info { padding: 20px; text-align: left; }
-        .title { font-size: 1.3rem; margin-bottom: 8px; }
-        .year { color: var(--accent); font-size: 0.9rem; }
-        .load-more { margin: 30px auto; padding: 12px 30px; background: rgba(255, 255, 255, 0.1); color: var(--light); border-radius: 25px; cursor: pointer; display: none; }
-        footer { text-align: center; margin-top: 60px; padding: 30px 0; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-        footer a { color: var(--gray); text-decoration: none; margin: 0 10px; }
-        footer a:hover { color: var(--secondary); }
-        .no-results { text-align: center; margin: 40px 0; display: none; }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-main);
+        }
+
+
+        body {
+            background: linear-gradient(135deg, var(--dark), #2D3047);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+
+        .logo-container img {
+            height: 40px;
+        }
+
+        .logo-container .brand-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--light);
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(255, 197, 61, 0.2);
+        }
+
+        .tagline {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .recommendation-bubbles {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0 40px;
+        }
+
+        .bubble {
+            padding: 12px 25px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .bubble:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .bubble.active {
+            background: rgba(255, 94, 91, 0.2);
+            color: var(--primary);
+            border-color: var(--primary);
+            font-weight: bold;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 25px;
+        }
+
+        .recommendation-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            border: none;
+            padding: 0;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .poster {
+            width: 100%;
+            height: 380px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .info {
+            padding: 20px;
+            text-align: left;
+        }
+
+        .title {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .year {
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .load-more {
+            margin: 30px auto;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            border-radius: 25px;
+            cursor: pointer;
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        footer a {
+            color: var(--gray);
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        footer a:hover {
+            color: var(--secondary);
+        }
+
+        .no-results {
+            text-align: center;
+            margin: 40px 0;
+            display: none;
+        }
+
         /* Menu Styles */
-        .main-nav { position: relative; }
-        .menu-btn { background: none; border: none; color: var(--light); font-size: 1.5rem; cursor: pointer; z-index: 1001; }
-        .nav-menu { display: none; position: absolute; right: 0; top: calc(100% + 10px); background-color: #2D3047; min-width: 220px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 100; border-radius: 10px; overflow: hidden; animation: slideDown 0.3s ease-out; }
-        .nav-menu a { color: var(--light); padding: 15px 20px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-        .nav-menu a i { width: 20px; text-align: center; }
-        .nav-menu a:hover { background-color: var(--primary); }
-        .main-nav.show .nav-menu { display: block; }
-        .close-btn { display: none; }
-        
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .main-nav {
+            position: relative;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--light);
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .nav-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            background-color: #2D3047;
+            min-width: 220px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            border-radius: 10px;
+            overflow: hidden;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .nav-menu a {
+            color: var(--light);
+            padding: 15px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-menu a i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-menu a:hover {
+            background-color: var(--primary);
+        }
+
+        .main-nav.show .nav-menu {
+            display: block;
+        }
+
+        .close-btn {
+            display: none;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         /* Modal Styles */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; align-items: center; justify-content: center; animation: fadeInModal 0.3s ease-out; }
-        .modal-overlay.show { display: flex; }
-        .modal { background: var(--dark); border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 800px; max-height: 90vh; border-radius: 15px; overflow-y: auto; animation: slideDownModal 0.4s ease-out; }
-        .modal-close { font-size: 2.5rem; color: var(--gray); position: absolute; top: 15px; right: 25px; cursor: pointer; }
-        .modal-header { position: relative; padding-top: 56.25%; background-color: #000; }
-        .modal-trailer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
-        .modal-body { padding: 30px; }
-        .modal-title { font-size: 2.5rem; margin-bottom: 10px; }
-        .modal-genres { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
-        .genre-tag { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
-        .modal-overview { color: var(--gray); line-height: 1.8; }
-        .tmdb-link { color: var(--secondary); display: inline-block; margin-top: 20px; font-weight: bold; }
-        #modal-loader { display: flex; justify-content: center; align-items: center; min-height: 400px; color: var(--accent); font-size: 1.5rem;}
-        #modal-content { display: none; }
-        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideDownModal { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInModal 0.3s ease-out;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--dark);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: 15px;
+            overflow-y: auto;
+            animation: slideDownModal 0.4s ease-out;
+        }
+
+        .modal-close {
+            font-size: 2.5rem;
+            color: var(--gray);
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            cursor: pointer;
+        }
+
+        .modal-header {
+            position: relative;
+            padding-top: 56.25%;
+            background-color: #000;
+        }
+
+        .modal-trailer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .modal-genres {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .genre-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .modal-overview {
+            color: var(--gray);
+            line-height: 1.8;
+        }
+
+        .tmdb-link {
+            color: var(--secondary);
+            display: inline-block;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        #modal-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+
+        #modal-content {
+            display: none;
+        }
+
+        @keyframes fadeInModal {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDownModal {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         @media (max-width: 768px) {
-            h1 { font-size: 2.8rem; }
-            .nav-menu { display: flex; flex-direction: column; position: fixed; top: 0; right: 0; width: 80%; max-width: 300px; height: 100vh; z-index: 1000; transform: translateX(100%); transition: transform 0.3s ease-in-out; box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
-            .main-nav.show .nav-menu { transform: translateX(0); }
-            .nav-menu a { font-size: 1.2rem; padding: 20px; border-bottom: 1px solid var(--gray); }
-            .close-btn { display: block; color: var(--light); font-size: 2rem; position: absolute; top: 15px; right: 20px; background: none; border: none; cursor: pointer; }
-            .modal-title { font-size: 1.8rem; }
+            h1 {
+                font-size: 2.8rem;
+            }
+
+            .nav-menu {
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                top: 0;
+                right: 0;
+                width: 80%;
+                max-width: 300px;
+                height: 100vh;
+                z-index: 1000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease-in-out;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+            }
+
+            .main-nav.show .nav-menu {
+                transform: translateX(0);
+            }
+
+            .nav-menu a {
+                font-size: 1.2rem;
+                padding: 20px;
+                border-bottom: 1px solid var(--gray);
+            }
+
+            .close-btn {
+                display: block;
+                color: var(--light);
+                font-size: 2rem;
+                position: absolute;
+                top: 15px;
+                right: 20px;
+                background: none;
+                border: none;
+                cursor: pointer;
+            }
+
+            .modal-title {
+                font-size: 1.8rem;
+            }
         }
 
         @media (max-width: 600px) {
-            body { padding: 0 10px; }
-            .container { padding: 0 10px; }
-            h1 { font-size: 2.2rem; }
-            .hero-section { padding: 20px 0; }
-            .section-title { font-size: 1.5rem; }
-            .bubble { padding: 10px 18px; font-size: 0.9rem; }
+            body {
+                padding: 0 10px;
+            }
+
+            .container {
+                padding: 0 10px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero-section {
+                padding: 20px 0;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .bubble {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -144,18 +519,20 @@
                 <img src="/logo.png" alt="PickMyBinge Logo">
                 <span class="brand-name">PickMyBinge</span>
             </a>
-           <nav class="main-nav">
-    <button class="menu-btn"><i class="fas fa-bars"></i></button>
-    <div class="nav-menu">
-        <button class="close-btn">&times;</button>
-        
-        <a href="/"><i class="fas fa-home"></i> Home</a>
+            <nav class="main-nav">
+                <button class="menu-btn"><i class="fas fa-bars"></i></button>
+                <div class="nav-menu">
+                    <button class="close-btn">&times;</button>
 
-        <a href="cringe.html"><i class="fas fa-ghost"></i> Worst Movies</a>
-        <a href="quiz.html"><i class="fas fa-question-circle"></i> Superhero Quiz</a>
-        <a href="/blog.html"><i class="fas fa-newspaper"></i> Blog</a>
-    </div>
-</nav>
+                    <a href="/"><i class="fas fa-home"></i> Home</a>
+
+                    <a href="https://www.pickmybinge.com/"><i class="fas fa-home"></i> Home</a>
+
+                    <a href="cringe.html"><i class="fas fa-ghost"></i> Worst Movies</a>
+                    <a href="quiz.html"><i class="fas fa-question-circle"></i> Superhero Quiz</a>
+                    <a href="/blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+                </div>
+            </nav>
         </header>
 
         <div class="hero-section">
@@ -174,21 +551,25 @@
                 <div class="bubble" data-genre="10751" role="button">👨‍👩‍👧‍👦 Bad Family Films</div>
                 <div class="bubble" data-genre="10749" role="button">💔 Bad Romance</div>
             </div>
-        
+
             <section class="results-section" id="results-section" aria-labelledby="results-title">
                 <h2 class="section-title" id="results-title">Our Worst Movie Picks</h2>
                 <div class="recommendation-cards" id="results" role="list" aria-live="polite"></div>
                 <button class="load-more" id="load-more">Load More</button>
             </section>
-        
-            <div class="no-results" id="no-results"><h3>No Movies Found!</h3><p>We couldn't find any bad movies for this category. Please try another one.</p></div>
+
+            <div class="no-results" id="no-results">
+                <h3>No Movies Found!</h3>
+                <p>We couldn't find any bad movies for this category. Please try another one.</p>
+            </div>
         </main>
-        
+
         <footer>
-             <p>PickMyBinge &copy; 2025</p>
-             <div style="margin-top: 20px; text-align: center;">
+            <p>PickMyBinge &copy; 2025</p>
+            <div style="margin-top: 20px; text-align: center;">
                 <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">
-                    <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-59e852f8194f928695ada4f72d5fe9787b282d8d85f76f363d6b4bf8d9f03dcb.svg" alt="The Movie Database API" width="100">
+                    <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-59e852f8194f928695ada4f72d5fe9787b282d8d85f76f363d6b4bf8d9f03dcb.svg"
+                        alt="The Movie Database API" width="100">
                 </a>
                 <p style="font-size: 0.8rem; color: var(--gray); margin-top: 5px;">
                     This product uses the TMDB API but is not endorsed or certified by TMDB.
@@ -201,7 +582,7 @@
             </nav>
         </footer>
     </div>
-    
+
     <div class="modal-overlay" id="details-modal">
         <div class="modal">
             <span class="modal-close" id="modal-close-btn">&times;</span>
@@ -214,110 +595,111 @@
                     <h2 class="modal-title" id="modal-title"></h2>
                     <div class="modal-genres" id="modal-genres"></div>
                     <p class="modal-overview" id="modal-overview"></p>
-                    <a id="modal-tmdb-link" class="tmdb-link" href="#" target="_blank" rel="noopener noreferrer">View full details on TMDB</a>
+                    <a id="modal-tmdb-link" class="tmdb-link" href="#" target="_blank" rel="noopener noreferrer">View
+                        full details on TMDB</a>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const resultsContainer = document.getElementById('results');
-        const bubbles = document.querySelectorAll('.bubble');
-        const noResultsElement = document.getElementById('no-results');
-        const loadMoreBtn = document.getElementById('load-more');
-        const resultsTitle = document.getElementById('results-title');
-        const TMDB_API_KEY = '__TMDB_API_KEY__';
-        
-        const modalOverlay = document.getElementById('details-modal');
-        const modalCloseBtn = document.getElementById('modal-close-btn');
-        const modalLoader = document.getElementById('modal-loader');
-        const modalContent = document.getElementById('modal-content');
+        document.addEventListener('DOMContentLoaded', function () {
+            const resultsContainer = document.getElementById('results');
+            const bubbles = document.querySelectorAll('.bubble');
+            const noResultsElement = document.getElementById('no-results');
+            const loadMoreBtn = document.getElementById('load-more');
+            const resultsTitle = document.getElementById('results-title');
+            const TMDB_API_KEY = '__TMDB_API_KEY__';
 
-        let allFetchedMovies = [];
-        let displayedCount = 0;
-        const RESULTS_PER_LOAD = 8;
-        let currentGenre = '';
-        let isLoading = false;
+            const modalOverlay = document.getElementById('details-modal');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const modalLoader = document.getElementById('modal-loader');
+            const modalContent = document.getElementById('modal-content');
 
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
+            let allFetchedMovies = [];
+            let displayedCount = 0;
+            const RESULTS_PER_LOAD = 8;
+            let currentGenre = '';
+            let isLoading = false;
 
-        async function fetchCringeMovies() {
-            if (isLoading) return;
-            isLoading = true;
-            allFetchedMovies = [];
-            displayedCount = 0;
-            resultsContainer.innerHTML = '';
-            noResultsElement.style.display = 'none';
-            loadMoreBtn.style.display = 'none';
-
-            const TMDB_API_URL = 'https://api.themoviedb.org/3/discover/movie';
-            const pagePromises = [];
-            
-            const baseParams = {
-                api_key: TMDB_API_KEY,
-                'vote_count.gte': '50',
-                'sort_by': 'vote_average.asc',
-                'vote_average.lte': '5.5',
-                'include_adult': 'false'
-            };
-
-            if (currentGenre) {
-                const activeBubble = document.querySelector('.bubble.active');
-                const genreName = activeBubble.textContent.replace(/^[^\w\s]+/, '').trim();
-                resultsTitle.textContent = `Worst ${genreName} Films`;
-                baseParams['with_genres'] = currentGenre;
-            } else {
-                const currentYear = new Date().getFullYear();
-                const randomYear = Math.floor(Math.random() * (currentYear - 1980 + 1)) + 1980;
-                resultsTitle.textContent = `Worst Movies from ${randomYear}`;
-                baseParams['primary_release_year'] = randomYear;
-            }
-
-            for (let i = 1; i <= 3; i++) {
-                const params = new URLSearchParams({ ...baseParams, page: i });
-                pagePromises.push(fetch(`${TMDB_API_URL}?${params.toString()}`).then(res => res.json()));
-            }
-
-            try {
-                const pageResults = await Promise.all(pagePromises);
-                let combinedResults = [];
-                pageResults.forEach(pageData => {
-                    if (pageData && pageData.results) {
-                        combinedResults = combinedResults.concat(pageData.results);
-                    }
-                });
-
-                const uniqueResults = Array.from(new Map(combinedResults.map(item => [item.id, item])).values());
-                allFetchedMovies = shuffleArray(uniqueResults);
-
-                if (allFetchedMovies.length === 0) {
-                    noResultsElement.style.display = 'block';
-                } else {
-                    displayMoreResults();
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
                 }
-            } catch (error) {
-                console.error('Failed to fetch data:', error);
-                noResultsElement.style.display = 'block';
-            } finally {
-                isLoading = false;
+                return array;
             }
-        }
 
-        function displayMoreResults() {
-            const moviesToShow = allFetchedMovies.slice(displayedCount, displayedCount + RESULTS_PER_LOAD);
-            moviesToShow.forEach((item) => {
-                const card = document.createElement('button');
-                card.className = 'card';
-                card.dataset.id = item.id;
-                card.dataset.type = 'movie';
-                card.innerHTML = `
+            async function fetchCringeMovies() {
+                if (isLoading) return;
+                isLoading = true;
+                allFetchedMovies = [];
+                displayedCount = 0;
+                resultsContainer.innerHTML = '';
+                noResultsElement.style.display = 'none';
+                loadMoreBtn.style.display = 'none';
+
+                const TMDB_API_URL = 'https://api.themoviedb.org/3/discover/movie';
+                const pagePromises = [];
+
+                const baseParams = {
+                    api_key: TMDB_API_KEY,
+                    'vote_count.gte': '50',
+                    'sort_by': 'vote_average.asc',
+                    'vote_average.lte': '5.5',
+                    'include_adult': 'false'
+                };
+
+                if (currentGenre) {
+                    const activeBubble = document.querySelector('.bubble.active');
+                    const genreName = activeBubble.textContent.replace(/^[^\w\s]+/, '').trim();
+                    resultsTitle.textContent = `Worst ${genreName} Films`;
+                    baseParams['with_genres'] = currentGenre;
+                } else {
+                    const currentYear = new Date().getFullYear();
+                    const randomYear = Math.floor(Math.random() * (currentYear - 1980 + 1)) + 1980;
+                    resultsTitle.textContent = `Worst Movies from ${randomYear}`;
+                    baseParams['primary_release_year'] = randomYear;
+                }
+
+                for (let i = 1; i <= 3; i++) {
+                    const params = new URLSearchParams({ ...baseParams, page: i });
+                    pagePromises.push(fetch(`${TMDB_API_URL}?${params.toString()}`).then(res => res.json()));
+                }
+
+                try {
+                    const pageResults = await Promise.all(pagePromises);
+                    let combinedResults = [];
+                    pageResults.forEach(pageData => {
+                        if (pageData && pageData.results) {
+                            combinedResults = combinedResults.concat(pageData.results);
+                        }
+                    });
+
+                    const uniqueResults = Array.from(new Map(combinedResults.map(item => [item.id, item])).values());
+                    allFetchedMovies = shuffleArray(uniqueResults);
+
+                    if (allFetchedMovies.length === 0) {
+                        noResultsElement.style.display = 'block';
+                    } else {
+                        displayMoreResults();
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch data:', error);
+                    noResultsElement.style.display = 'block';
+                } finally {
+                    isLoading = false;
+                }
+            }
+
+            function displayMoreResults() {
+                const moviesToShow = allFetchedMovies.slice(displayedCount, displayedCount + RESULTS_PER_LOAD);
+                moviesToShow.forEach((item) => {
+                    const card = document.createElement('button');
+                    card.className = 'card';
+                    card.dataset.id = item.id;
+                    card.dataset.type = 'movie';
+                    card.innerHTML = `
                     <div class="poster">
                         <img src="${item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/300x450/2D3047/8B8BA0?text=No+Image'}" alt="Poster for ${item.title}" class="poster" loading="lazy">
                     </div>
@@ -325,116 +707,116 @@
                         <h3 class="title">${item.title}</h3>
                         <p class="year">${(item.release_date || '').substring(0, 4) || 'N/A'}</p>
                     </div>`;
-                resultsContainer.appendChild(card);
-            });
-
-            displayedCount += moviesToShow.length;
-            if (displayedCount < allFetchedMovies.length) {
-                loadMoreBtn.style.display = 'block';
-            } else {
-                loadMoreBtn.style.display = 'none';
-            }
-        }
-
-        loadMoreBtn.addEventListener('click', displayMoreResults);
-
-        bubbles.forEach(bubble => {
-            bubble.addEventListener('click', () => {
-                bubbles.forEach(b => b.classList.remove('active'));
-                bubble.classList.add('active');
-                currentGenre = bubble.dataset.genre;
-                fetchCringeMovies();
-            });
-        });
-
-        async function openDetailsModal(id, type) {
-            modalOverlay.classList.add('show');
-            document.body.classList.add('modal-open');
-            modalLoader.style.display = 'flex';
-            modalContent.style.display = 'none';
-
-            const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
-            
-            try {
-                const response = await fetch(detailsUrl);
-                const data = await response.json();
-                document.getElementById('modal-title').textContent = data.name || data.title;
-                document.getElementById('modal-overview').textContent = data.overview || "No summary available.";
-                
-                const genresContainer = document.getElementById('modal-genres');
-                genresContainer.innerHTML = '';
-                data.genres.slice(0, 4).forEach(genre => {
-                    const genreTag = document.createElement('span');
-                    genreTag.className = 'genre-tag';
-                    genreTag.textContent = genre.name;
-                    genresContainer.appendChild(genreTag);
+                    resultsContainer.appendChild(card);
                 });
 
-                const trailer = data.videos.results.find(video => video.site === 'YouTube' && video.type === 'Trailer');
-                const trailerFrame = document.getElementById('modal-trailer');
-                if (trailer) {
-                    trailerFrame.src = `https://www.youtube.com/embed/${trailer.key}`;
-                    trailerFrame.parentElement.style.display = 'block';
+                displayedCount += moviesToShow.length;
+                if (displayedCount < allFetchedMovies.length) {
+                    loadMoreBtn.style.display = 'block';
                 } else {
-                    trailerFrame.parentElement.style.display = 'none';
+                    loadMoreBtn.style.display = 'none';
                 }
-
-                document.getElementById('modal-tmdb-link').href = `https://www.themoviedb.org/${type}/${id}`;
-                modalLoader.style.display = 'none';
-                modalContent.style.display = 'block';
-
-            } catch (error) {
-                console.error("Failed to fetch details:", error);
-                closeDetailsModal();
             }
-        }
 
-        function closeDetailsModal() {
-            modalOverlay.classList.remove('show');
-            document.body.classList.remove('modal-open');
-            document.getElementById('modal-trailer').src = '';
-        }
+            loadMoreBtn.addEventListener('click', displayMoreResults);
 
-        resultsContainer.addEventListener('click', (e) => {
-            const card = e.target.closest('.card');
-            if (card) {
-                const id = card.dataset.id;
-                const type = card.dataset.type;
-                openDetailsModal(id, type);
-            }
-        });
-
-        modalCloseBtn.addEventListener('click', closeDetailsModal);
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                closeDetailsModal();
-            }
-        });
-
-        const menuBtn = document.querySelector('.menu-btn');
-        const closeBtn = document.querySelector('.close-btn');
-        const mainNav = document.querySelector('.main-nav');
-
-        if(menuBtn) {
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                mainNav.classList.toggle('show');
+            bubbles.forEach(bubble => {
+                bubble.addEventListener('click', () => {
+                    bubbles.forEach(b => b.classList.remove('active'));
+                    bubble.classList.add('active');
+                    currentGenre = bubble.dataset.genre;
+                    fetchCringeMovies();
+                });
             });
-        }
-        if(closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                mainNav.classList.remove('show');
-            });
-        }
-        window.addEventListener('click', (e) => {
-            if (mainNav && !mainNav.contains(e.target)) {
-                mainNav.classList.remove('show');
-            }
-        });
 
-        fetchCringeMovies();
-    });
+            async function openDetailsModal(id, type) {
+                modalOverlay.classList.add('show');
+                document.body.classList.add('modal-open');
+                modalLoader.style.display = 'flex';
+                modalContent.style.display = 'none';
+
+                const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
+
+                try {
+                    const response = await fetch(detailsUrl);
+                    const data = await response.json();
+                    document.getElementById('modal-title').textContent = data.name || data.title;
+                    document.getElementById('modal-overview').textContent = data.overview || "No summary available.";
+
+                    const genresContainer = document.getElementById('modal-genres');
+                    genresContainer.innerHTML = '';
+                    data.genres.slice(0, 4).forEach(genre => {
+                        const genreTag = document.createElement('span');
+                        genreTag.className = 'genre-tag';
+                        genreTag.textContent = genre.name;
+                        genresContainer.appendChild(genreTag);
+                    });
+
+                    const trailer = data.videos.results.find(video => video.site === 'YouTube' && video.type === 'Trailer');
+                    const trailerFrame = document.getElementById('modal-trailer');
+                    if (trailer) {
+                        trailerFrame.src = `https://www.youtube.com/embed/${trailer.key}`;
+                        trailerFrame.parentElement.style.display = 'block';
+                    } else {
+                        trailerFrame.parentElement.style.display = 'none';
+                    }
+
+                    document.getElementById('modal-tmdb-link').href = `https://www.themoviedb.org/${type}/${id}`;
+                    modalLoader.style.display = 'none';
+                    modalContent.style.display = 'block';
+
+                } catch (error) {
+                    console.error("Failed to fetch details:", error);
+                    closeDetailsModal();
+                }
+            }
+
+            function closeDetailsModal() {
+                modalOverlay.classList.remove('show');
+                document.body.classList.remove('modal-open');
+                document.getElementById('modal-trailer').src = '';
+            }
+
+            resultsContainer.addEventListener('click', (e) => {
+                const card = e.target.closest('.card');
+                if (card) {
+                    const id = card.dataset.id;
+                    const type = card.dataset.type;
+                    openDetailsModal(id, type);
+                }
+            });
+
+            modalCloseBtn.addEventListener('click', closeDetailsModal);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    closeDetailsModal();
+                }
+            });
+
+            const menuBtn = document.querySelector('.menu-btn');
+            const closeBtn = document.querySelector('.close-btn');
+            const mainNav = document.querySelector('.main-nav');
+
+            if (menuBtn) {
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    mainNav.classList.toggle('show');
+                });
+            }
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    mainNav.classList.remove('show');
+                });
+            }
+            window.addEventListener('click', (e) => {
+                if (mainNav && !mainNav.contains(e.target)) {
+                    mainNav.classList.remove('show');
+                }
+            });
+
+            fetchCringeMovies();
+        });
     </script>
 </body>
-</html>
 
+</html>

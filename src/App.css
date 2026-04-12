@@ -1,19 +1,8 @@
-/* Base Styles from PickMyBinge Repo */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-:root {
-    --primary: #FF5E5B;
-    --secondary: #00CECB;
-    --dark: #1E1E2E;
-    --light: #FDFFFC;
-    --accent: #FFC53D;
-    --gray: #8B8BA0;
-    --glass: rgba(255, 255, 255, 0.05);
+    font-family: var(--font-main);
 }
 
 body {
@@ -75,6 +64,7 @@ h1 {
     margin-bottom: 15px;
     background: linear-gradient(to right, var(--primary), var(--accent));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 0 30px rgba(255, 94, 91, 0.3);
     font-weight: 900;

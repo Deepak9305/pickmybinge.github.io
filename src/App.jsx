@@ -17,8 +17,7 @@ const genreMappings = {
 };
 const languageMappings = { 'korean': 'ko' };
 
-// Dynamically load all blog posts from src/content/blogs
-const blogModules = import.meta.glob('./content/blogs/*.json', { eager: true });
+// We will now fetch blogs from /blogs-index.json instead of eager globbing for better performance
 
 function App() {
     const [allFetchedResults, setAllFetchedResults] = useState([]);
@@ -59,15 +58,20 @@ function App() {
         init();
     }, []);
 
-    const loadBlogs = () => {
-        const loadedBlogs = Object.entries(blogModules).map(([path, module]) => ({
-            ...module.default,
-            id: path.split('/').pop().replace('.json', '')
-        }));
+    const loadBlogs = async () => {
+        try {
+            const res = await fetch('/blogs-index.json');
+            if (!res.ok) throw new Error("Blog index not found");
+            const loadedBlogs = await res.json();
 
-        // Sort by date descending
-        loadedBlogs.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setBlogs(loadedBlogs);
+            // Sort by date descending
+            loadedBlogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setBlogs(loadedBlogs);
+        } catch (err) {
+            console.error("Failed to load blogs:", err);
+            // Fallback or empty state
+            setBlogs([]);
+        }
     };
 
     const shuffleArray = (array) => {
@@ -397,6 +401,7 @@ function App() {
                 <nav>
                     <a href="/privacy.html">Privacy Policy</a>
                     <a href="/terms.html">Terms &amp; Conditions</a>
+
                     <a href="/contact.html">Contact Us</a>
                 </nav>
             </footer>

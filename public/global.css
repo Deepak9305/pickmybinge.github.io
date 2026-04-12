@@ -1,0 +1,26 @@
+:root {
+  --primary: #FF5E5B;
+  --secondary: #00CECB;
+  --accent: #FFC53D;
+  --dark: #1E1E2E;
+  --dark2: #2D3047;
+  --light: #FDFFFC;
+  --gray: #8B8BA0;
+  --glass: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.08);
+  --font-main: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-alt {
+  background: linear-gradient(135deg, var(--secondary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

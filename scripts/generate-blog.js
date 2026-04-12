@@ -71,11 +71,12 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
         if (!fs.existsSync(BLOG_DIR)) fs.mkdirSync(BLOG_DIR, { recursive: true });
 
         // STEP 1: FETCH REAL DATA FROM TMDB
+        const currentYear = new Date().getFullYear();
         let tmdbData;
         if (nicheHint === 'K-Dramas') {
-            tmdbData = await fetchFromTMDB('discover/tv', { 'first_air_date_year': 2024, 'with_original_language': 'ko', 'sort_by': 'popularity.desc' });
+            tmdbData = await fetchFromTMDB('discover/tv', { 'first_air_date_year': currentYear - 1, 'with_original_language': 'ko', 'sort_by': 'popularity.desc' });
         } else {
-            tmdbData = await fetchFromTMDB('discover/movie', { 'primary_release_year': 2025, 'with_genres': '878,53', 'sort_by': 'popularity.desc' });
+            tmdbData = await fetchFromTMDB('discover/movie', { 'primary_release_year': currentYear, 'with_genres': '878,53', 'sort_by': 'popularity.desc' });
         }
 
         const realContent = tmdbData.results.slice(0, 5).map(item => ({
@@ -89,21 +90,12 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
         if (realContent.length === 0) throw new Error("No content found on TMDB.");
         console.log(`Fetched ${realContent.length} titles from TMDB.`);
 
-        // STEP 2: WRITE ARTICLE (grounded in real TMDB titles)
-        const writingPrompt = `You are the Lead Editor at PickMyBinge, a top entertainment publication.
-        Write a VIRAL, high-retention feature article about these real titles: ${JSON.stringify(realContent)}.
-        Guidelines:
-        - Punchy structure (2-3 sentences max per paragraph)
-        - Include a "The PickMyBinge Verdict" section per title
-        - Include "Watch if you liked" recommendation per title
-        - Use blockquotes for memorable lines or insights
-        - Internal headers linked to TMDB URLs provided
-        - Critical analysis: directorial choices, tone, cultural significance
-        - Enthusiastic and expert voice. NO hallucinations — only use the titles provided.
-        Format in clean HTML (<p>, <h3>, <ul>, <li>, <blockquote>).
-        Output ONLY a JSON object with keys 'title', 'excerpt', and 'content'.`;
+        // STEP 2: WRITE ARTICLE
+        const writingPrompt = `You are the Lead Editor at PickMyBinge. Write a VIRAL, high-retention feature article about these titles: ${JSON.stringify(realContent)}. 
+        Guidelines: Punchy structure (2-3 sentences max per para), "The PickMyBinge Verdict" section, "Watch if you liked" recommendation, blockquotes, internal headers linked to TMDB. 
+        Enthusiastic and expert voice. Output ONLY JSON with keys 'title', 'excerpt', and 'content'.`;
 
-        const draftRaw = await callGroqWithRetry('openai/gpt-oss-120b', writingPrompt);
+        const draftRaw = await callGroqWithRetry('llama-3.1-70b-versatile', writingPrompt);
         const draft = parseJson(draftRaw);
 
         // STEP 3: HOSTILE FACT-CHECK & EDITORIAL REFINE
@@ -113,8 +105,8 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
         Remove any hallucinated titles or facts not grounded in the source data.
         Return the final polished version as a JSON object with keys 'title', 'excerpt', and 'content'. Output ONLY the JSON.`;
 
-        const finalRaw = await callGroqWithRetry('meta-llama/llama-4-scout-17b-16e-instruct', refinerPrompt);
-        const finalPost = parseJson(finalRaw);
+        const polishedRaw = await callGroqWithRetry('llama-3.1-70b-versatile', refinerPrompt);
+        const finalPost = parseJson(polishedRaw);
 
         // STEP 4: SAVE
         const date = new Date().toISOString().split('T')[0];
@@ -133,7 +125,6 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
 
         fs.writeFileSync(filePath, JSON.stringify(newPost, null, 4));
 
-        // Update manifest
         const manifestPath = path.join(BLOG_DIR, 'manifest.json');
         let manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) : [];
         if (!manifest.includes(fileName)) {
@@ -151,11 +142,12 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
 
         console.log(`Successfully published: ${fileName}`);
         return true;
-    } catch (error) {
-        console.error('CRITICAL: Pipeline failed:', error.message);
-        return false;
-    }
+    } catch (error) { console.error('Pipeline failed:', error.message); return false; }
 }
 
-const targetNiche = process.env.BLOG_NICHE || "Sci-Fi Thrillers";
-runPipeline(targetNiche);
+async function main() {
+    const targetNiche = process.env.BLOG_NICHE || "Sci-Fi Thrillers";
+    await runPipeline(targetNiche);
+}
+
+main();

@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <title>Superhero Quiz: Which Character Are You? | PickMyBinge</title>
-    
-    <meta name="description" content="Take our fun personality quiz to discover which iconic DC or Marvel character you are most like. Are you a hero, a villain, or a steadfast ally? Find out now!">
-    
-    <link rel="canonical" href="https://www.pickmybinge.com/quiz.html" />
+
+    <meta name="description"
+        content="Take our fun personality quiz to discover which iconic DC or Marvel character you are most like. Are you a hero, a villain, or a steadfast ally? Find out now!">
+
+    <link rel="canonical" href="/quiz.html" />
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="DC vs. Marvel: What Character Are You? | A Fun Quiz by PickMyBinge">
-    <meta property="og:description" content="Take our fun personality quiz to discover which iconic DC or Marvel character you are most like.">
+    <meta property="og:description"
+        content="Take our fun personality quiz to discover which iconic DC or Marvel character you are most like.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.pickmybinge.com/quiz.html">
-    <meta property="og:image" content="https://www.pickmybinge.com/social-preview-quiz.png">
+    <meta property="og:url" content="/quiz.html">
+    <meta property="og:image" content="/social-preview-quiz.png">
     <meta name="twitter:card" content="summary_large_image">
-    
+
     <!-- SEO: Added Quiz Schema -->
     <script type="application/ld+json">
     {
@@ -34,7 +37,7 @@
       }
     }
     </script>
-    
+
     <!-- SEO: Added FAQ Schema -->
     <script type="application/ld+json">
     {
@@ -66,15 +69,58 @@
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/global.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        :root { --primary: #FF5E5B; --secondary: #00CECB; --dark: #1E1E2E; --light: #FDFFFC; --accent: #FFC53D; --gray: #8B8BA0; --dc-blue: #00529B; --marvel-red: #ED1D24;}
-        body { background: linear-gradient(135deg, var(--dark), #2D3047); color: var(--light); min-height: 100vh; padding: 0; line-height: 1.6; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        .logo-container { display: flex; align-items: center; gap: 15px; text-decoration: none; }
-        .logo-container img { height: 40px; }
-        .logo-container .brand-name { font-size: 1.5rem; font-weight: bold; color: var(--light); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-main);
+        }
+
+        :root {
+            --dc-blue: #00529B;
+            --marvel-red: #ED1D24;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark), #2D3047);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+
+        .logo-container img {
+            height: 40px;
+        }
+
+        .logo-container .brand-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--light);
+        }
 
         .content-box {
             max-width: 800px;
@@ -89,20 +135,31 @@
             margin: 40px auto;
         }
 
-        #start-screen, #quiz-screen, #result-screen {
+        #start-screen,
+        #quiz-screen,
+        #result-screen {
             animation: fadeIn 0.5s ease-in-out;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        h1, .section-title {
+        h1,
+        .section-title {
             font-size: 2.5rem;
             margin-bottom: 15px;
             background: linear-gradient(to right, var(--primary), var(--accent));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -125,32 +182,46 @@
             transition: all 0.3s ease;
             text-decoration: none;
         }
+
         .btn:hover {
             transform: scale(1.05);
         }
-        
+
         #start-choices {
             display: flex;
             gap: 20px;
             justify-content: center;
             flex-wrap: wrap;
         }
-        #start-dc-btn { background-color: var(--dc-blue); }
-        #start-dc-btn:hover { box-shadow: 0 5px 15px rgba(0, 82, 155, 0.4); }
-        #start-marvel-btn { background-color: var(--marvel-red); }
-        #start-marvel-btn:hover { box-shadow: 0 5px 15px rgba(237, 29, 36, 0.4); }
+
+        #start-dc-btn {
+            background-color: var(--dc-blue);
+        }
+
+        #start-dc-btn:hover {
+            box-shadow: 0 5px 15px rgba(0, 82, 155, 0.4);
+        }
+
+        #start-marvel-btn {
+            background-color: var(--marvel-red);
+        }
+
+        #start-marvel-btn:hover {
+            box-shadow: 0 5px 15px rgba(237, 29, 36, 0.4);
+        }
 
         #question-text {
             font-size: 1.8rem;
             margin-bottom: 30px;
             color: var(--light);
         }
+
         #answers {
             display: grid;
             grid-template-columns: 1fr;
             gap: 15px;
         }
-       
+
         .answer-btn {
             width: 100%;
             padding: 20px;
@@ -164,10 +235,12 @@
             text-align: left;
             height: 100%;
         }
+
         .answer-btn:hover {
             background: rgba(255, 197, 61, 0.2);
             border-color: var(--accent);
         }
+
         #progress-text {
             margin-top: 30px;
             color: var(--gray);
@@ -182,71 +255,276 @@
             opacity: 0;
             animation: result-card-anim 0.5s 0.1s ease-out forwards;
         }
-        #result-character, #result-description, .result-reveal p {
+
+        #result-character,
+        #result-description,
+        .result-reveal p {
             opacity: 0;
             animation: result-text-anim 0.5s 0.6s ease-out forwards;
         }
-        #result-character { animation-delay: 0.8s; font-size: 2.2rem; color: var(--accent); margin-bottom: 10px; }
-        #result-description { animation-delay: 1s; font-size: 1.1rem; line-height: 1.6; }
-        
-        @keyframes result-card-anim { to { transform: scale(1); opacity: 1; } }
-        @keyframes result-text-anim { to { opacity: 1; } }
-        
-        #result-actions { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;}
-        .btn.secondary { background: var(--secondary); }
-        .btn.secondary:hover { box-shadow: 0 5px 15px rgba(0, 206, 203, 0.3); }
-        .back-link { display: block; margin-top: 20px; color: var(--gray); text-decoration: none; }
-        .back-link:hover { color: var(--secondary); }
-        
-        .blog-content { text-align: left; line-height: 1.8; }
-        .blog-content p { margin-bottom: 20px; }
 
-        .faq-container { display: flex; flex-direction: column; gap: 15px; text-align: left; }
-        .faq-item { background: rgba(0, 0, 0, 0.1); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); }
-        .faq-question { padding: 20px; font-weight: bold; cursor: pointer; position: relative; }
-        .faq-question:hover { color: var(--accent); }
-        .faq-question::after { content: '+'; position: absolute; right: 20px; font-size: 1.5rem; transition: transform 0.2s ease; }
-        .faq-item[open] .faq-question::after { transform: rotate(45deg); }
-        .faq-answer { padding: 0 20px 20px; color: var(--gray); }
-        .faq-answer p { margin-bottom: 0; }
-        #summary-section p { font-size: 1.1rem; max-width: 600px; margin-left: auto; margin-right: auto;}
+        #result-character {
+            animation-delay: 0.8s;
+            font-size: 2.2rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
 
-        .main-nav { position: relative; }
-        .menu-btn { background: none; border: none; color: var(--light); font-size: 1.5rem; cursor: pointer; z-index: 1001; }
-        .nav-menu { display: none; position: absolute; right: 0; top: calc(100% + 10px); background-color: #2D3047; min-width: 220px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 100; border-radius: 10px; overflow: hidden; animation: slideDown 0.3s ease-out; }
-        .nav-menu a { color: var(--light); padding: 15px 20px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-        .nav-menu a i { width: 20px; text-align: center; }
-        .nav-menu a:hover { background-color: var(--primary); }
-        .main-nav.show .nav-menu { display: block; }
-        .close-btn { display: none; }
-        
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        #result-description {
+            animation-delay: 1s;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        @keyframes result-card-anim {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes result-text-anim {
+            to {
+                opacity: 1;
+            }
+        }
+
+        #result-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn.secondary {
+            background: var(--secondary);
+        }
+
+        .btn.secondary:hover {
+            box-shadow: 0 5px 15px rgba(0, 206, 203, 0.3);
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            color: var(--gray);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: var(--secondary);
+        }
+
+        .blog-content {
+            text-align: left;
+            line-height: 1.8;
+        }
+
+        .blog-content p {
+            margin-bottom: 20px;
+        }
+
+        .faq-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
+        }
+
+        .faq-item {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .faq-question {
+            padding: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .faq-question:hover {
+            color: var(--accent);
+        }
+
+        .faq-question::after {
+            content: '+';
+            position: absolute;
+            right: 20px;
+            font-size: 1.5rem;
+            transition: transform 0.2s ease;
+        }
+
+        .faq-item[open] .faq-question::after {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            padding: 0 20px 20px;
+            color: var(--gray);
+        }
+
+        .faq-answer p {
+            margin-bottom: 0;
+        }
+
+        #summary-section p {
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .main-nav {
+            position: relative;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--light);
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .nav-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            background-color: #2D3047;
+            min-width: 220px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            border-radius: 10px;
+            overflow: hidden;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .nav-menu a {
+            color: var(--light);
+            padding: 15px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-menu a i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-menu a:hover {
+            background-color: var(--primary);
+        }
+
+        .main-nav.show .nav-menu {
+            display: block;
+        }
+
+        .close-btn {
+            display: none;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         @media (min-width: 600px) {
             #answers {
                 grid-template-columns: 1fr 1fr;
             }
         }
-        
+
         @media (max-width: 768px) {
-            .nav-menu { display: flex; flex-direction: column; position: fixed; top: 0; right: 0; width: 80%; max-width: 300px; height: 100vh; background: var(--dark); z-index: 1000; transform: translateX(100%); transition: transform 0.3s ease-in-out; box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
-            .main-nav.show .nav-menu { transform: translateX(0); }
-            .nav-menu a { font-size: 1.2rem; padding: 20px; border-bottom: 1px solid var(--gray); }
-            .close-btn { display: block; color: var(--light); font-size: 2rem; position: absolute; top: 15px; right: 20px; background: none; border: none; cursor: pointer; }
+            .nav-menu {
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                top: 0;
+                right: 0;
+                width: 80%;
+                max-width: 300px;
+                height: 100vh;
+                background: var(--dark);
+                z-index: 1000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease-in-out;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+            }
+
+            .main-nav.show .nav-menu {
+                transform: translateX(0);
+            }
+
+            .nav-menu a {
+                font-size: 1.2rem;
+                padding: 20px;
+                border-bottom: 1px solid var(--gray);
+            }
+
+            .close-btn {
+                display: block;
+                color: var(--light);
+                font-size: 2rem;
+                position: absolute;
+                top: 15px;
+                right: 20px;
+                background: none;
+                border: none;
+                cursor: pointer;
+            }
         }
 
         @media (max-width: 600px) {
-            .content-box { padding: 25px; }
-            h1, .section-title { font-size: 1.8rem; }
-            #question-text { font-size: 1.4rem; }
-            #result-character { font-size: 1.8rem; }
+            .content-box {
+                padding: 25px;
+            }
+
+            h1,
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            #question-text {
+                font-size: 1.4rem;
+            }
+
+            #result-character {
+                font-size: 1.8rem;
+            }
         }
-        
-        footer { text-align: center; margin-top: 60px; padding: 30px 0; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-        footer a { color: var(--gray); text-decoration: none; margin: 0 10px; }
-        footer a:hover { color: var(--secondary); }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        footer a {
+            color: var(--gray);
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        footer a:hover {
+            color: var(--secondary);
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -254,18 +532,18 @@
                 <img src="logo.png" alt="PickMyBinge Logo">
                 <span class="brand-name">PickMyBinge</span>
             </a>
-          <nav class="main-nav">
-    <button class="menu-btn"><i class="fas fa-bars"></i></button>
-    <div class="nav-menu">
-        <button class="close-btn">&times;</button>
-        
-        <a href="https://www.pickmybinge.com/"><i class="fas fa-home"></i> Home</a>
+            <nav class="main-nav">
+                <button class="menu-btn"><i class="fas fa-bars"></i></button>
+                <div class="nav-menu">
+                    <button class="close-btn">&times;</button>
 
-        <a href="cringe.html"><i class="fas fa-ghost"></i> Worst Movies</a>
-        <a href="quiz.html"><i class="fas fa-question-circle"></i> Superhero Quiz</a>
-        <a href="/blog.html"><i class="fas fa-newspaper"></i> Blog</a>
-    </div>
-</nav>
+                    <a href="https://www.pickmybinge.com/"><i class="fas fa-home"></i> Home</a>
+
+                    <a href="cringe.html"><i class="fas fa-ghost"></i> Worst Movies</a>
+                    <a href="quiz.html"><i class="fas fa-question-circle"></i> Superhero Quiz</a>
+                    <a href="/blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+                </div>
+            </nav>
         </header>
 
         <main>
@@ -304,44 +582,61 @@
 
             <!-- Blog Section -->
             <section id="blog-section" class="content-box">
-                 <h2 class="section-title">The Psychology of a Hero</h2>
+                <h2 class="section-title">The Psychology of a Hero</h2>
                 <div class="blog-content">
-                    <p>What makes a hero? This quiz explores the core of what defines the iconic characters of DC and Marvel. It's often a question of motivation. Are you driven by an unwavering sense of hope, or a burning desire for vengeance?</p>
-                    <p>Characters like <strong>Superman</strong> represent the "Hero of Hope." They are beacons of morality who believe in the inherent goodness of humanity. Their goal isn't just to stop criminals, but to inspire people to be better. In contrast, the "Hero of Vengeance," like <strong>Batman</strong> or <strong>The Wolverine</strong>, is often born from tragedy. They operate in the shadows, using fear and a strict personal code to impose justice on a world they see as corrupt.</p>
-                    <p>Neither path is inherently right or wrong, but they reveal a lot about a character's worldview. Your quiz result reflects which of these—or the many other archetypes, from chaotic villain to steadfast ally—your personality aligns with most. So, what does your result say about you?</p>
+                    <p>What makes a hero? This quiz explores the core of what defines the iconic characters of DC and
+                        Marvel. It's often a question of motivation. Are you driven by an unwavering sense of hope, or a
+                        burning desire for vengeance?</p>
+                    <p>Characters like <strong>Superman</strong> represent the "Hero of Hope." They are beacons of
+                        morality who believe in the inherent goodness of humanity. Their goal isn't just to stop
+                        criminals, but to inspire people to be better. In contrast, the "Hero of Vengeance," like
+                        <strong>Batman</strong> or <strong>The Wolverine</strong>, is often born from tragedy. They
+                        operate in the shadows, using fear and a strict personal code to impose justice on a world they
+                        see as corrupt.
+                    </p>
+                    <p>Neither path is inherently right or wrong, but they reveal a lot about a character's worldview.
+                        Your quiz result reflects which of these—or the many other archetypes, from chaotic villain to
+                        steadfast ally—your personality aligns with most. So, what does your result say about you?</p>
                 </div>
             </section>
 
             <!-- FAQ Section -->
             <section id="faq-section" class="content-box">
-                 <h2 class="section-title">Frequently Asked Questions</h2>
+                <h2 class="section-title">Frequently Asked Questions</h2>
                 <div class="faq-container">
                     <details class="faq-item">
-                            <summary class="faq-question">How does this quiz work?</summary>
-                            <div class="faq-answer">
-                                <p>This quiz asks you 7 personality-based questions. Each answer is associated with one or more characters. The character with the most points at the end is your result! If there's a tie, a winner is chosen randomly from the top contenders.</p>
-                            </div>
-                        </details>
-                        <details class="faq-item">
-                            <summary class="faq-question">Are the results accurate?</summary>
-                            <div class="faq-answer">
-                                <p>This quiz is designed for fun and entertainment! While the questions are carefully crafted to match character archetypes, the results are meant to be a fun reflection of your personality, not a scientific analysis.</p>
-                            </div>
-                        </details>
-                         <details class="faq-item">
-                            <summary class="faq-question">How many characters are in the quiz?</summary>
-                            <div class="faq-answer">
-                                <p>There are 12 possible character outcomes for the DC quiz and 12 for the Marvel quiz, including a wide range of heroes, villains, and important side characters to provide a variety of fun results.</p>
-                            </div>
-                        </details>
-                    </div>
-                </section>
+                        <summary class="faq-question">How does this quiz work?</summary>
+                        <div class="faq-answer">
+                            <p>This quiz asks you 7 personality-based questions. Each answer is associated with one or
+                                more characters. The character with the most points at the end is your result! If
+                                there's a tie, a winner is chosen randomly from the top contenders.</p>
+                        </div>
+                    </details>
+                    <details class="faq-item">
+                        <summary class="faq-question">Are the results accurate?</summary>
+                        <div class="faq-answer">
+                            <p>This quiz is designed for fun and entertainment! While the questions are carefully
+                                crafted to match character archetypes, the results are meant to be a fun reflection of
+                                your personality, not a scientific analysis.</p>
+                        </div>
+                    </details>
+                    <details class="faq-item">
+                        <summary class="faq-question">How many characters are in the quiz?</summary>
+                        <div class="faq-answer">
+                            <p>There are 12 possible character outcomes for the DC quiz and 12 for the Marvel quiz,
+                                including a wide range of heroes, villains, and important side characters to provide a
+                                variety of fun results.</p>
+                        </div>
+                    </details>
+                </div>
+            </section>
         </main>
         <footer>
             <p>PickMyBinge &copy; 2025</p>
             <div style="margin-top: 20px; text-align: center;">
                 <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">
-                    <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-59e852f8194f928695ada4f72d5fe9787b282d8d85f76f363d6b4bf8d9f03dcb.svg" alt="The Movie Database API" width="100">
+                    <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-59e852f8194f928695ada4f72d5fe9787b282d8d85f76f363d6b4bf8d9f03dcb.svg"
+                        alt="The Movie Database API" width="100">
                 </a>
                 <p style="font-size: 0.8rem; color: var(--gray); margin-top: 5px;">
                     This product uses the TMDB API but is not endorsed or certified by TMDB.
@@ -370,13 +665,13 @@
         const resultDescription = document.getElementById('result-description');
 
         const dcQuizData = [
-            { question: "The city is in chaos. What's your immediate priority?", answers: [{ text: "Inspire hope and protect the innocent.", characters: ["superman", "wonderwoman", "flash"] },{ text: "Use strategy and fear to neutralize the threat.", characters: ["batman", "greenlantern"] },{ text: "Support the heroes and maintain order.", characters: ["alfred", "gordon", "loislane"] },{ text: "Take advantage of the chaos for personal gain.", characters: ["catwoman", "joker", "harleyquinn", "lexluthor"] }] },
-            { question: "What is your greatest asset?", answers: [{ text: "My superhuman abilities.", characters: ["superman", "wonderwoman", "flash"] },{ text: "My intellect and resources.", characters: ["batman", "lexluthor"] },{ text: "My unwavering sense of duty and will.", characters: ["gordon", "alfred", "greenlantern"] },{ text: "My cunning and unpredictability.", characters: ["joker", "harleyquinn", "catwoman", "loislane"] }] },
-            { question: "You operate best...", answers: [{ text: "In the public eye, as a symbol.", characters: ["superman", "wonderwoman", "lexluthor"] },{ text: "From the shadows, where I have control.", characters: ["batman", "catwoman"] },{ text: "On the front lines, getting the job done.", characters: ["flash", "greenlantern", "gordon", "loislane"] },{ text: "Wherever the chaos takes me.", characters: ["joker", "harleyquinn"] }] },
-            { question: "The law is...", answers: [{ text: "Something to be respected and upheld.", characters: ["superman", "gordon", "wonderwoman", "greenlantern"] },{ text: "A suggestion. True justice requires flexibility.", characters: ["batman", "catwoman"] },{ text: "A system to be manipulated for power and profit.", characters: ["lexluthor"] },{ text: "An irrelevant joke.", characters: ["joker", "harleyquinn"] }] },
-            { question: "Your personal code is driven by...", answers: [{ text: "Unshakable morality and a desire to help.", characters: ["superman", "wonderwoman", "flash"] },{ text: "A strict set of self-imposed rules.", characters: ["batman", "greenlantern"] },{ text: "Loyalty and dedication to others.", characters: ["alfred", "gordon", "loislane"] },{ text: "Self-interest and a chaotic philosophy.", characters: ["joker", "lexluthor", "harleyquinn", "catwoman"] }] },
-            { question: "What do you desire most in the world?", answers: [{ text: "Peace, order, and a safer world.", characters: ["superman", "wonderwoman", "gordon", "batman"] },{ text: "To be in control of my own destiny.", characters: ["lexluthor", "catwoman"] },{ text: "To protect the people I care about most.", characters: ["alfred", "loislane", "greenlantern", "flash"] },{ text: "To watch the world burn... and laugh.", characters: ["joker", "harleyquinn"] }] },
-            { question: "What is your greatest vulnerability?", answers: [{ text: "My compassion and love for others.", characters: ["superman", "wonderwoman", "flash", "alfred", "loislane"] },{ text: "My strict moral code and inability to kill.", characters: ["batman", "gordon"] },{ text: "My own ego and obsessive mind.", characters: ["lexluthor", "joker"] },{ text: "My unpredictable nature and past mistakes.", characters: ["harleyquinn", "catwoman", "greenlantern"] }] }
+            { question: "The city is in chaos. What's your immediate priority?", answers: [{ text: "Inspire hope and protect the innocent.", characters: ["superman", "wonderwoman", "flash"] }, { text: "Use strategy and fear to neutralize the threat.", characters: ["batman", "greenlantern"] }, { text: "Support the heroes and maintain order.", characters: ["alfred", "gordon", "loislane"] }, { text: "Take advantage of the chaos for personal gain.", characters: ["catwoman", "joker", "harleyquinn", "lexluthor"] }] },
+            { question: "What is your greatest asset?", answers: [{ text: "My superhuman abilities.", characters: ["superman", "wonderwoman", "flash"] }, { text: "My intellect and resources.", characters: ["batman", "lexluthor"] }, { text: "My unwavering sense of duty and will.", characters: ["gordon", "alfred", "greenlantern"] }, { text: "My cunning and unpredictability.", characters: ["joker", "harleyquinn", "catwoman", "loislane"] }] },
+            { question: "You operate best...", answers: [{ text: "In the public eye, as a symbol.", characters: ["superman", "wonderwoman", "lexluthor"] }, { text: "From the shadows, where I have control.", characters: ["batman", "catwoman"] }, { text: "On the front lines, getting the job done.", characters: ["flash", "greenlantern", "gordon", "loislane"] }, { text: "Wherever the chaos takes me.", characters: ["joker", "harleyquinn"] }] },
+            { question: "The law is...", answers: [{ text: "Something to be respected and upheld.", characters: ["superman", "gordon", "wonderwoman", "greenlantern"] }, { text: "A suggestion. True justice requires flexibility.", characters: ["batman", "catwoman"] }, { text: "A system to be manipulated for power and profit.", characters: ["lexluthor"] }, { text: "An irrelevant joke.", characters: ["joker", "harleyquinn"] }] },
+            { question: "Your personal code is driven by...", answers: [{ text: "Unshakable morality and a desire to help.", characters: ["superman", "wonderwoman", "flash"] }, { text: "A strict set of self-imposed rules.", characters: ["batman", "greenlantern"] }, { text: "Loyalty and dedication to others.", characters: ["alfred", "gordon", "loislane"] }, { text: "Self-interest and a chaotic philosophy.", characters: ["joker", "lexluthor", "harleyquinn", "catwoman"] }] },
+            { question: "What do you desire most in the world?", answers: [{ text: "Peace, order, and a safer world.", characters: ["superman", "wonderwoman", "gordon", "batman"] }, { text: "To be in control of my own destiny.", characters: ["lexluthor", "catwoman"] }, { text: "To protect the people I care about most.", characters: ["alfred", "loislane", "greenlantern", "flash"] }, { text: "To watch the world burn... and laugh.", characters: ["joker", "harleyquinn"] }] },
+            { question: "What is your greatest vulnerability?", answers: [{ text: "My compassion and love for others.", characters: ["superman", "wonderwoman", "flash", "alfred", "loislane"] }, { text: "My strict moral code and inability to kill.", characters: ["batman", "gordon"] }, { text: "My own ego and obsessive mind.", characters: ["lexluthor", "joker"] }, { text: "My unpredictable nature and past mistakes.", characters: ["harleyquinn", "catwoman", "greenlantern"] }] }
         ];
 
         const dcCharacterResults = {
@@ -395,15 +690,15 @@
         };
 
         const marvelQuizData = [
-            { question: "A global crisis hits. Your first move is to...", answers: [ { text: "Assemble a team and lead from the front.", characters: ["captainamerica", "nickfury"] }, { text: "Build a technological solution to neutralize the threat.", characters: ["ironman"] }, { text: "Consult ancient texts for a mystical answer.", characters: ["doctorstrange", "thor", "loki"] }, { text: "Take on the problem yourself, with or without a witty remark.", characters: ["hulk", "wolverine", "spiderman"] } ] },
-            { question: "Your greatest weapon is...", answers: [ { text: "Your unshakable will and moral code.", characters: ["captainamerica", "spiderman"] }, { text: "Your genius-level intellect and inventions.", characters: ["ironman", "nickfury"] }, { text: "Your mastery of cosmic or magical forces.", characters: ["thor", "doctorstrange", "loki", "thanos"] }, { text: "Your raw, untamable power.", characters: ["hulk", "wolverine", "magneto"] } ] },
-            { question: "You view the world as...", answers: [ { text: "A place worth protecting, full of good people.", characters: ["captainamerica", "spiderman", "thor"] }, { text: "A complex system that needs a firm hand to guide it.", characters: ["ironman", "nickfury", "doctorstrange"] }, { text: "A flawed system that needs to be broken or remade.", characters: ["thanos", "magneto", "loki"] }, { text: "A battlefield where I must survive and protect my own.", characters: ["wolverine", "blackwidow"] } ] },
-            { question: "Your past is...", answers: [ { text: "A source of honor and duty.", characters: ["captainamerica", "thor"] }, { text: "Full of mistakes I'm trying to out-invent.", characters: ["ironman", "doctorstrange"] }, { text: "A source of pain that made me who I am.", characters: ["wolverine", "blackwidow", "hulk", "spiderman"] }, { text: "A grand history that proves my superiority.", characters: ["thanos", "loki", "magneto"] } ] },
-            { question: "When dealing with authority, you...", answers: [ { text: "Respect the chain of command, but question unjust orders.", characters: ["captainamerica", "nickfury"] }, { text: "Are the authority.", characters: ["ironman", "doctorstrange", "thanos"] }, { text: "Have no respect for it and do what you want.", characters: ["wolverine", "loki", "magneto"] }, { text: "Try to stay off their radar.", characters: ["spiderman", "blackwidow", "hulk"] } ] },
-            { question: "Your fighting style is best described as...", answers: [ { text: "Tactical and precise.", characters: ["captainamerica", "blackwidow", "nickfury", "spiderman"] }, { text: "Overwhelming power and advanced technology.", characters: ["ironman", "thor"] }, { text: "Savage, brutal, and up-close.", characters: ["hulk", "wolverine"] }, { text: "Cunning, deceptive, and reality-bending.", characters: ["loki", "doctorstrange", "thanos", "magneto"] } ] },
-            { question: "What is your ultimate goal?", answers: [ { text: "To ensure freedom and justice for all.", characters: ["captainamerica", "spiderman"] }, { text: "To create a better future through innovation and control.", characters: ["ironman", "nickfury", "doctorstrange"] }, { text: "To bring about a new world order based on your vision.", characters: ["thanos", "magneto"] }, { text: "To find your place and protect your own, by any means.", characters: ["wolverine", "loki", "thor", "blackwidow", "hulk"] } ] }
+            { question: "A global crisis hits. Your first move is to...", answers: [{ text: "Assemble a team and lead from the front.", characters: ["captainamerica", "nickfury"] }, { text: "Build a technological solution to neutralize the threat.", characters: ["ironman"] }, { text: "Consult ancient texts for a mystical answer.", characters: ["doctorstrange", "thor", "loki"] }, { text: "Take on the problem yourself, with or without a witty remark.", characters: ["hulk", "wolverine", "spiderman"] }] },
+            { question: "Your greatest weapon is...", answers: [{ text: "Your unshakable will and moral code.", characters: ["captainamerica", "spiderman"] }, { text: "Your genius-level intellect and inventions.", characters: ["ironman", "nickfury"] }, { text: "Your mastery of cosmic or magical forces.", characters: ["thor", "doctorstrange", "loki", "thanos"] }, { text: "Your raw, untamable power.", characters: ["hulk", "wolverine", "magneto"] }] },
+            { question: "You view the world as...", answers: [{ text: "A place worth protecting, full of good people.", characters: ["captainamerica", "spiderman", "thor"] }, { text: "A complex system that needs a firm hand to guide it.", characters: ["ironman", "nickfury", "doctorstrange"] }, { text: "A flawed system that needs to be broken or remade.", characters: ["thanos", "magneto", "loki"] }, { text: "A battlefield where I must survive and protect my own.", characters: ["wolverine", "blackwidow"] }] },
+            { question: "Your past is...", answers: [{ text: "A source of honor and duty.", characters: ["captainamerica", "thor"] }, { text: "Full of mistakes I'm trying to out-invent.", characters: ["ironman", "doctorstrange"] }, { text: "A source of pain that made me who I am.", characters: ["wolverine", "blackwidow", "hulk", "spiderman"] }, { text: "A grand history that proves my superiority.", characters: ["thanos", "loki", "magneto"] }] },
+            { question: "When dealing with authority, you...", answers: [{ text: "Respect the chain of command, but question unjust orders.", characters: ["captainamerica", "nickfury"] }, { text: "Are the authority.", characters: ["ironman", "doctorstrange", "thanos"] }, { text: "Have no respect for it and do what you want.", characters: ["wolverine", "loki", "magneto"] }, { text: "Try to stay off their radar.", characters: ["spiderman", "blackwidow", "hulk"] }] },
+            { question: "Your fighting style is best described as...", answers: [{ text: "Tactical and precise.", characters: ["captainamerica", "blackwidow", "nickfury", "spiderman"] }, { text: "Overwhelming power and advanced technology.", characters: ["ironman", "thor"] }, { text: "Savage, brutal, and up-close.", characters: ["hulk", "wolverine"] }, { text: "Cunning, deceptive, and reality-bending.", characters: ["loki", "doctorstrange", "thanos", "magneto"] }] },
+            { question: "What is your ultimate goal?", answers: [{ text: "To ensure freedom and justice for all.", characters: ["captainamerica", "spiderman"] }, { text: "To create a better future through innovation and control.", characters: ["ironman", "nickfury", "doctorstrange"] }, { text: "To bring about a new world order based on your vision.", characters: ["thanos", "magneto"] }, { text: "To find your place and protect your own, by any means.", characters: ["wolverine", "loki", "thor", "blackwidow", "hulk"] }] }
         ];
-        
+
         const marvelCharacterResults = {
             captainamerica: { name: "Captain America", description: "You are a born leader with an unshakeable sense of right and wrong. You inspire others through your courage and selflessness, always standing up for the little guy and fighting for what you believe in, no matter the odds." },
             ironman: { name: "Iron Man", description: "You are a brilliant, witty, and resourceful genius. You solve problems with technology and a healthy dose of sarcasm. You're a futurist who is always innovating to protect the world, even if it means making tough choices." },
@@ -418,7 +713,7 @@
             nickfury: { name: "Nick Fury", description: "You are the ultimate spymaster, a man with a plan for every contingency. You operate in the gray areas, making the tough calls that no one else can to keep the world safe from threats it doesn't even know exist." },
             magneto: { name: "Magneto", description: "You are a powerful and charismatic leader, forged by suffering. You fight with absolute conviction for the protection of your people, and you are not afraid to use extreme measures to ensure their survival and dominance." }
         };
-        
+
         let currentQuizData = [];
         let currentCharacterResults = {};
         let currentQuestionIndex = 0;
@@ -433,7 +728,7 @@
                 currentQuizData = marvelQuizData;
                 currentCharacterResults = marvelCharacterResults;
             }
-            
+
             currentQuestionIndex = 0;
             scores = {};
             Object.keys(currentCharacterResults).forEach(char => scores[char] = 0);
@@ -478,17 +773,17 @@
             const maxScore = Math.max(...Object.values(scores));
             const winners = Object.keys(scores).filter(character => scores[character] === maxScore);
             const winner = winners[Math.floor(Math.random() * winners.length)];
-            
+
             finalResult = currentCharacterResults[winner];
-            
+
             resultCharacter.textContent = finalResult.name;
             resultDescription.textContent = finalResult.description;
-            
+
             setTimeout(() => {
                 resultScreen.classList.add('result-reveal');
             }, 100);
         }
-        
+
         async function shareResult() {
             const shareData = {
                 title: 'PickMyBinge Character Quiz',
@@ -505,35 +800,35 @@
             } else {
                 const textToCopy = `${shareData.text}\n${shareData.url}`;
                 try {
-                   await navigator.clipboard.writeText(textToCopy);
-                   shareBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                   setTimeout(() => {
-                       shareBtn.innerHTML = '<i class="fas fa-share"></i> Share Result';
-                   }, 2000);
+                    await navigator.clipboard.writeText(textToCopy);
+                    shareBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        shareBtn.innerHTML = '<i class="fas fa-share"></i> Share Result';
+                    }, 2000);
                 } catch (err) {
                     console.error('Could not copy text: ', err);
                 }
             }
         }
-        
+
         function resetQuiz() {
             quizScreen.style.display = 'none';
             resultScreen.style.display = 'none';
             startScreen.style.display = 'block';
             resultScreen.classList.remove('result-reveal');
         }
-        
+
         const menuBtn = document.querySelector('.menu-btn');
         const closeBtn = document.querySelector('.close-btn');
         const mainNav = document.querySelector('.main-nav');
 
-        if(menuBtn) {
+        if (menuBtn) {
             menuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 mainNav.classList.toggle('show');
             });
         }
-        if(closeBtn) {
+        if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 mainNav.classList.remove('show');
             });
@@ -551,4 +846,5 @@
 
     </script>
 </body>
+
 </html>
