@@ -177,206 +177,205 @@
             margin-bottom: 20px;
             display: block;
         }
-    </style>
 
-    /* Modal Styles */
-    .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(5px);
-    z-index: 2000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    animation: fadeInModal 0.3s ease-out;
-    }
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInModal 0.3s ease-out;
+        }
 
-    .modal-overlay.show {
-    display: flex;
-    }
+        .modal-overlay.show {
+            display: flex;
+        }
 
-    .modal {
-    background: var(--dark);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    width: 90%;
-    max-width: 800px;
-    max-height: 90vh;
-    border-radius: 15px;
-    overflow-y: auto;
-    animation: slideDownModal 0.4s ease-out;
-    }
+        .modal {
+            background: var(--dark);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: 15px;
+            overflow-y: auto;
+            animation: slideDownModal 0.4s ease-out;
+        }
 
-    .modal-close {
-    font-size: 2.5rem;
-    color: var(--gray);
-    position: absolute;
-    top: 15px;
-    right: 25px;
-    cursor: pointer;
-    }
+        .modal-close {
+            font-size: 2.5rem;
+            color: var(--gray);
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            cursor: pointer;
+        }
 
-    .modal-header {
-    position: relative;
-    padding-top: 56.25%;
-    background-color: #000;
-    }
+        .modal-header {
+            position: relative;
+            padding-top: 56.25%;
+            background-color: #000;
+        }
 
-    .modal-trailer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    }
+        .modal-trailer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
 
-    .modal-body {
-    padding: 30px;
-    }
+        .modal-body {
+            padding: 30px;
+        }
 
-    .modal-title {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-    }
+        .modal-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
 
-    .modal-genres {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 15px 0;
-    }
+        .modal-genres {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
 
-    .genre-tag {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    }
+        .genre-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
 
-    .modal-overview {
-    color: var(--gray);
-    line-height: 1.8;
-    }
+        .modal-overview {
+            color: var(--gray);
+            line-height: 1.8;
+        }
 
-    .tmdb-link {
-    color: var(--secondary);
-    display: inline-block;
-    margin-top: 20px;
-    font-weight: bold;
-    }
+        .tmdb-link {
+            color: var(--secondary);
+            display: inline-block;
+            margin-top: 20px;
+            font-weight: bold;
+        }
 
-    #modal-loader {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 400px;
-    color: var(--accent);
-    font-size: 1.5rem;
-    }
+        #modal-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
 
-    #modal-content {
-    display: none;
-    }
+        #modal-content {
+            display: none;
+        }
 
-    @keyframes fadeInModal {
-    from {
-    opacity: 0;
-    }
+        @keyframes fadeInModal {
+            from {
+                opacity: 0;
+            }
 
-    to {
-    opacity: 1;
-    }
-    }
+            to {
+                opacity: 1;
+            }
+        }
 
-    @keyframes slideDownModal {
-    from {
-    opacity: 0;
-    transform: translateY(-20px);
-    }
+        @keyframes slideDownModal {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
 
-    to {
-    opacity: 1;
-    transform: translateY(0);
-    }
-    }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-    @media (max-width: 768px) {
-    h1 {
-    font-size: 2.8rem;
-    }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.8rem;
+            }
 
-    .nav-menu {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 80%;
-    max-width: 300px;
-    height: 100vh;
-    z-index: 1000;
-    transform: translateX(100%);
-    transition: transform 0.3s ease-in-out;
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
-    }
+            .nav-menu {
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                top: 0;
+                right: 0;
+                width: 80%;
+                max-width: 300px;
+                height: 100vh;
+                z-index: 1000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease-in-out;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+            }
 
-    .main-nav.show .nav-menu {
-    transform: translateX(0);
-    }
+            .main-nav.show .nav-menu {
+                transform: translateX(0);
+            }
 
-    .nav-menu a {
-    font-size: 1.2rem;
-    padding: 20px;
-    border-bottom: 1px solid var(--gray);
-    }
+            .nav-menu a {
+                font-size: 1.2rem;
+                padding: 20px;
+                border-bottom: 1px solid var(--gray);
+            }
 
-    .close-btn {
-    display: block;
-    color: var(--light);
-    font-size: 2rem;
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    }
+            .close-btn {
+                display: block;
+                color: var(--light);
+                font-size: 2rem;
+                position: absolute;
+                top: 15px;
+                right: 20px;
+                background: none;
+                border: none;
+                cursor: pointer;
+            }
 
-    .modal-title {
-    font-size: 1.8rem;
-    }
-    }
+            .modal-title {
+                font-size: 1.8rem;
+            }
+        }
 
-    @media (max-width: 600px) {
-    body {
-    padding: 0 10px;
-    }
+        @media (max-width: 600px) {
+            body {
+                padding: 0 10px;
+            }
 
-    .container {
-    padding: 0 10px;
-    }
+            .container {
+                padding: 0 10px;
+            }
 
-    h1 {
-    font-size: 2.2rem;
-    }
+            h1 {
+                font-size: 2.2rem;
+            }
 
-    .hero-section {
-    padding: 20px 0;
-    }
+            .hero-section {
+                padding: 20px 0;
+            }
 
-    .section-title {
-    font-size: 1.5rem;
-    }
+            .section-title {
+                font-size: 1.5rem;
+            }
 
-    .bubble {
-    padding: 10px 18px;
-    font-size: 0.9rem;
-    }
-    }
+            .bubble {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 

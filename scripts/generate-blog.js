@@ -85,6 +85,8 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
             id: item.id,
             overview: item.overview,
             release_date: item.release_date || item.first_air_date,
+            rating: item.vote_average,
+            poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
             tmdb_link: `https://www.themoviedb.org/${item.title ? 'movie' : 'tv'}/${item.id}`
         }));
 
@@ -94,6 +96,8 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
         // STEP 2: WRITE ARTICLE
         const writingPrompt = `You are the Lead Editor at PickMyBinge. Write a VIRAL, high-retention feature article about these titles: ${JSON.stringify(realContent)}. 
         Guidelines: Punchy structure (2-3 sentences max per para), "The PickMyBinge Verdict" section, "Watch if you liked" recommendation, blockquotes, internal headers linked to TMDB. 
+        Crucial: For each title, you MUST include a reference to their poster URL provided in the data. Embed them using HTML <img> tags with class "blog-image".
+        DO NOT use placeholders like [Official Poster Placeholder]. Use the real 'poster' URLs from the source JSON.
         Enthusiastic and expert voice. Output ONLY JSON with keys 'title', 'excerpt', and 'content'.`;
 
         const draftRaw = await callGroqWithRetry('llama-3.1-70b-versatile', writingPrompt);

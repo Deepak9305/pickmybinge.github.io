@@ -130,14 +130,15 @@ function App() {
         }
     };
 
-    const searchEntertainment = async (query, isNewSearch = true) => {
-        const page = isNewSearch ? 1 : currentPage;
+    const searchEntertainment = async (query, isNewSearch = true, targetPage = 1) => {
         const isText = !!query;
 
         if (isNewSearch) {
             setCurrentPage(1);
             setAllFetchedResults([]);
             setDisplayedResultsCount(0);
+        } else {
+            setCurrentPage(targetPage);
         }
 
         let movies = [];
@@ -145,13 +146,13 @@ function App() {
 
         if (typeFilter === 'all') {
             [movies, tvShows] = await Promise.all([
-                fetchData('movie', query, page, isText),
-                fetchData('tv', query, page, isText)
+                fetchData('movie', query, targetPage, isText),
+                fetchData('tv', query, targetPage, isText)
             ]);
         } else if (typeFilter === 'movie') {
-            movies = await fetchData('movie', query, page, isText);
+            movies = await fetchData('movie', query, targetPage, isText);
         } else if (typeFilter === 'tv') {
-            tvShows = await fetchData('tv', query, page, isText);
+            tvShows = await fetchData('tv', query, targetPage, isText);
         }
 
         const newResults = shuffleArray([...movies, ...tvShows]);
@@ -169,8 +170,7 @@ function App() {
             setDisplayedResultsCount(prev => Math.min(prev + RESULTS_PER_LOAD, allFetchedResults.length));
         } else if (currentPage < totalApiPages) {
             const nextPage = currentPage + 1;
-            setCurrentPage(nextPage);
-            searchEntertainment(isTextSearch ? currentQuery : null, false);
+            searchEntertainment(isTextSearch ? currentQuery : null, false, nextPage);
         }
     };
 
@@ -342,6 +342,12 @@ function App() {
                         >🇰🇷 Korean</div>
                     </div>
                 </section>
+
+                <div className="results-count">
+                    {allFetchedResults.length > 0 && (
+                        <p>Showing {Math.min(displayedResultsCount, allFetchedResults.length)} of {allFetchedResults.length} recommendations</p>
+                    )}
+                </div>
 
                 <section className="results-section">
                     <h2 className="section-title">Recommended For You</h2>
