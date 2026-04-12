@@ -284,3 +284,25 @@ footer a:hover {
     opacity: 0.8;
   }
 }
+
+/* Blog Media Fallbacks */
+.blog-media-fallback {
+  background: var(--glass);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  color: var(--gray);
+  margin: 20px 0;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.blog-media-fallback i {
+  font-size: 2rem;
+  color: var(--secondary);
+  opacity: 0.6;
+}
