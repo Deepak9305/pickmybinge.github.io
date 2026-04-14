@@ -43,7 +43,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add public/content/blogs/ public/blogs-index.json public/sitemap.xml
+          git add "public/content/1st draft/" public/content/blogs/ public/blogs-index.json public/sitemap.xml
           if git diff --staged --quiet; then
             echo "No new blog content generated."
           else

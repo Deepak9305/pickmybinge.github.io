@@ -98,6 +98,7 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
         Guidelines: Punchy structure (2-3 sentences max per para), "The PickMyBinge Verdict" section, "Watch if you liked" recommendation, blockquotes, internal headers linked to TMDB. 
         Crucial: For each title, you MUST include a reference to their poster URL provided in the data. Embed them using HTML <img> tags with class "blog-image".
         DO NOT use placeholders like [Official Poster Placeholder]. Use the real 'poster' URLs from the source JSON.
+        CRITICAL: DO NOT generate any inline CSS, <style> tags, or inline style attributes. Rely entirely on external CSS classes.
         Enthusiastic and expert voice. Output ONLY JSON with keys 'title', 'excerpt', and 'content'.`;
 
         const draftRaw = await callGroqWithRetry('llama-3.1-70b-versatile', writingPrompt);
@@ -119,39 +120,29 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
         }
 
         // STEP 4: SAVE
-        const date = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const formattedDate = `${month}-${day}`;
         const slug = nicheHint.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const fileName = `${date}-${slug}.json`;
-        const filePath = path.join(BLOG_DIR, fileName);
+        const fileName = `${formattedDate}-${slug}.json`;
+
+        const DRAFTS_DIR = path.join(process.cwd(), 'public/content/1st draft');
+        if (!fs.existsSync(DRAFTS_DIR)) fs.mkdirSync(DRAFTS_DIR, { recursive: true });
+        const filePath = path.join(DRAFTS_DIR, fileName);
 
         const newPost = {
-            id: `${date}-${slug}`,
-            date,
+            id: `${formattedDate}-${slug}`,
+            date: now.toISOString().split('T')[0],
             title: finalPost.title,
             excerpt: finalPost.excerpt,
             content: finalPost.content,
-            link: `/blog.html?id=${date}-${slug}`
+            link: `/blog.html?id=${formattedDate}-${slug}`
         };
 
         fs.writeFileSync(filePath, JSON.stringify(newPost, null, 4));
 
-        const manifestPath = path.join(BLOG_DIR, 'manifest.json');
-        let manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) : [];
-        if (!manifest.includes(fileName)) {
-            manifest.unshift(fileName);
-            fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-        }
-
-        // Update blogs index
-        const existingIndex = fs.existsSync(BLOGS_INDEX) ? JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8')) : [];
-        if (!existingIndex.find(p => p.id === newPost.id)) {
-            const { content: _, ...postMeta } = newPost;
-            existingIndex.unshift(postMeta);
-            fs.writeFileSync(BLOGS_INDEX, JSON.stringify(existingIndex, null, 4));
-        }
-
-        console.log(`Successfully published: ${fileName}`);
-        generateSitemap();
+        console.log(`Successfully generated draft: ${fileName} in 1st draft folder.`);
         return true;
     } catch (error) { console.error('Pipeline failed:', error.message); return false; }
 }
