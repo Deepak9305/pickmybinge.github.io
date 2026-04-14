@@ -99,6 +99,7 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
         Crucial: For each title, you MUST include a reference to their poster URL provided in the data. Embed them using HTML <img> tags with class "blog-image".
         DO NOT use placeholders like [Official Poster Placeholder]. Use the real 'poster' URLs from the source JSON.
         CRITICAL: DO NOT generate any inline CSS, <style> tags, or inline style attributes. Rely entirely on external CSS classes.
+        LENGTH REQUIREMENT: The article MUST comprehensively cover the titles and be at least 800 words in length. Expand deeply on plot analyses, trivia, and why readers should watch each title.
         Enthusiastic and expert voice. Output ONLY JSON with keys 'title', 'excerpt', and 'content'.`;
 
         const draftRaw = await callGroqWithRetry('llama-3.1-70b-versatile', writingPrompt);
@@ -109,6 +110,7 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
         ${JSON.stringify(draft)}
         Fix any generic intro/outro. Ensure all title references match these real titles: ${JSON.stringify(realContent.map(t => t.title))}.
         Remove any hallucinated titles or facts not grounded in the source data.
+        LENGTH REQUIREMENT: The final polished article MUST remain at least 800 words long. Do not over-condense the content.
         Return the final polished version as a JSON object with keys 'title', 'excerpt', and 'content'. Output ONLY the JSON.`;
 
         const polishedRaw = await callGroqWithRetry('llama-3.1-70b-versatile', refinerPrompt);
