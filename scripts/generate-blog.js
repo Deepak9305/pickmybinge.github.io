@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { generateSitemap } from './generate-sitemap.js';
 
 /**
  * Autonomous Blog Generation Pipeline
@@ -58,6 +57,7 @@ function parseJson(str) {
         const end = str.lastIndexOf('}');
         if (start === -1 || end === -1) throw new Error("No JSON object found");
         let clean = str.substring(start, end + 1);
+        // eslint-disable-next-line no-control-regex
         clean = clean.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
         return JSON.parse(clean);
     } catch (e) {

@@ -429,7 +429,7 @@
         </main>
 
         <footer>
-            <p>PickMyBinge &copy; 2025</p>
+            <p>PickMyBinge &copy; 2026</p>
             <div style="margin-top: 20px; text-align: center;">
                 <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">
                     <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-59e852f8194f928695ada4f72d5fe9787b282d8d85f76f363d6b4bf8d9f03dcb.svg"
@@ -473,7 +473,7 @@
             const noResultsElement = document.getElementById('no-results');
             const loadMoreBtn = document.getElementById('load-more');
             const resultsTitle = document.getElementById('results-title');
-            const TMDB_API_KEY = '__TMDB_API_KEY__';
+            const TMDB_API_KEY = window.TMDB_CONFIG?.apiKey || ''; // Use global config if available
 
             const modalOverlay = document.getElementById('details-modal');
             const modalCloseBtn = document.getElementById('modal-close-btn');

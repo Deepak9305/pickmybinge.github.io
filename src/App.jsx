@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -39,26 +39,9 @@ function App() {
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [apiError, setApiError] = useState(null);
 
-    useEffect(() => {
-        const init = async () => {
-            console.log("App initializing...");
-            try {
-                await Promise.all([
-                    searchEntertainment(null, true),
-                    loadBlogs()
-                ]);
-                console.log("Initialization complete.");
-            } catch (err) {
-                console.error("Initialization failed:", err);
-                setApiError("Failed to load initial data. Please check your connection.");
-            } finally {
-                setIsInitialLoading(false);
-            }
-        };
-        init();
-    }, []);
 
-    const loadBlogs = async () => {
+
+    const loadBlogs = useCallback(async () => {
         try {
             const res = await fetch('/blogs-index.json');
             if (!res.ok) throw new Error("Blog index not found");
@@ -72,18 +55,18 @@ function App() {
             // Fallback or empty state
             setBlogs([]);
         }
-    };
+    }, []);
 
-    const shuffleArray = (array) => {
+    const shuffleArray = useCallback((array) => {
         const newArray = [...array];
         for (let i = newArray.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
         }
         return newArray;
-    };
+    }, []);
 
-    const fetchData = async (type, query, page, isText) => {
+    const fetchData = useCallback(async (type, query, page, isText) => {
         const params = new URLSearchParams({
             api_key: TMDB_API_KEY,
             page: page,
@@ -120,18 +103,18 @@ function App() {
                 id: item.id,
                 type: type,
                 title: type === 'movie' ? item.title : item.name,
-                year: (type === 'movie' ? item.release_date : item.first_air_date || '').substring(0, 4),
+                year: ((type === 'movie' ? item.release_date : item.first_air_date) || '').substring(0, 4),
                 poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/300x450/2D3047/8B8BA0?text=No+Image',
-                rating: item.vote_average.toFixed(1)
+                rating: (item.vote_average || 0).toFixed(1)
             }));
             return { results, total_results: data.total_results };
         } catch (error) {
             console.error('Failed to fetch data:', error);
             return { results: [], total_results: 0 };
         }
-    };
+    }, [activeFilters]);
 
-    const searchEntertainment = async (query, isNewSearch = true, targetPage = 1) => {
+    const searchEntertainment = useCallback(async (query, isNewSearch = true, targetPage = 1) => {
         const isText = !!query;
 
         if (isNewSearch) {
@@ -165,7 +148,26 @@ function App() {
             setAllFetchedResults(prev => [...prev, ...newResults]);
             setDisplayedResultsCount(prev => prev + Math.min(newResults.length, RESULTS_PER_LOAD));
         }
-    };
+    }, [fetchData, shuffleArray, typeFilter]);
+
+    useEffect(() => {
+        const init = async () => {
+            console.log("App initializing...");
+            try {
+                await Promise.all([
+                    searchEntertainment(null, true),
+                    loadBlogs()
+                ]);
+                console.log("Initialization complete.");
+            } catch (err) {
+                console.error("Initialization failed:", err);
+                setApiError("Failed to load initial data. Please check your connection.");
+            } finally {
+                setIsInitialLoading(false);
+            }
+        };
+        init();
+    }, [searchEntertainment, loadBlogs]);
 
     const handleLoadMore = () => {
         if (displayedResultsCount < allFetchedResults.length) {
@@ -202,7 +204,7 @@ function App() {
         if (!isTextSearch) {
             searchEntertainment(null, true);
         }
-    }, [activeFilters, typeFilter]);
+    }, [activeFilters, typeFilter, isTextSearch, searchEntertainment]);
 
     const triggerTextSearch = () => {
         const query = searchInput.trim();
