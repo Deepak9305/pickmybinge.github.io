@@ -150,8 +150,15 @@ async function runPipeline(nicheHint = "Sci-Fi Thrillers") {
 }
 
 async function main() {
-    const targetNiche = process.env.BLOG_NICHE || "Sci-Fi Thrillers";
-    await runPipeline(targetNiche);
+    const niches = ["Sci-Fi Thrillers", "K-Dramas"];
+    console.log(`Starting continuous generation for niches: ${niches.join(', ')}`);
+
+    for (const niche of niches) {
+        await runPipeline(niche);
+        console.log(`Finished generation for: ${niche}\n`);
+        // Add a small delay between generations to avoid rate limits if needed
+        await new Promise(r => setTimeout(r, 2000));
+    }
 }
 
 main();
