@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
