@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -17,8 +17,7 @@ const genreMappings = {
 };
 const languageMappings = { 'korean': 'ko' };
 
-// Dynamically load all blog posts from src/content/blogs
-const blogModules = import.meta.glob('./content/blogs/*.json', { eager: true });
+// We will now fetch blogs from /blogs-index.json instead of eager globbing for better performance
 
 function App() {
     const [allFetchedResults, setAllFetchedResults] = useState([]);
@@ -40,46 +39,34 @@ function App() {
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [apiError, setApiError] = useState(null);
 
-    useEffect(() => {
-        const init = async () => {
-            console.log("App initializing...");
-            try {
-                await Promise.all([
-                    searchEntertainment(null, true),
-                    loadBlogs()
-                ]);
-                console.log("Initialization complete.");
-            } catch (err) {
-                console.error("Initialization failed:", err);
-                setApiError("Failed to load initial data. Please check your connection.");
-            } finally {
-                setIsInitialLoading(false);
-            }
-        };
-        init();
+
+
+    const loadBlogs = useCallback(async () => {
+        try {
+            const res = await fetch('/blogs-index.json');
+            if (!res.ok) throw new Error("Blog index not found");
+            const loadedBlogs = await res.json();
+
+            // Sort by date descending
+            loadedBlogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setBlogs(loadedBlogs);
+        } catch (err) {
+            console.error("Failed to load blogs:", err);
+            // Fallback or empty state
+            setBlogs([]);
+        }
     }, []);
 
-    const loadBlogs = () => {
-        const loadedBlogs = Object.entries(blogModules).map(([path, module]) => ({
-            ...module.default,
-            id: path.split('/').pop().replace('.json', '')
-        }));
-
-        // Sort by date descending
-        loadedBlogs.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setBlogs(loadedBlogs);
-    };
-
-    const shuffleArray = (array) => {
+    const shuffleArray = useCallback((array) => {
         const newArray = [...array];
         for (let i = newArray.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
         }
         return newArray;
-    };
+    }, []);
 
-    const fetchData = async (type, query, page, isText) => {
+    const fetchData = useCallback(async (type, query, page, isText) => {
         const params = new URLSearchParams({
             api_key: TMDB_API_KEY,
             page: page,
@@ -109,48 +96,51 @@ function App() {
 
         try {
             const response = await fetch(`${url}?${params.toString()}`);
-            if (!response.ok) return [];
+            if (!response.ok) return { results: [], total_results: 0 };
             const data = await response.json();
             setTotalApiPages(data.total_pages);
-            return data.results.map(item => ({
+            const results = data.results.map(item => ({
                 id: item.id,
                 type: type,
                 title: type === 'movie' ? item.title : item.name,
-                year: (type === 'movie' ? item.release_date : item.first_air_date || '').substring(0, 4),
+                year: ((type === 'movie' ? item.release_date : item.first_air_date) || '').substring(0, 4),
                 poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/300x450/2D3047/8B8BA0?text=No+Image',
-                rating: item.vote_average.toFixed(1)
+                rating: (item.vote_average || 0).toFixed(1)
             }));
+            return { results, total_results: data.total_results };
         } catch (error) {
             console.error('Failed to fetch data:', error);
-            return [];
+            return { results: [], total_results: 0 };
         }
-    };
+    }, [activeFilters]);
 
-    const searchEntertainment = async (query, isNewSearch = true) => {
-        const page = isNewSearch ? 1 : currentPage;
+    const searchEntertainment = useCallback(async (query, isNewSearch = true, targetPage = 1) => {
         const isText = !!query;
 
         if (isNewSearch) {
             setCurrentPage(1);
             setAllFetchedResults([]);
             setDisplayedResultsCount(0);
+        } else {
+            setCurrentPage(targetPage);
         }
 
-        let movies = [];
-        let tvShows = [];
+        let movieData = { results: [], total_results: 0 };
+        let tvData = { results: [], total_results: 0 };
 
         if (typeFilter === 'all') {
-            [movies, tvShows] = await Promise.all([
-                fetchData('movie', query, page, isText),
-                fetchData('tv', query, page, isText)
+            [movieData, tvData] = await Promise.all([
+                fetchData('movie', query, targetPage, isText),
+                fetchData('tv', query, targetPage, isText)
             ]);
         } else if (typeFilter === 'movie') {
-            movies = await fetchData('movie', query, page, isText);
+            movieData = await fetchData('movie', query, targetPage, isText);
         } else if (typeFilter === 'tv') {
-            tvShows = await fetchData('tv', query, page, isText);
+            tvData = await fetchData('tv', query, targetPage, isText);
         }
 
-        const newResults = shuffleArray([...movies, ...tvShows]);
+        const newResults = shuffleArray([...movieData.results, ...tvData.results]);
+
         if (isNewSearch) {
             setAllFetchedResults(newResults);
             setDisplayedResultsCount(Math.min(newResults.length, RESULTS_PER_LOAD));
@@ -158,15 +148,33 @@ function App() {
             setAllFetchedResults(prev => [...prev, ...newResults]);
             setDisplayedResultsCount(prev => prev + Math.min(newResults.length, RESULTS_PER_LOAD));
         }
-    };
+    }, [fetchData, shuffleArray, typeFilter]);
+
+    useEffect(() => {
+        const init = async () => {
+            console.log("App initializing...");
+            try {
+                await Promise.all([
+                    searchEntertainment(null, true),
+                    loadBlogs()
+                ]);
+                console.log("Initialization complete.");
+            } catch (err) {
+                console.error("Initialization failed:", err);
+                setApiError("Failed to load initial data. Please check your connection.");
+            } finally {
+                setIsInitialLoading(false);
+            }
+        };
+        init();
+    }, [searchEntertainment, loadBlogs]);
 
     const handleLoadMore = () => {
         if (displayedResultsCount < allFetchedResults.length) {
             setDisplayedResultsCount(prev => Math.min(prev + RESULTS_PER_LOAD, allFetchedResults.length));
         } else if (currentPage < totalApiPages) {
             const nextPage = currentPage + 1;
-            setCurrentPage(nextPage);
-            searchEntertainment(isTextSearch ? currentQuery : null, false);
+            searchEntertainment(isTextSearch ? currentQuery : null, false, nextPage);
         }
     };
 
@@ -196,7 +204,7 @@ function App() {
         if (!isTextSearch) {
             searchEntertainment(null, true);
         }
-    }, [activeFilters, typeFilter]);
+    }, [activeFilters, typeFilter, isTextSearch, searchEntertainment]);
 
     const triggerTextSearch = () => {
         const query = searchInput.trim();
@@ -260,11 +268,14 @@ function App() {
                     <img src="/logo.png" alt="PickMyBinge Logo" />
                     <span className="brand-name">PickMyBinge</span>
                 </a>
-                <nav className={`main-nav ${isMenuOpen ? 'show' : ''}`}>
-                    <button className="menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                        <i className={`fas ${isMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+                <nav className="main-nav">
+                    <button className="menu-btn" onClick={() => setIsMenuOpen(true)}>
+                        <i className="fas fa-bars"></i>
                     </button>
-                    <div className="nav-menu">
+                    <div className={`nav-menu ${isMenuOpen ? 'show' : ''}`}>
+                        <button className="close-btn" onClick={() => setIsMenuOpen(false)}>
+                            <i className="fas fa-times"></i>
+                        </button>
                         <a href="/" className="active-nav"><i className="fas fa-home"></i> Home</a>
                         <a href="/cringe.html"><i className="fas fa-ghost"></i> Worst Movies</a>
                         <a href="/quiz.html"><i className="fas fa-question-circle"></i> Superhero Quiz</a>
@@ -336,6 +347,12 @@ function App() {
                     </div>
                 </section>
 
+                <div className="results-count">
+                    {allFetchedResults.length > 0 && (
+                        <p>Showing {Math.min(displayedResultsCount, allFetchedResults.length)} of {allFetchedResults.length} recommendations</p>
+                    )}
+                </div>
+
                 <section className="results-section">
                     <h2 className="section-title">Recommended For You</h2>
                     <div className="recommendation-cards">
@@ -397,6 +414,7 @@ function App() {
                 <nav>
                     <a href="/privacy.html">Privacy Policy</a>
                     <a href="/terms.html">Terms &amp; Conditions</a>
+
                     <a href="/contact.html">Contact Us</a>
                 </nav>
             </footer>

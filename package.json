@@ -8,8 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "blog:generate": "node scripts/generate-blog.js",
-    "blog:sitemap": "node scripts/generate-sitemap.js"
+    "sitemap": "node scripts/generate-sitemap.js",
+    "delete-blog": "node scripts/delete-blog.js"
   },
   "dependencies": {
     "react": "^19.2.4",

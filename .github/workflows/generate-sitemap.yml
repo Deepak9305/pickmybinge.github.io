@@ -3,6 +3,9 @@ name: Manual Sitemap Generator
 on:
   workflow_dispatch: # Run manually via GitHub UI
 
+permissions:
+  contents: write
+
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -23,4 +26,4 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add public/sitemap.xml
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Manual Sitemap Update: $(date +'%Y-%m-%d')" && git push)
+          git diff --staged --quiet || (git commit -m "Manual Sitemap Update: $(date +'%Y-%m-%d')" && git push)

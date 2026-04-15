@@ -5,6 +5,9 @@ on:
     - cron: '30 1 * * *' # 7:00 AM IST
   workflow_dispatch: # Allow manual run for testing
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -40,7 +43,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add public/content/blogs/ public/blogs-index.json
+          git add "public/content/1st draft/" public/content/blogs/ public/blogs-index.json public/sitemap.xml
           if git diff --staged --quiet; then
             echo "No new blog content generated."
           else

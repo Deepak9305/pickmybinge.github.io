@@ -1,95 +1,27 @@
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 
 /**
- * Autonomous Blog Generation Pipeline
- * 5-stage: LLM vertical selection → TMDB fetch → persona-voiced draft →
- *          hostile fact-check → lead editor polish → post-process → auto-deploy
+ * Autonomous Blog Generation Pipeline v2
+ * - Richer TMDB data (cast, genres, tagline, runtime)
+ * - Upgraded model: llama-3.3-70b-versatile
+ * - Longer, structured prompts (1200+ words enforced)
+ * - Auto-publishes to blogs-index.json and public/content/blogs/
+ * - Correct YYYY-MM-DD date in filenames
  */
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const BLOG_DIR = path.join(process.cwd(), 'public/content/blogs');
+const DRAFTS_DIR = path.join(process.cwd(), 'public/content/1st draft');
 const BLOGS_INDEX = path.join(process.cwd(), 'public/blogs-index.json');
+const MANIFEST_PATH = path.join(process.cwd(), 'public/content/blogs/manifest.json');
 
-// ---------------------------------------------------------------------------
-// Content verticals — each maps to a TMDB endpoint + query params
-// ---------------------------------------------------------------------------
-const VERTICALS = {
-    'Sci-Fi Thrillers': {
-        endpoint: 'discover/movie',
-        params: { primary_release_year: 2025, with_genres: '878,53', sort_by: 'popularity.desc' }
-    },
-    'K-Dramas': {
-        endpoint: 'discover/tv',
-        params: { first_air_date_year: 2024, with_original_language: 'ko', sort_by: 'popularity.desc' }
-    },
-    'Superhero & Comic Book': {
-        endpoint: 'discover/movie',
-        params: { primary_release_year: 2025, with_keywords: '9715|180547', sort_by: 'popularity.desc' }
-    },
-    'Horror & Psychological Thriller': {
-        endpoint: 'discover/movie',
-        params: { primary_release_year: 2025, with_genres: '27,9648', sort_by: 'vote_average.desc', 'vote_count.gte': 50 }
-    },
-    'Anime Series': {
-        endpoint: 'discover/tv',
-        params: { with_genres: '16', with_keywords: '210024', sort_by: 'popularity.desc', first_air_date_year: 2025 }
-    },
-    'Hidden Gem Movies': {
-        endpoint: 'discover/movie',
-        params: { primary_release_year: 2024, sort_by: 'vote_average.desc', 'vote_count.gte': 100, 'vote_count.lte': 1000, 'vote_average.gte': 7.0 }
-    },
-    'Prestige TV Dramas': {
-        endpoint: 'discover/tv',
-        params: { first_air_date_year: 2025, with_genres: '18', sort_by: 'vote_average.desc', 'vote_count.gte': 50 }
-    },
-    'Action & Adventure Blockbusters': {
-        endpoint: 'discover/movie',
-        params: { primary_release_year: 2025, with_genres: '28,12', sort_by: 'popularity.desc' }
-    },
-    'True Crime & Docuseries': {
-        endpoint: 'discover/tv',
-        params: { first_air_date_year: 2025, with_genres: '99', with_keywords: '11108|173432', sort_by: 'popularity.desc' }
-    },
-    'Romantic Dramas & Rom-Coms': {
-        endpoint: 'discover/movie',
-        params: { primary_release_year: 2025, with_genres: '10749,35', sort_by: 'popularity.desc' }
-    },
-};
+// ─── Groq Helpers ─────────────────────────────────────────────────────────────
 
-// ---------------------------------------------------------------------------
-// Audience personas — injected as the opening system instruction for Stage 2
-// ---------------------------------------------------------------------------
-const PERSONAS = {
-    CASUAL: `You are a casual, enthusiastic binge-watcher writing for PickMyBinge.
-Your energy is "what should I watch tonight?" — friendly, zero pretension, relatable.
-Write like you're texting your best friend about something they absolutely have to watch.
-Use conversational language, short punchy sentences, and light humour.
-Avoid film-school jargon. Say "the way it looks is insane" instead of "cinematography".
-Goal: make the reader hit play immediately.`,
-
-    CINEPHILE: `You are a seasoned film critic and cultural analyst writing for PickMyBinge.
-Your voice is authoritative, precise, and intellectually stimulating — but never snobbish.
-Analyse directorial choices, cinematographic language, thematic subtext, and cultural significance.
-Reference relevant genre history or comparable auteurs where appropriate.
-Use technical vocabulary correctly and explain it in context so general readers follow along.
-Goal: give the reader a deeper appreciation of what they're watching, not just whether to watch it.`,
-
-    DISCOVERER: `You are a hidden-gem hunter and niche recommendation specialist writing for PickMyBinge.
-You live for titles that got overlooked, slept on, or buried under algorithmic noise.
-Your voice is conspiratorial and enthusiastic — like you're letting the reader in on a secret.
-Lead with why a title was underrated, what the mainstream missed, and who will love it.
-Use phrases like "slept on", "criminally underrated", "if you haven't seen this yet".
-Goal: make the reader feel like they discovered something the algorithm doesn't want them to find.`,
-};
-
-// ---------------------------------------------------------------------------
-// Utility functions (unchanged from previous version)
-// ---------------------------------------------------------------------------
 async function callGroq(model, prompt) {
-    if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing from environment.");
+    if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY is missing from environment.');
+    console.log(`  → Calling Groq (${model})...`);
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -99,11 +31,15 @@ async function callGroq(model, prompt) {
         body: JSON.stringify({
             model,
             messages: [{ role: 'user', content: prompt }],
-            temperature: 0.7
+            temperature: 0.72,
+            max_tokens: 4096
         })
     });
     const data = await response.json();
-    if (data.error) throw new Error(`Groq API Error: ${data.error.message}`);
+    if (data.error) {
+        console.error('Groq Error:', JSON.stringify(data.error));
+        throw new Error(`Groq API Error: ${data.error.message}`);
+    }
     return data.choices[0].message.content;
 }
 
@@ -112,271 +48,358 @@ async function callGroqWithRetry(model, prompt, retries = 3) {
         try {
             return await callGroq(model, prompt);
         } catch (e) {
-            console.error(`Attempt ${i + 1} failed for model ${model}:`, e.message);
+            console.error(`  Attempt ${i + 1} failed: ${e.message}`);
             if (i === retries - 1) throw e;
-            await new Promise(r => setTimeout(r, 2000));
+            // Parse Groq's suggested wait time from the error message, e.g.:
+            // "Please try again in 36.43s."
+            const match = e.message.match(/try again in ([\d.]+)s/i);
+            const waitMs = match
+                ? Math.ceil(parseFloat(match[1]) * 1000) + 2000 // advised wait + 2s buffer
+                : 60000; // fallback: 60s
+            console.log(`  ⏳ Rate limit hit — waiting ${(waitMs / 1000).toFixed(1)}s before retry...`);
+            await new Promise(r => setTimeout(r, waitMs));
         }
     }
 }
 
+// ─── TMDB Helpers ─────────────────────────────────────────────────────────────
+
 async function fetchFromTMDB(endpoint, params = {}) {
-    if (!TMDB_API_KEY) throw new Error("TMDB_API_KEY is missing from environment.");
+    if (!TMDB_API_KEY) throw new Error('TMDB_API_KEY is missing from environment.');
     const url = new URL(`https://api.themoviedb.org/3/${endpoint}`);
     url.searchParams.append('api_key', TMDB_API_KEY);
-    Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-    const response = await fetch(url.toString());
-    return await response.json();
+    Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, v));
+    const sanitized = url.toString().replace(TMDB_API_KEY, 'REDACTED');
+    console.log(`  → TMDB: ${sanitized}`);
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error(`TMDB HTTP ${res.status} for ${endpoint}`);
+    return res.json();
+}
+
+/**
+ * Fetch full details + credits for a single TMDB item.
+ * Returns enriched object with cast, genres, tagline, runtime.
+ */
+async function fetchEnrichedItem(id, type) {
+    const [details, credits] = await Promise.all([
+        fetchFromTMDB(`${type}/${id}`, { append_to_response: 'keywords' }),
+        fetchFromTMDB(`${type}/${id}/credits`)
+    ]);
+
+    const topCast = (credits.cast || [])
+        .slice(0, 3)
+        .map(a => a.name);
+
+    const genres = (details.genres || []).map(g => g.name);
+
+    return {
+        id,
+        type,
+        title: details.title || details.name,
+        tagline: details.tagline || '',
+        overview: details.overview || '',
+        release_date: details.release_date || details.first_air_date || '',
+        rating: details.vote_average ? details.vote_average.toFixed(1) : 'N/A',
+        runtime: details.runtime
+            ? `${details.runtime} min`
+            : details.number_of_seasons
+                ? `${details.number_of_seasons} season(s)`
+                : 'N/A',
+        genres,
+        cast: topCast,
+        poster: details.poster_path
+            ? `https://image.tmdb.org/t/p/w500${details.poster_path}`
+            : null,
+        tmdb_link: `https://www.themoviedb.org/${type}/${id}`
+    };
+}
+
+// ─── JSON Parser ──────────────────────────────────────────────────────────────
+
+/**
+ * Robustly parses a JSON object that may contain literal (unescaped) newlines,
+ * carriage returns, or tabs inside string values — a common LLM output artifact.
+ *
+ * Strategy: walk character-by-character; when inside a JSON string, replace any
+ * raw control character with its proper JSON escape sequence. Already-escaped
+ * sequences (e.g. the two characters `\` + `n`) are left completely untouched.
+ */
+function sanitizeJsonString(raw) {
+    let result = '';
+    let inString = false;
+    let i = 0;
+    while (i < raw.length) {
+        const ch = raw[i];
+        if (inString) {
+            if (ch === '\\') {
+                // Consume the escape sequence as-is (e.g. \n, \", \\, \uXXXX)
+                result += ch + (raw[i + 1] || '');
+                i += 2;
+                continue;
+            } else if (ch === '"') {
+                inString = false;
+                result += ch;
+            } else if (ch === '\n') {
+                result += '\\n';
+            } else if (ch === '\r') {
+                result += '\\r';
+            } else if (ch === '\t') {
+                result += '\\t';
+            } else if (ch < ' ') {
+                // Other control characters: drop them silently
+            } else {
+                result += ch;
+            }
+        } else {
+            if (ch === '"') inString = true;
+            result += ch;
+        }
+        i++;
+    }
+    return result;
 }
 
 function parseJson(str) {
     try {
         const start = str.indexOf('{');
         const end = str.lastIndexOf('}');
-        if (start === -1 || end === -1) throw new Error("No JSON object found");
-        let clean = str.substring(start, end + 1);
-        clean = clean.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        if (start === -1 || end === -1) throw new Error('No JSON object found');
+        const clean = sanitizeJsonString(str.substring(start, end + 1));
         return JSON.parse(clean);
     } catch (e) {
-        console.error("Failed to parse JSON. Raw snippet:", str.substring(0, 500));
+        console.error('Failed to parse JSON. Raw snippet:', str.substring(0, 600));
         throw new Error(`JSON Parse Error: ${e.message}`);
     }
 }
 
-// ---------------------------------------------------------------------------
-// pickVertical — uses today's TMDB trending + llama-4-scout to choose niche
-// ---------------------------------------------------------------------------
-async function pickVertical() {
-    // Allow manual override for testing / CI
-    if (process.env.BLOG_NICHE && VERTICALS[process.env.BLOG_NICHE]) {
-        console.log(`Using forced vertical from env: ${process.env.BLOG_NICHE}`);
-        return process.env.BLOG_NICHE;
+// ─── Index Helpers ────────────────────────────────────────────────────────────
+
+function updateBlogsIndex(newEntry) {
+    let index = [];
+    if (fs.existsSync(BLOGS_INDEX)) {
+        try { index = JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8')); } catch { }
     }
+    // Remove any existing entry with the same id, then prepend
+    index = index.filter(p => p.id !== newEntry.id);
+    index.unshift(newEntry);
+    fs.writeFileSync(BLOGS_INDEX, JSON.stringify(index, null, 4));
+    console.log(`  → blogs-index.json updated (${index.length} entries).`);
+}
 
-    console.log('Selecting vertical via LLM analysis of today\'s TMDB trending...');
-    const trending = await fetchFromTMDB('trending/all/day', {});
-    const trendingSample = trending.results.slice(0, 10).map(item => ({
-        title: item.title || item.name,
-        media_type: item.media_type,
-        genre_ids: item.genre_ids,
-        overview: item.overview?.substring(0, 120)
-    }));
+function updateManifest(fileName) {
+    let manifest = [];
+    if (fs.existsSync(MANIFEST_PATH)) {
+        try { manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8')); } catch { }
+    }
+    if (!manifest.includes(fileName)) {
+        manifest.unshift(fileName);
+        fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+        console.log(`  → manifest.json updated.`);
+    }
+}
 
-    const verticalNames = Object.keys(VERTICALS);
-    const selectionPrompt = `You are a content strategist for PickMyBinge, an entertainment recommendation site.
-Today's TMDB trending titles are: ${JSON.stringify(trendingSample)}
+function estimateReadTime(content) {
+    const words = content.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.round(words / 200));
+}
 
-Available content verticals: ${JSON.stringify(verticalNames)}
+// ─── Pipeline ─────────────────────────────────────────────────────────────────
 
-Based on what is trending today, pick the ONE vertical that would produce the most engaging and timely blog post.
-Consider: which vertical has the most trending momentum right now?
-
-Respond with ONLY a JSON object: {"vertical": "<vertical name>", "reason": "<one sentence>"}
-The vertical name must exactly match one of the options provided.`;
+async function runPipeline(nicheHint = 'Sci-Fi Thrillers') {
+    const MODEL = 'llama-3.3-70b-versatile';
 
     try {
-        const raw = await callGroqWithRetry('meta-llama/llama-4-scout-17b-16e-instruct', selectionPrompt);
-        const parsed = parseJson(raw);
-        if (VERTICALS[parsed.vertical]) {
-            console.log(`LLM chose vertical: "${parsed.vertical}" — ${parsed.reason}`);
-            return parsed.vertical;
+        console.log(`\n${'─'.repeat(60)}`);
+        console.log(`  Pipeline: ${nicheHint}`);
+        console.log(`${'─'.repeat(60)}`);
+
+        [BLOG_DIR, DRAFTS_DIR].forEach(d => {
+            if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+        });
+
+        // ── STEP 1: Discover titles from TMDB ────────────────────────────────
+        console.log('\n[STEP 1] Discovering titles from TMDB...');
+        const currentYear = new Date().getFullYear();
+        let discoverData;
+
+        if (nicheHint === 'K-Dramas') {
+            discoverData = await fetchFromTMDB('discover/tv', {
+                first_air_date_year: currentYear - 1,
+                with_original_language: 'ko',
+                sort_by: 'popularity.desc'
+            });
+        } else {
+            discoverData = await fetchFromTMDB('discover/movie', {
+                primary_release_year: currentYear,
+                with_genres: '878,53',
+                sort_by: 'popularity.desc'
+            });
         }
-        throw new Error(`LLM returned unknown vertical: ${parsed.vertical}`);
-    } catch (e) {
-        const fallback = verticalNames[Math.floor(Math.random() * verticalNames.length)];
-        console.warn(`Vertical selection failed (${e.message}), falling back to random: "${fallback}"`);
-        return fallback;
-    }
-}
 
-// ---------------------------------------------------------------------------
-// postProcess — strips common LLM artifacts from the final HTML content
-// ---------------------------------------------------------------------------
-function postProcess(content) {
-    if (!content || typeof content !== 'string') return content;
-    let c = content;
+        const topResults = discoverData.results.slice(0, 5);
+        if (topResults.length === 0) throw new Error('No content found on TMDB.');
 
-    // 1. Remove "In conclusion" paragraph openers
-    c = c.replace(/<p>\s*In conclusion[,:]?\s*/gi, '<p>');
-    c = c.replace(/\bIn conclusion[,:]?\s+/gi, '');
+        // ── STEP 2: Enrich each title with full details ───────────────────────
+        console.log('\n[STEP 2] Fetching enriched details for each title...');
+        const itemType = nicheHint === 'K-Dramas' ? 'tv' : 'movie';
+        const enrichedContent = await Promise.all(
+            topResults.map(item => fetchEnrichedItem(item.id, itemType))
+        );
+        console.log(`  → Enriched ${enrichedContent.length} titles.`);
 
-    // 2. Remove "As an AI" self-referential phrases
-    c = c.replace(/As an AI(?: language model)?[,]?\s*/gi, '');
-    c = c.replace(/I(?:'m| am) an AI[^.]*\.\s*/gi, '');
+        const category = nicheHint === 'K-Dramas' ? 'korean' : 'movies';
+        const nicheLabel = nicheHint === 'K-Dramas' ? 'K-Drama' : 'Sci-Fi Thriller';
 
-    // 3. Deduplicate H2 tags (keeps first occurrence of each)
-    const seenH2 = new Set();
-    c = c.replace(/<h2[^>]*>.*?<\/h2>/gi, (match) => {
-        const key = match.toLowerCase().replace(/\s+/g, ' ').trim();
-        if (seenH2.has(key)) return '';
-        seenH2.add(key);
-        return match;
-    });
+        // ── STEP 3: AI Writing pass ───────────────────────────────────────────
+        console.log('\n[STEP 3] Generating article (writing pass)...');
 
-    // 4. Remove consecutive duplicate sentences
-    c = c.replace(/(\b[A-Z][^.!?]*[.!?])\s+\1/g, '$1');
+        const writingPrompt = `You are the Lead Editor at PickMyBinge, a premium entertainment blog. Write a viral, deeply researched ${nicheLabel} feature article.
 
-    // 5. Strip generic sign-off paragraphs
-    c = c.replace(/<p>[^<]*(?:hope you enjoyed|let me know what you think|feel free to)[^<]*<\/p>/gi, '');
+SOURCE DATA (you MUST use all 5 titles, do not invent others):
+${JSON.stringify(enrichedContent, null, 2)}
 
-    // 6. Collapse multiple consecutive empty <p> tags
-    c = c.replace(/(<p>\s*<\/p>\s*){2,}/gi, '');
+ARTICLE STRUCTURE — follow this exactly:
+1. HOOK introduction (2-3 punchy paragraphs). NO generic "In the world of cinema..." openers.
+2. For EACH of the 5 titles, a deep-dive section with:
+   - <h2> heading containing the title and release year (link to tmdb_link)
+   - <img src="[poster URL from data]" alt="[title] poster" class="blog-image"> — REQUIRED for every title. Use the exact poster URL from the source data. Do NOT skip or use placeholder text.
+   - Cast callout: "Starring [cast names]"
+   - Tagline in an HTML <blockquote>
+   - 3–4 paragraphs: plot analysis, what makes it special, themes, why PickMyBinge readers will love it
+   - A <span class="verdict-badge">PickMyBinge Verdict: X/10</span> rating
+3. A "PickMyBinge Quick Picks" HTML <table> summarising all 5 titles (columns: Title, Genre, Rating, Must-Watch Factor)
+4. A "Watch If You Liked" section with 2-3 similar recommendations
+5. A CTA paragraph: "Ready to find your next binge?" linking to https://www.pickmybinge.com
 
-    return c.trim();
-}
+RULES:
+- Output ONLY a JSON object with exactly these keys: "title", "excerpt", "content"
+- "title": catchy SEO headline (max 70 chars)
+- "excerpt": 1-2 sentence hook (max 160 chars, good for meta description)
+- "content": the full article as a single HTML string (NO <html>/<body>/<style> tags)
+- NO inline CSS or style attributes anywhere
+- Minimum 1200 words in the article body
+- All <img> tags must use the real poster URLs from the source data
+- Enthusiastic yet authoritative tone`;
 
-// ---------------------------------------------------------------------------
-// autoDeploy — regenerates sitemap, commits, and pushes to GitHub
-// ---------------------------------------------------------------------------
-async function autoDeploy(date) {
-    console.log('\n--- Starting Auto-Deploy ---');
-    try {
-        console.log('Regenerating sitemap...');
-        execSync('node scripts/generate-sitemap.js', { stdio: 'inherit', cwd: process.cwd() });
-
-        execSync('git add public/content/blogs/ public/blogs-index.json public/sitemap.xml sitemap.xml', {
-            stdio: 'inherit', cwd: process.cwd()
-        });
-
-        execSync(`git commit -m "Autonomous Blog Update: ${date}"`, {
-            stdio: 'inherit', cwd: process.cwd()
-        });
-
-        execSync('git push', { stdio: 'inherit', cwd: process.cwd() });
-
-        console.log('Auto-deploy complete. Blog is live.');
-    } catch (e) {
-        console.error('Auto-deploy failed (blog JSON saved locally):', e.message);
-        console.error('Run manually: git add public/content/blogs/ public/blogs-index.json && git commit -m "Manual blog deploy" && git push');
-    }
-}
-
-// ---------------------------------------------------------------------------
-// runPipeline — 5-stage orchestrator
-// ---------------------------------------------------------------------------
-async function runPipeline() {
-    try {
-        // PRE-STAGE: Vertical + Persona Selection
-        const vertical = await pickVertical();
-        const personaKeys = Object.keys(PERSONAS);
-        const personaIndex = Math.floor(Math.random() * personaKeys.length);
-        const personaName = personaKeys[personaIndex];
-        const persona = PERSONAS[personaName];
-
-        console.log(`\n--- Pipeline: ${vertical} | Persona: ${personaName} ---`);
-        if (!fs.existsSync(BLOG_DIR)) fs.mkdirSync(BLOG_DIR, { recursive: true });
-
-        // STAGE 1: Fetch real titles from TMDB
-        const { endpoint, params } = VERTICALS[vertical];
-        const tmdbData = await fetchFromTMDB(endpoint, params);
-
-        const realContent = tmdbData.results.slice(0, 5).map(item => ({
-            title: item.title || item.name,
-            id: item.id,
-            overview: item.overview,
-            release_date: item.release_date || item.first_air_date,
-            tmdb_link: `https://www.themoviedb.org/${item.title ? 'movie' : 'tv'}/${item.id}`
-        }));
-
-        if (realContent.length === 0) throw new Error("No content found on TMDB.");
-        console.log(`[Stage 1] Fetched ${realContent.length} titles for "${vertical}".`);
-
-        // STAGE 2: Write article (persona-voiced, grounded in real TMDB titles)
-        const writingPrompt = `${persona}
-
-You are writing for PickMyBinge, a top entertainment recommendation site.
-Write a VIRAL, high-retention feature article about these real titles: ${JSON.stringify(realContent)}.
-
-Guidelines:
-- Punchy structure (2-3 sentences max per paragraph)
-- Include a "The PickMyBinge Verdict" section per title
-- Include "Watch if you liked" recommendation per title
-- Use blockquotes for memorable lines or insights
-- Internal headers linked to TMDB URLs provided
-- NO hallucinations — only reference the titles provided
-
-Format in clean HTML (<p>, <h3>, <ul>, <li>, <blockquote>).
-Output ONLY a JSON object with keys 'title', 'excerpt', and 'content'.`;
-
-        const draftRaw = await callGroqWithRetry('openai/gpt-oss-120b', writingPrompt);
+        const draftRaw = await callGroqWithRetry(MODEL, writingPrompt);
         const draft = parseJson(draftRaw);
-        console.log(`[Stage 2] Draft written. Title: "${draft.title}"`);
 
-        // STAGE 3: Hostile fact-check — strips hallucinations, tightens grounding
-        const refinerPrompt = `You are a Hostile Lead Editor at PickMyBinge. Review this article for AI fluff, inaccuracies, and weak writing:
+        // ── STEP 4: Hostile editorial refinement ──────────────────────────────
+        console.log('\n[STEP 4] Refining article (hostile editor pass)...');
+
+        const refinerPrompt = `You are a Hostile Senior Editor at PickMyBinge. Critically audit this draft article and return the polished version.
+
+DRAFT:
 ${JSON.stringify(draft)}
 
-Ensure all title references exactly match these real titles: ${JSON.stringify(realContent.map(t => t.title))}.
-Remove any hallucinated titles or facts not grounded in the source data.
-Fix generic intros/outros. Tighten loose paragraphs.
-Return the polished version as a JSON object with keys 'title', 'excerpt', and 'content'. Output ONLY the JSON.`;
+SOURCE TITLES TO VERIFY AGAINST:
+${JSON.stringify(enrichedContent.map(t => ({ title: t.title, poster: t.poster, cast: t.cast, tmdb_link: t.tmdb_link })))}
 
-        const factCheckedRaw = await callGroqWithRetry('meta-llama/llama-4-scout-17b-16e-instruct', refinerPrompt);
-        const factChecked = parseJson(factCheckedRaw);
-        console.log(`[Stage 3] Fact-check complete.`);
+YOUR CHECKLIST — fix every issue you find:
+1. Hook: Is the opening NON-GENERIC? If it starts with "In the world of..." or "As we step into...", rewrite it completely.
+2. Coverage: Are ALL 5 titles covered with deep-dive <h2> sections? Add any that are missing.
+3. Images: Does EVERY title section have an <img class="blog-image" src="[real URL]">? If any is missing or uses placeholder text, add it using the poster URL from SOURCE TITLES.
+4. Verdict badges: Is <span class="verdict-badge"> present for every title? Add if missing.
+5. Table: Is the Quick Picks <table> present and correctly formatted?
+6. Length: Is the article at least 1200 words? If short, expand plot analyses and themes.
+7. Tone: Remove any AI-sounding filler phrases ("It's worth noting", "In conclusion", "Dive into").
+8. SEO: Ensure the title is punchy and under 70 chars. Ensure the excerpt is under 160 chars.
 
-        // STAGE 4: Lead editor polish — POV, AI-isms, hook/CTA
-        const editorPrompt = `You are the Lead Editor at PickMyBinge performing a final polish pass.
-Review this article and fix the following:
-${JSON.stringify(factChecked)}
+Return ONLY the corrected JSON object with keys: "title", "excerpt", "content". Output ONLY the JSON, no explanation.`;
 
-Checklist:
-1. POV consistency — enforce second-person ("you") throughout, remove first-person slippage
-2. Remove AI-isms: "delve into", "it's worth noting", "at the end of the day", "in today's world", "game-changer", "paradigm shift"
-3. Ensure every H3 header is present and not duplicated
-4. Verify the article opens with a hook, not a generic statement
-5. Ensure the closing paragraph ends on a strong call-to-action ("add it to your watchlist", "hit play tonight") — not a summary
+        const polishedRaw = await callGroqWithRetry(MODEL, refinerPrompt);
+        const finalPost = parseJson(polishedRaw);
 
-Return the final version as a JSON object with keys 'title', 'excerpt', and 'content'. Output ONLY the JSON.`;
+        // Validation
+        const missing = ['title', 'excerpt', 'content'].filter(k => !finalPost[k]);
+        if (missing.length > 0) throw new Error(`Polished post missing fields: ${missing.join(', ')}`);
 
-        const polishedRaw = await callGroqWithRetry('meta-llama/llama-4-scout-17b-16e-instruct', editorPrompt);
-        const polished = parseJson(polishedRaw);
-        console.log(`[Stage 4] Lead editor polish complete.`);
+        // ── STEP 5: Build and save ────────────────────────────────────────────
+        console.log('\n[STEP 5] Saving files...');
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
+        const slug = nicheHint.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const fileId = `${formattedDate}-${slug}`;
+        const fileName = `${fileId}.json`;
 
-        // STAGE 5: Post-process, save, deploy
-        const cleanContent = postProcess(polished.content);
-
-        const date = new Date().toISOString().split('T')[0];
-        const slug = vertical.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const fileName = `${date}-${slug}.json`;
-        const filePath = path.join(BLOG_DIR, fileName);
+        const tags = nicheHint === 'K-Dramas'
+            ? ['k-drama', 'korean', 'tv-shows', 'streaming']
+            : ['sci-fi', 'thriller', 'movies', 'action'];
 
         const newPost = {
-            id: `${date}-${slug}`,
-            date,
-            vertical,
-            persona: personaName,
-            title: polished.title,
-            excerpt: polished.excerpt,
-            content: cleanContent,
-            link: `/blog.html?id=${date}-${slug}`
+            id: fileId,
+            date: `${year}-${month}-${day}`,
+            title: finalPost.title,
+            excerpt: finalPost.excerpt,
+            category,
+            tags,
+            readTimeMinutes: estimateReadTime(finalPost.content),
+            content: finalPost.content,
+            link: `/blog.html?id=${fileId}`
         };
 
-        fs.writeFileSync(filePath, JSON.stringify(newPost, null, 4));
+        // Save to draft folder
+        const draftPath = path.join(DRAFTS_DIR, fileName);
+        fs.writeFileSync(draftPath, JSON.stringify(newPost, null, 4));
+        console.log(`  → Draft saved: public/content/1st draft/${fileName}`);
+
+        // Save to live blogs folder
+        const livePath = path.join(BLOG_DIR, fileName);
+        fs.writeFileSync(livePath, JSON.stringify(newPost, null, 4));
+        console.log(`  → Live post saved: public/content/blogs/${fileName}`);
 
         // Update manifest
-        const manifestPath = path.join(BLOG_DIR, 'manifest.json');
-        let manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) : [];
-        if (!manifest.includes(fileName)) {
-            manifest.unshift(fileName);
-            fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-        }
+        updateManifest(fileName);
 
-        // Update blogs-index
-        const existingIndex = fs.existsSync(BLOGS_INDEX) ? JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8')) : [];
-        if (!existingIndex.find(p => p.id === newPost.id)) {
-            const { content: _, ...postMeta } = newPost;
-            existingIndex.unshift(postMeta);
-            fs.writeFileSync(BLOGS_INDEX, JSON.stringify(existingIndex, null, 4));
-        }
+        // Update blogs-index.json (index entry is lightweight — no content field)
+        const indexEntry = {
+            id: fileId,
+            date: newPost.date,
+            title: newPost.title,
+            category,
+            excerpt: newPost.excerpt,
+            link: newPost.link
+        };
+        updateBlogsIndex(indexEntry);
 
-        console.log(`[Stage 5] Saved: ${fileName}`);
-
-        await autoDeploy(date);
+        console.log(`\n✅ Pipeline complete: ${fileId}`);
         return true;
+
     } catch (error) {
-        console.error('CRITICAL: Pipeline failed:', error.message);
+        console.error(`\n❌ Pipeline failed for "${nicheHint}":`, error.message);
+        if (error.cause) console.error('   Cause:', error.cause);
         return false;
     }
 }
 
-runPipeline();
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
+async function main() {
+    const niches = ['Sci-Fi Thrillers', 'K-Dramas'];
+    console.log(`\nPickMyBinge Blog Pipeline v2`);
+    console.log(`Generating posts for: ${niches.join(', ')}\n`);
+
+    const results = [];
+    for (const niche of niches) {
+        const ok = await runPipeline(niche);
+        results.push({ niche, ok });
+        if (niches.indexOf(niche) < niches.length - 1) {
+            console.log('\nPausing 3s before next niche...');
+            await new Promise(r => setTimeout(r, 3000));
+        }
+    }
+
+    console.log('\n─── Final Results ───');
+    results.forEach(({ niche, ok }) => {
+        console.log(`  ${ok ? '✅' : '❌'} ${niche}`);
+    });
+    console.log('─────────────────────\n');
+
+    const anyFailed = results.some(r => !r.ok);
+    process.exit(anyFailed ? 1 : 0);
+}
+
+main();
