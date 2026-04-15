@@ -17,8 +17,6 @@ const genreMappings = {
 };
 const languageMappings = { 'korean': 'ko' };
 
-// We will now fetch blogs from /blogs-index.json instead of eager globbing for better performance
-
 function App() {
     const [allFetchedResults, setAllFetchedResults] = useState([]);
     const [displayedResultsCount, setDisplayedResultsCount] = useState(0);
@@ -39,8 +37,6 @@ function App() {
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [apiError, setApiError] = useState(null);
 
-
-
     const loadBlogs = useCallback(async () => {
         try {
             const res = await fetch('/blogs-index.json');
@@ -52,7 +48,6 @@ function App() {
             setBlogs(loadedBlogs);
         } catch (err) {
             console.error("Failed to load blogs:", err);
-            // Fallback or empty state
             setBlogs([]);
         }
     }, []);
@@ -152,13 +147,11 @@ function App() {
 
     useEffect(() => {
         const init = async () => {
-            console.log("App initializing...");
             try {
                 await Promise.all([
                     searchEntertainment(null, true),
                     loadBlogs()
                 ]);
-                console.log("Initialization complete.");
             } catch (err) {
                 console.error("Initialization failed:", err);
                 setApiError("Failed to load initial data. Please check your connection.");
@@ -225,11 +218,13 @@ function App() {
         const detailsUrl = `${TMDB_API_URL}/${type}/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
         try {
             const response = await fetch(detailsUrl);
+            if (!response.ok) throw new Error(`TMDB error ${response.status}`);
             const data = await response.json();
             setModalData(data);
             setModalLoading(false);
         } catch (error) {
             console.error("Failed to fetch details:", error);
+            setModalLoading(false);
             setShowModal(false);
         }
     };
@@ -254,7 +249,7 @@ function App() {
     if (apiError) {
         return (
             <div className="initial-error">
-                <h2>Opps!</h2>
+                <h2>Oops!</h2>
                 <p>{apiError}</p>
                 <button onClick={() => window.location.reload()}>Retry</button>
             </div>
@@ -308,7 +303,7 @@ function App() {
                                     placeholder="Search for a specific title..."
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && triggerTextSearch()}
+                                    onKeyDown={(e) => e.key === 'Enter' && triggerTextSearch()}
                                 />
                             </div>
                             <select
@@ -379,7 +374,7 @@ function App() {
                         ))}
                     </div>
                     {(displayedResultsCount < allFetchedResults.length || currentPage < totalApiPages) && (
-                        <button className="load-more" style={{ display: 'block' }} onClick={handleLoadMore}>Load More</button>
+                        <button className="load-more" onClick={handleLoadMore}>Load More</button>
                     )}
                     {allFetchedResults.length === 0 && !modalLoading && (
                         <div className="no-results"><h3>No results found</h3><p>Try a different search term or filter combination.</p></div>
@@ -421,13 +416,13 @@ function App() {
 
             {/* Modal */}
             {showModal && (
-                <div className={`modal-overlay ${showModal ? 'show' : ''}`} onClick={closeDetailsModal}>
+                <div className="modal-overlay" onClick={closeDetailsModal}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <span className="modal-close" onClick={closeDetailsModal}>&times;</span>
                         {modalLoading ? (
-                            <div id="modal-loader"><i className="fas fa-spinner fa-spin"></i> &nbsp; Loading...</div>
+                            <div className="modal-loader"><i className="fas fa-spinner fa-spin"></i> &nbsp; Loading...</div>
                         ) : modalData && (
-                            <div id="modal-content" style={{ display: 'block' }}>
+                            <div className="modal-content">
                                 <div className="modal-header">
                                     {modalData.videos?.results?.find(v => v.type === 'Trailer') ? (
                                         <iframe

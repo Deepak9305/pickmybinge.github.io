@@ -602,20 +602,21 @@
 
                 try {
                     const response = await fetch(detailsUrl);
+                    if (!response.ok) throw new Error(`TMDB error ${response.status}`);
                     const data = await response.json();
                     document.getElementById('modal-title').textContent = data.name || data.title;
                     document.getElementById('modal-overview').textContent = data.overview || "No summary available.";
 
                     const genresContainer = document.getElementById('modal-genres');
                     genresContainer.innerHTML = '';
-                    data.genres.slice(0, 4).forEach(genre => {
+                    (data.genres || []).slice(0, 4).forEach(genre => {
                         const genreTag = document.createElement('span');
                         genreTag.className = 'genre-tag';
                         genreTag.textContent = genre.name;
                         genresContainer.appendChild(genreTag);
                     });
 
-                    const trailer = data.videos.results.find(video => video.site === 'YouTube' && video.type === 'Trailer');
+                    const trailer = (data.videos?.results || []).find(video => video.site === 'YouTube' && video.type === 'Trailer');
                     const trailerFrame = document.getElementById('modal-trailer');
                     if (trailer) {
                         trailerFrame.src = `https://www.youtube.com/embed/${trailer.key}`;

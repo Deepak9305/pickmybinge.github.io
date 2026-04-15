@@ -14,92 +14,6 @@
   <link rel="stylesheet" href="/global.css" />
   <style>
     /* Specific overrides for Blog page */
-    .hero {
-      padding: 60px 0 40px;
-      text-align: center;
-    }
-
-    .hero h1 {
-      font-size: clamp(2.5rem, 6vw, 4rem);
-      font-weight: 900;
-      margin-bottom: 12px;
-      background: linear-gradient(135deg, var(--secondary), var(--accent));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero p {
-      color: var(--gray);
-      font-size: 1.2rem;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    /* Filters */
-    .controls {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      flex-wrap: wrap;
-      padding: 20px 0 40px;
-    }
-
-    .search-box {
-      position: relative;
-      flex: 1;
-      min-width: 280px;
-    }
-
-    .search-box input {
-      width: 100%;
-      background: var(--glass);
-      border: 1px solid var(--border);
-      border-radius: 50px;
-      padding: 14px 20px 14px 50px;
-      color: var(--light);
-      font-size: 1rem;
-      outline: none;
-      transition: all 0.3s;
-    }
-
-    .search-box i {
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--gray);
-    }
-
-    .chips {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .chip {
-      padding: 10px 22px;
-      border-radius: 50px;
-      border: 1px solid var(--border);
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--gray);
-      cursor: pointer;
-      transition: all 0.3s;
-      background: var(--glass);
-    }
-
-    .chip:hover {
-      border-color: var(--secondary);
-      color: var(--secondary);
-      background: rgba(0, 206, 203, 0.05);
-    }
-
-    .chip.active {
-      background: var(--secondary);
-      border-color: var(--secondary);
-      color: var(--dark) !important;
-    }
 
     /* Hero */
     .hero {
@@ -493,6 +407,7 @@
         const grid = document.getElementById('blog-grid');
         try {
           const res = await fetch('/blogs-index.json');
+          if (!res.ok) throw new Error('Failed to load blog index');
           allPosts = await res.json();
           allPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
         } catch (e) { allPosts = []; }
@@ -515,23 +430,31 @@
 
         const cat = post.category || detectCat(post.title, post.content);
 
-        document.getElementById('post-content').innerHTML = `
+        const titleEl = document.createElement('h1');
+        titleEl.textContent = post.title;
+        titleEl.style.cssText = 'font-size: 3rem; margin-bottom: 30px; line-height: 1.1;';
+
+        const content = post.content || '';
+        const bodyHtml = content
+          .replace(/\n/g, '<br>')
+          .replace(/\[Official Poster Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-film"></i> Official Artwork Incoming</div>')
+          .replace(/\[Trailer Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-play-circle"></i> Trailer Available on TMDB</div>');
+
+        const container = document.getElementById('post-content');
+        container.innerHTML = `
                 <div class="card-meta" style="font-size: 1rem; margin-bottom: 20px;">
                     <span><i class="fas fa-calendar-alt"></i> ${fmtDate(post.date)}</span>
-                    <span><i class="fas fa-clock"></i> ${readTime(post.content)} read</span>
+                    <span><i class="fas fa-clock"></i> ${readTime(content)} read</span>
                     <span class="card-cat-badge" style="position:static;">${catLabel[cat] || 'Article'}</span>
                 </div>
-                <h1 style="font-size: 3rem; margin-bottom: 30px; line-height: 1.1;">${post.title}</h1>
-                <div style="font-size: 1.2rem; line-height: 1.8; color: #d1d1e0;">
-                    ${post.content
-            .replace(/\n/g, '<br>')
-            .replace(/\[Official Poster Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-film"></i> Official Artwork Incoming</div>')
-            .replace(/\[Trailer Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-play-circle"></i> Trailer Available on TMDB</div>')
-          }
-                </div>
+                <div style="font-size: 1.2rem; line-height: 1.8; color: #d1d1e0;">${bodyHtml}</div>
             `;
+        container.insertBefore(titleEl, container.children[1]);
       } catch (e) {
-        document.getElementById('post-content').innerHTML = `<h2>Error</h2><p>Article not found.</p>`;
+        document.getElementById('post-content').innerHTML = `
+          <h2>Article Not Found</h2>
+          <p>Sorry, we couldn't find this article.</p>
+          <a href="/blog.html" style="color: var(--secondary); text-decoration: none; font-weight: bold;">← Back to all articles</a>`;
       }
     }
 
