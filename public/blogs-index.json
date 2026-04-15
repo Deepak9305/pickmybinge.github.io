@@ -1,5 +1,21 @@
 [
     {
+        "id": "2026-04-15-k-dramas",
+        "date": "2026-04-15",
+        "title": "K-Drama Frenzy",
+        "category": "korean",
+        "excerpt": "Discover latest K-Dramas",
+        "link": "/blog.html?id=2026-04-15-k-dramas"
+    },
+    {
+        "id": "2026-04-15-sci-fi-thrillers",
+        "date": "2026-04-15",
+        "title": "Sci-Fi Thrillers 2026",
+        "category": "movies",
+        "excerpt": "Discover 2026's most anticipated sci-fi thrillers",
+        "link": "/blog.html?id=2026-04-15-sci-fi-thrillers"
+    },
+    {
         "id": "2026-04-10-k-dramas-polished",
         "date": "2026-04-10",
         "title": "Heartstrings and High Stakes: Why 2024's K-Dramas are Dominating Screens",
