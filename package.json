@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "blog:generate": "node scripts/generate-blog.js",
+    "blog:sitemap": "node scripts/generate-sitemap.js"
   },
   "dependencies": {
     "react": "^19.2.4",
