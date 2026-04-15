@@ -109,16 +109,55 @@ async function fetchEnrichedItem(id, type) {
 
 // ─── JSON Parser ──────────────────────────────────────────────────────────────
 
+/**
+ * Robustly parses a JSON object that may contain literal (unescaped) newlines,
+ * carriage returns, or tabs inside string values — a common LLM output artifact.
+ *
+ * Strategy: walk character-by-character; when inside a JSON string, replace any
+ * raw control character with its proper JSON escape sequence. Already-escaped
+ * sequences (e.g. the two characters `\` + `n`) are left completely untouched.
+ */
+function sanitizeJsonString(raw) {
+    let result = '';
+    let inString = false;
+    let i = 0;
+    while (i < raw.length) {
+        const ch = raw[i];
+        if (inString) {
+            if (ch === '\\') {
+                // Consume the escape sequence as-is (e.g. \n, \", \\, \uXXXX)
+                result += ch + (raw[i + 1] || '');
+                i += 2;
+                continue;
+            } else if (ch === '"') {
+                inString = false;
+                result += ch;
+            } else if (ch === '\n') {
+                result += '\\n';
+            } else if (ch === '\r') {
+                result += '\\r';
+            } else if (ch === '\t') {
+                result += '\\t';
+            } else if (ch < ' ') {
+                // Other control characters: drop them silently
+            } else {
+                result += ch;
+            }
+        } else {
+            if (ch === '"') inString = true;
+            result += ch;
+        }
+        i++;
+    }
+    return result;
+}
+
 function parseJson(str) {
     try {
         const start = str.indexOf('{');
         const end = str.lastIndexOf('}');
         if (start === -1 || end === -1) throw new Error('No JSON object found');
-        let clean = str.substring(start, end + 1);
-        // eslint-disable-next-line no-control-regex
-        clean = clean.replace(/[\u0000-\u001F\u007F-\u009F]/g, match =>
-            match === '\n' || match === '\r' || match === '\t' ? match : ''
-        );
+        const clean = sanitizeJsonString(str.substring(start, end + 1));
         return JSON.parse(clean);
     } catch (e) {
         console.error('Failed to parse JSON. Raw snippet:', str.substring(0, 600));
