@@ -50,7 +50,14 @@ async function callGroqWithRetry(model, prompt, retries = 3) {
         } catch (e) {
             console.error(`  Attempt ${i + 1} failed: ${e.message}`);
             if (i === retries - 1) throw e;
-            await new Promise(r => setTimeout(r, 3000 * (i + 1)));
+            // Parse Groq's suggested wait time from the error message, e.g.:
+            // "Please try again in 36.43s."
+            const match = e.message.match(/try again in ([\d.]+)s/i);
+            const waitMs = match
+                ? Math.ceil(parseFloat(match[1]) * 1000) + 2000 // advised wait + 2s buffer
+                : 60000; // fallback: 60s
+            console.log(`  ⏳ Rate limit hit — waiting ${(waitMs / 1000).toFixed(1)}s before retry...`);
+            await new Promise(r => setTimeout(r, waitMs));
         }
     }
 }
