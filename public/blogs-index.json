@@ -1,5 +1,21 @@
 [
     {
+        "id": "2026-04-16-k-dramas",
+        "date": "2026-04-16",
+        "title": "K-Drama Frenzy",
+        "category": "korean",
+        "excerpt": "Discover the latest K-Drama hits",
+        "link": "/blog.html?id=2026-04-16-k-dramas"
+    },
+    {
+        "id": "2026-04-16-sci-fi-thrillers",
+        "date": "2026-04-16",
+        "title": "Sci-Fi Thrillers 2026",
+        "category": "movies",
+        "excerpt": "Explore top sci-fi thrillers of 2026",
+        "link": "/blog.html?id=2026-04-16-sci-fi-thrillers"
+    },
+    {
         "id": "2026-04-15-k-dramas",
         "date": "2026-04-15",
         "title": "K-Drama Frenzy",
