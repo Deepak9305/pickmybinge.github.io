@@ -18,8 +18,6 @@ const genreMappings = {
 };
 const languageMappings = { 'korean': 'ko' };
 
-// We will now fetch blogs from /blogs-index.json instead of eager globbing for better performance
-
 function App() {
     const [allFetchedResults, setAllFetchedResults] = useState([]);
     const [displayedResultsCount, setDisplayedResultsCount] = useState(0);
@@ -51,8 +49,6 @@ function App() {
         setTimeout(() => setToast(null), 2500);
     }, []);
 
-
-
     const loadBlogs = useCallback(async () => {
         try {
             const res = await fetch('/blogs-index.json');
@@ -64,7 +60,6 @@ function App() {
             setBlogs(loadedBlogs);
         } catch (err) {
             console.error("Failed to load blogs:", err);
-            // Fallback or empty state
             setBlogs([]);
         }
     }, []);
@@ -606,7 +601,7 @@ function App() {
                         {modalLoading ? (
                             <div id="modal-loader"><i className="fas fa-spinner fa-spin" aria-hidden="true"></i> &nbsp; Loading...</div>
                         ) : modalData && (
-                            <div id="modal-content" style={{ display: 'block' }}>
+                            <div className="modal-content">
                                 <div className="modal-header">
                                     {modalData.videos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube') ? (
                                         <iframe

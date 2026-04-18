@@ -1,5 +1,69 @@
 [
     {
+        "id": "2026-04-18-k-dramas",
+        "date": "2026-04-18",
+        "title": "K-Drama Frenzy",
+        "category": "korean",
+        "excerpt": "Top K-Drama picks and in-depth analysis",
+        "link": "/blog.html?id=2026-04-18-k-dramas"
+    },
+    {
+        "id": "2026-04-18-sci-fi-thrillers",
+        "date": "2026-04-18",
+        "title": "2026 Sci-Fi Thrillers",
+        "category": "movies",
+        "excerpt": "Discover the top sci-fi thrillers of 2026",
+        "link": "/blog.html?id=2026-04-18-sci-fi-thrillers"
+    },
+    {
+        "id": "2026-04-17-k-dramas",
+        "date": "2026-04-17",
+        "title": "K-Drama Frenzy",
+        "category": "korean",
+        "excerpt": "Top K-Drama picks with expert analysis",
+        "link": "/blog.html?id=2026-04-17-k-dramas"
+    },
+    {
+        "id": "2026-04-17-sci-fi-thrillers",
+        "date": "2026-04-17",
+        "title": "5 Sci-Fi Thrillers",
+        "category": "movies",
+        "excerpt": "Explore 5 sci-fi movies with action, suspense, and plot twists",
+        "link": "/blog.html?id=2026-04-17-sci-fi-thrillers"
+    },
+    {
+        "id": "2026-04-16-k-dramas",
+        "date": "2026-04-16",
+        "title": "K-Drama Frenzy",
+        "category": "korean",
+        "excerpt": "Discover the latest K-Drama hits",
+        "link": "/blog.html?id=2026-04-16-k-dramas"
+    },
+    {
+        "id": "2026-04-16-sci-fi-thrillers",
+        "date": "2026-04-16",
+        "title": "Sci-Fi Thrillers 2026",
+        "category": "movies",
+        "excerpt": "Explore top sci-fi thrillers of 2026",
+        "link": "/blog.html?id=2026-04-16-sci-fi-thrillers"
+    },
+    {
+        "id": "2026-04-15-k-dramas",
+        "date": "2026-04-15",
+        "title": "K-Drama Frenzy",
+        "category": "korean",
+        "excerpt": "Discover top K-Dramas",
+        "link": "/blog.html?id=2026-04-15-k-dramas"
+    },
+    {
+        "id": "2026-04-15-sci-fi-thrillers",
+        "date": "2026-04-15",
+        "title": "5 Sci-Fi Thrillers",
+        "category": "movies",
+        "excerpt": "Buckle up for epic sci-fi thrillers",
+        "link": "/blog.html?id=2026-04-15-sci-fi-thrillers"
+    },
+    {
         "id": "2026-04-10-k-dramas-polished",
         "date": "2026-04-10",
         "title": "Heartstrings and High Stakes: Why 2024's K-Dramas are Dominating Screens",
