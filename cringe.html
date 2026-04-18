@@ -10,14 +10,14 @@
     <meta name="description"
         content="Dare to watch? Discover the most cringeworthy, awkward, and 'so bad they're good' movies of all time. Our Cringe Finder helps you find the perfect trainwreck for your next movie night.">
 
-    <link rel="canonical" href="/cringe.html" />
+    <link rel="canonical" href="https://www.pickmybinge.com/cringe.html" />
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="Worst Movies of All Time | PickMyBinge">
     <meta property="og:description"
         content="Our Cringe Finder tool helps you discover the most hilariously bad and awkward movies ever made.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="/cringe.html">
-    <meta property="og:image" content="/social-preview-cringe.png">
+    <meta property="og:url" content="https://www.pickmybinge.com/cringe.html">
+    <meta property="og:image" content="https://www.pickmybinge.com/social-preview-cringe.png">
     <meta name="twitter:card" content="summary_large_image">
 
     <script type="application/ld+json">
@@ -453,7 +453,9 @@
             <div id="modal-loader"><i class="fas fa-spinner fa-spin"></i> &nbsp; Loading...</div>
             <div id="modal-content">
                 <div class="modal-header">
-                    <iframe class="modal-trailer" id="modal-trailer" allowfullscreen></iframe>
+                    <iframe class="modal-trailer" id="modal-trailer" title="Movie trailer"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen></iframe>
                 </div>
                 <div class="modal-body">
                     <h2 class="modal-title" id="modal-title"></h2>
@@ -559,26 +561,43 @@
                 const moviesToShow = allFetchedMovies.slice(displayedCount, displayedCount + RESULTS_PER_LOAD);
                 moviesToShow.forEach((item) => {
                     const card = document.createElement('button');
+                    card.type = 'button';
                     card.className = 'card';
                     card.dataset.id = item.id;
                     card.dataset.type = 'movie';
-                    card.innerHTML = `
-                    <div class="poster">
-                        <img src="${item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/300x450/2D3047/8B8BA0?text=No+Image'}" alt="Poster for ${item.title}" class="poster" loading="lazy">
-                    </div>
-                    <div class="info">
-                        <h3 class="title">${item.title}</h3>
-                        <p class="year">${(item.release_date || '').substring(0, 4) || 'N/A'}</p>
-                    </div>`;
+                    card.setAttribute('aria-label', `View details for ${item.title || 'movie'}`);
+
+                    const posterWrap = document.createElement('div');
+                    posterWrap.className = 'poster';
+                    const img = document.createElement('img');
+                    img.src = item.poster_path
+                        ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+                        : 'https://via.placeholder.com/300x450/2D3047/8B8BA0?text=No+Image';
+                    img.alt = item.title ? `Poster for ${item.title}` : 'Poster';
+                    img.className = 'poster';
+                    img.loading = 'lazy';
+                    img.width = 300;
+                    img.height = 450;
+                    posterWrap.appendChild(img);
+
+                    const info = document.createElement('div');
+                    info.className = 'info';
+                    const title = document.createElement('h3');
+                    title.className = 'title';
+                    title.textContent = item.title || 'Untitled';
+                    const year = document.createElement('p');
+                    year.className = 'year';
+                    year.textContent = (item.release_date || '').substring(0, 4) || 'N/A';
+                    info.appendChild(title);
+                    info.appendChild(year);
+
+                    card.appendChild(posterWrap);
+                    card.appendChild(info);
                     resultsContainer.appendChild(card);
                 });
 
                 displayedCount += moviesToShow.length;
-                if (displayedCount < allFetchedMovies.length) {
-                    loadMoreBtn.style.display = 'block';
-                } else {
-                    loadMoreBtn.style.display = 'none';
-                }
+                loadMoreBtn.style.display = displayedCount < allFetchedMovies.length ? 'block' : 'none';
             }
 
             loadMoreBtn.addEventListener('click', displayMoreResults);
@@ -598,25 +617,29 @@
                 modalLoader.style.display = 'flex';
                 modalContent.style.display = 'none';
 
+                // Always clear previous trailer src so stale trailers don't flash
+                const trailerFrame = document.getElementById('modal-trailer');
+                trailerFrame.src = '';
+
                 const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
 
                 try {
                     const response = await fetch(detailsUrl);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const data = await response.json();
-                    document.getElementById('modal-title').textContent = data.name || data.title;
+                    document.getElementById('modal-title').textContent = data.name || data.title || 'Untitled';
                     document.getElementById('modal-overview').textContent = data.overview || "No summary available.";
 
                     const genresContainer = document.getElementById('modal-genres');
                     genresContainer.innerHTML = '';
-                    data.genres.slice(0, 4).forEach(genre => {
+                    (data.genres || []).slice(0, 4).forEach(genre => {
                         const genreTag = document.createElement('span');
                         genreTag.className = 'genre-tag';
                         genreTag.textContent = genre.name;
                         genresContainer.appendChild(genreTag);
                     });
 
-                    const trailer = data.videos.results.find(video => video.site === 'YouTube' && video.type === 'Trailer');
-                    const trailerFrame = document.getElementById('modal-trailer');
+                    const trailer = (data.videos?.results || []).find(video => video.site === 'YouTube' && video.type === 'Trailer');
                     if (trailer) {
                         trailerFrame.src = `https://www.youtube.com/embed/${trailer.key}`;
                         trailerFrame.parentElement.style.display = 'block';

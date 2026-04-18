@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const TMDB_API_URL = 'https://api.themoviedb.org/3';
 const RESULTS_PER_LOAD = 8;
+const CURRENT_YEAR = new Date().getFullYear();
 
 const genreMappings = {
     'comedy': { movie: '35', tv: '35' },
@@ -38,6 +39,17 @@ function App() {
     const [blogs, setBlogs] = useState([]);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [apiError, setApiError] = useState(null);
+    const [toast, setToast] = useState(null);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [showScrollTop, setShowScrollTop] = useState(false);
+    const didInit = useRef(false);
+    const filtersFirstRun = useRef(true);
+
+    const showToast = useCallback((msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 2500);
+    }, []);
 
 
 
@@ -118,10 +130,12 @@ function App() {
         const isText = !!query;
 
         if (isNewSearch) {
+            setIsSearching(true);
             setCurrentPage(1);
             setAllFetchedResults([]);
             setDisplayedResultsCount(0);
         } else {
+            setIsLoadingMore(true);
             setCurrentPage(targetPage);
         }
 
@@ -139,26 +153,45 @@ function App() {
             tvData = await fetchData('tv', query, targetPage, isText);
         }
 
-        const newResults = shuffleArray([...movieData.results, ...tvData.results]);
+        try {
+            const combined = shuffleArray([...movieData.results, ...tvData.results]);
 
-        if (isNewSearch) {
-            setAllFetchedResults(newResults);
-            setDisplayedResultsCount(Math.min(newResults.length, RESULTS_PER_LOAD));
-        } else {
-            setAllFetchedResults(prev => [...prev, ...newResults]);
-            setDisplayedResultsCount(prev => prev + Math.min(newResults.length, RESULTS_PER_LOAD));
+            if (isNewSearch) {
+                const seen = new Set();
+                const newResults = combined.filter(item => {
+                    if (seen.has(item.id)) return false;
+                    seen.add(item.id);
+                    return true;
+                });
+                setAllFetchedResults(newResults);
+                setDisplayedResultsCount(Math.min(newResults.length, RESULTS_PER_LOAD));
+            } else {
+                setAllFetchedResults(prev => {
+                    const seen = new Set(prev.map(r => r.id));
+                    const uniqueNew = combined.filter(item => {
+                        if (seen.has(item.id)) return false;
+                        seen.add(item.id);
+                        return true;
+                    });
+                    setDisplayedResultsCount(count => count + Math.min(uniqueNew.length, RESULTS_PER_LOAD));
+                    return [...prev, ...uniqueNew];
+                });
+            }
+        } finally {
+            setIsSearching(false);
+            setIsLoadingMore(false);
         }
     }, [fetchData, shuffleArray, typeFilter]);
 
     useEffect(() => {
+        if (didInit.current) return;
+        didInit.current = true;
         const init = async () => {
-            console.log("App initializing...");
             try {
                 await Promise.all([
                     searchEntertainment(null, true),
                     loadBlogs()
                 ]);
-                console.log("Initialization complete.");
             } catch (err) {
                 console.error("Initialization failed:", err);
                 setApiError("Failed to load initial data. Please check your connection.");
@@ -167,7 +200,8 @@ function App() {
             }
         };
         init();
-    }, [searchEntertainment, loadBlogs]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleLoadMore = () => {
         if (displayedResultsCount < allFetchedResults.length) {
@@ -175,6 +209,8 @@ function App() {
         } else if (currentPage < totalApiPages) {
             const nextPage = currentPage + 1;
             searchEntertainment(isTextSearch ? currentQuery : null, false, nextPage);
+        } else {
+            showToast("You've reached the end!");
         }
     };
 
@@ -190,21 +226,29 @@ function App() {
                 newFilters.delete(filter);
             } else {
                 if (newFilters.size >= 2) {
-                    alert('You can select a maximum of 2 filters.');
+                    showToast('You can select up to 2 filters at a time.');
                     return;
                 }
                 newFilters.add(filter);
             }
         }
         setActiveFilters(newFilters);
+        // Reset pagination state when filters change
+        setCurrentPage(1);
+        setTotalApiPages(1);
     };
 
-    // Trigger search when filters change
+    // Trigger search when filters change (skip the very first mount run)
     useEffect(() => {
+        if (filtersFirstRun.current) {
+            filtersFirstRun.current = false;
+            return;
+        }
         if (!isTextSearch) {
             searchEntertainment(null, true);
         }
-    }, [activeFilters, typeFilter, isTextSearch, searchEntertainment]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeFilters, typeFilter]);
 
     const triggerTextSearch = () => {
         const query = searchInput.trim();
@@ -225,19 +269,50 @@ function App() {
         const detailsUrl = `${TMDB_API_URL}/${type}/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
         try {
             const response = await fetch(detailsUrl);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
-            setModalData(data);
-            setModalLoading(false);
+            // Preserve the type we were passed so links don't mis-detect TV as movie
+            setModalData({ ...data, __type: type });
         } catch (error) {
             console.error("Failed to fetch details:", error);
+            showToast("Couldn't load details. Please try again.");
             setShowModal(false);
+            document.body.classList.remove('modal-open');
+        } finally {
+            setModalLoading(false);
         }
     };
 
-    const closeDetailsModal = () => {
+    const closeDetailsModal = useCallback(() => {
         setShowModal(false);
         document.body.classList.remove('modal-open');
-    };
+    }, []);
+
+    // Close modal on Escape
+    useEffect(() => {
+        if (!showModal) return;
+        const onKey = (e) => { if (e.key === 'Escape') closeDetailsModal(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [showModal, closeDetailsModal]);
+
+    // Close mobile menu on Escape
+    useEffect(() => {
+        if (!isMenuOpen) return;
+        const onKey = (e) => { if (e.key === 'Escape') setIsMenuOpen(false); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [isMenuOpen]);
+
+    // Scroll-to-top visibility
+    useEffect(() => {
+        const onScroll = () => setShowScrollTop(window.scrollY > 600);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
+    const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+    const clearSearchInput = () => setSearchInput('');
 
     if (isInitialLoading) {
         return (
@@ -253,8 +328,8 @@ function App() {
 
     if (apiError) {
         return (
-            <div className="initial-error">
-                <h2>Opps!</h2>
+            <div className="initial-error" role="alert">
+                <h2>Oops!</h2>
                 <p>{apiError}</p>
                 <button onClick={() => window.location.reload()}>Retry</button>
             </div>
@@ -268,18 +343,39 @@ function App() {
                     <img src="/logo.png" alt="PickMyBinge Logo" />
                     <span className="brand-name">PickMyBinge</span>
                 </a>
-                <nav className="main-nav">
-                    <button className="menu-btn" onClick={() => setIsMenuOpen(true)}>
-                        <i className="fas fa-bars"></i>
+                <nav className="main-nav" aria-label="Primary">
+                    <button
+                        className="menu-btn"
+                        onClick={() => setIsMenuOpen(true)}
+                        aria-label="Open menu"
+                        aria-expanded={isMenuOpen}
+                        aria-controls="main-nav-menu"
+                    >
+                        <i className="fas fa-bars" aria-hidden="true"></i>
                     </button>
-                    <div className={`nav-menu ${isMenuOpen ? 'show' : ''}`}>
-                        <button className="close-btn" onClick={() => setIsMenuOpen(false)}>
-                            <i className="fas fa-times"></i>
+                    {isMenuOpen && (
+                        <div
+                            className="nav-backdrop"
+                            onClick={() => setIsMenuOpen(false)}
+                            aria-hidden="true"
+                        />
+                    )}
+                    <div
+                        id="main-nav-menu"
+                        className={`nav-menu ${isMenuOpen ? 'show' : ''}`}
+                        role="menu"
+                    >
+                        <button
+                            className="close-btn"
+                            onClick={() => setIsMenuOpen(false)}
+                            aria-label="Close menu"
+                        >
+                            <i className="fas fa-times" aria-hidden="true"></i>
                         </button>
-                        <a href="/" className="active-nav"><i className="fas fa-home"></i> Home</a>
-                        <a href="/cringe.html"><i className="fas fa-ghost"></i> Worst Movies</a>
-                        <a href="/quiz.html"><i className="fas fa-question-circle"></i> Superhero Quiz</a>
-                        <a href="/blog.html"><i className="fas fa-newspaper"></i> Blog</a>
+                        <a href="/" className="active-nav" role="menuitem"><i className="fas fa-home" aria-hidden="true"></i> Home</a>
+                        <a href="/cringe.html" role="menuitem"><i className="fas fa-ghost" aria-hidden="true"></i> Worst Movies</a>
+                        <a href="/quiz.html" role="menuitem"><i className="fas fa-question-circle" aria-hidden="true"></i> Superhero Quiz</a>
+                        <a href="/blog.html" role="menuitem"><i className="fas fa-newspaper" aria-hidden="true"></i> Blog</a>
                     </div>
                 </nav>
             </header>
@@ -302,15 +398,28 @@ function App() {
                     <div className="search-container">
                         <div className="search-controls">
                             <div className="search-wrapper">
+                                <label htmlFor="search-input" className="visually-hidden">Search titles</label>
                                 <input
-                                    type="text"
+                                    type="search"
                                     id="search-input"
                                     placeholder="Search for a specific title..."
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && triggerTextSearch()}
+                                    onKeyDown={(e) => e.key === 'Enter' && triggerTextSearch()}
+                                    autoComplete="off"
                                 />
+                                {searchInput && (
+                                    <button
+                                        type="button"
+                                        className="search-clear"
+                                        onClick={clearSearchInput}
+                                        aria-label="Clear search"
+                                    >
+                                        <i className="fas fa-times-circle" aria-hidden="true"></i>
+                                    </button>
+                                )}
                             </div>
+                            <label htmlFor="type-filter" className="visually-hidden">Content type</label>
                             <select
                                 id="type-filter"
                                 value={typeFilter}
@@ -320,30 +429,36 @@ function App() {
                                 <option value="movie">Movies Only</option>
                                 <option value="tv">TV Shows Only</option>
                             </select>
-                            <button id="search-btn" onClick={triggerTextSearch}>
-                                <i className="fas fa-search"></i> Search
+                            <button id="search-btn" onClick={triggerTextSearch} aria-label="Search">
+                                <i className="fas fa-search" aria-hidden="true"></i> Search
                             </button>
                         </div>
                     </div>
 
-                    <div className="recommendation-bubbles">
-                        <div
+                    <div className="recommendation-bubbles" role="group" aria-label="Genre filters">
+                        <button
+                            type="button"
                             className={`bubble ${activeFilters.size === 0 ? 'active' : ''}`}
                             onClick={() => handleBubbleClick('popular')}
-                        >🔥 Popular Now</div>
+                            aria-pressed={activeFilters.size === 0}
+                        >🔥 Popular Now</button>
                         {Object.keys(genreMappings).map(genre => (
-                            <div
+                            <button
+                                type="button"
                                 key={genre}
                                 className={`bubble ${activeFilters.has(genre) ? 'active' : ''}`}
                                 onClick={() => handleBubbleClick(genre)}
+                                aria-pressed={activeFilters.has(genre)}
                             >
                                 {genre.charAt(0).toUpperCase() + genre.slice(1)}
-                            </div>
+                            </button>
                         ))}
-                        <div
+                        <button
+                            type="button"
                             className={`bubble ${activeFilters.has('korean') ? 'active' : ''}`}
                             onClick={() => handleBubbleClick('korean')}
-                        >🇰🇷 Korean</div>
+                            aria-pressed={activeFilters.has('korean')}
+                        >🇰🇷 Korean</button>
                     </div>
                 </section>
 
@@ -355,34 +470,71 @@ function App() {
 
                 <section className="results-section">
                     <h2 className="section-title">Recommended For You</h2>
-                    <div className="recommendation-cards">
-                        {allFetchedResults.slice(0, displayedResultsCount).map((item, index) => (
-                            <button
-                                key={`${item.id}-${index}`}
-                                className="card"
-                                onClick={() => openDetailsModal(item.id, item.type)}
-                            >
-                                <div className="card-header">
-                                    <img src={item.poster} alt={item.title} className="poster" loading="lazy" />
-                                    <span className={`type-badge ${item.type}-type`}>
-                                        {item.type === 'movie' ? 'Movie' : 'TV Show'}
-                                    </span>
-                                </div>
-                                <div className="info">
-                                    <h3 className="title">{item.title}</h3>
-                                    <p className="year">{item.year || 'N/A'}</p>
-                                    <div className="details">
-                                        <span className="rating"><i className="fas fa-star"></i> {item.rating}</span>
+                    <div className="recommendation-cards" aria-live="polite" aria-busy={isSearching}>
+                        {isSearching && allFetchedResults.length === 0 ? (
+                            Array.from({ length: 8 }).map((_, i) => (
+                                <div key={`skeleton-${i}`} className="card skeleton-card" aria-hidden="true">
+                                    <div className="skeleton-poster"></div>
+                                    <div className="info">
+                                        <div className="skeleton-line skeleton-title"></div>
+                                        <div className="skeleton-line skeleton-sub"></div>
                                     </div>
                                 </div>
-                            </button>
-                        ))}
+                            ))
+                        ) : (
+                            allFetchedResults.slice(0, displayedResultsCount).map((item, index) => (
+                                <button
+                                    key={`${item.id}-${index}`}
+                                    className="card"
+                                    onClick={() => openDetailsModal(item.id, item.type)}
+                                    aria-label={`View details for ${item.title}`}
+                                >
+                                    <div className="card-header">
+                                        <img
+                                            src={item.poster}
+                                            alt={item.title ? `Poster for ${item.title}` : 'Poster'}
+                                            className="poster"
+                                            loading="lazy"
+                                            width="300"
+                                            height="450"
+                                        />
+                                        <span className={`type-badge ${item.type}-type`}>
+                                            {item.type === 'movie' ? 'Movie' : 'TV Show'}
+                                        </span>
+                                    </div>
+                                    <div className="info">
+                                        <h3 className="title">{item.title}</h3>
+                                        <p className="year">{item.year || 'N/A'}</p>
+                                        <div className="details">
+                                            <span className="rating" aria-label={`Rating ${item.rating} out of 10`}>
+                                                <i className="fas fa-star" aria-hidden="true"></i> {item.rating}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </button>
+                            ))
+                        )}
                     </div>
-                    {(displayedResultsCount < allFetchedResults.length || currentPage < totalApiPages) && (
-                        <button className="load-more" style={{ display: 'block' }} onClick={handleLoadMore}>Load More</button>
+                    {!isSearching && (displayedResultsCount < allFetchedResults.length || currentPage < totalApiPages) && (
+                        <button
+                            className="load-more"
+                            onClick={handleLoadMore}
+                            disabled={isLoadingMore}
+                            aria-busy={isLoadingMore}
+                        >
+                            {isLoadingMore ? (
+                                <><i className="fas fa-spinner fa-spin" aria-hidden="true"></i> Loading...</>
+                            ) : (
+                                'Load More'
+                            )}
+                        </button>
                     )}
-                    {allFetchedResults.length === 0 && !modalLoading && (
-                        <div className="no-results"><h3>No results found</h3><p>Try a different search term or filter combination.</p></div>
+                    {!isSearching && allFetchedResults.length === 0 && (
+                        <div className="no-results" role="status">
+                            <i className="fas fa-search" aria-hidden="true"></i>
+                            <h3>No results found</h3>
+                            <p>Try a different search term or filter combination.</p>
+                        </div>
                     )}
                 </section>
 
@@ -410,49 +562,81 @@ function App() {
             </main>
 
             <footer>
-                <p>PickMyBinge &copy; 2026</p>
-                <nav>
+                <p>PickMyBinge &copy; {CURRENT_YEAR}</p>
+                <nav aria-label="Footer">
                     <a href="/privacy.html">Privacy Policy</a>
                     <a href="/terms.html">Terms &amp; Conditions</a>
-
                     <a href="/contact.html">Contact Us</a>
                 </nav>
             </footer>
 
+            {/* Toast */}
+            {toast && (
+                <div className="toast" role="status" aria-live="polite">{toast}</div>
+            )}
+
+            {/* Scroll to top */}
+            {showScrollTop && (
+                <button
+                    type="button"
+                    className="scroll-top"
+                    onClick={scrollToTop}
+                    aria-label="Scroll to top"
+                >
+                    <i className="fas fa-arrow-up" aria-hidden="true"></i>
+                </button>
+            )}
+
             {/* Modal */}
             {showModal && (
-                <div className={`modal-overlay ${showModal ? 'show' : ''}`} onClick={closeDetailsModal}>
+                <div
+                    className={`modal-overlay ${showModal ? 'show' : ''}`}
+                    onClick={closeDetailsModal}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Content details"
+                >
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
-                        <span className="modal-close" onClick={closeDetailsModal}>&times;</span>
+                        <button
+                            type="button"
+                            className="modal-close"
+                            onClick={closeDetailsModal}
+                            aria-label="Close details"
+                        >&times;</button>
                         {modalLoading ? (
-                            <div id="modal-loader"><i className="fas fa-spinner fa-spin"></i> &nbsp; Loading...</div>
+                            <div id="modal-loader"><i className="fas fa-spinner fa-spin" aria-hidden="true"></i> &nbsp; Loading...</div>
                         ) : modalData && (
                             <div id="modal-content" style={{ display: 'block' }}>
                                 <div className="modal-header">
-                                    {modalData.videos?.results?.find(v => v.type === 'Trailer') ? (
+                                    {modalData.videos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube') ? (
                                         <iframe
                                             className="modal-trailer"
-                                            src={`https://www.youtube.com/embed/${modalData.videos.results.find(v => v.type === 'Trailer').key}`}
+                                            title={`${modalData.name || modalData.title || 'Content'} trailer`}
+                                            src={`https://www.youtube.com/embed/${modalData.videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube').key}`}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowFullScreen
                                         ></iframe>
                                     ) : (
-                                        <div style={{ padding: '100px', textAlign: 'center' }}>No trailer available</div>
+                                        <div className="no-trailer" style={{ padding: '60px 20px', textAlign: 'center' }}>
+                                            <i className="fas fa-film" aria-hidden="true" style={{ fontSize: '2rem', opacity: 0.5 }}></i>
+                                            <p style={{ marginTop: '12px' }}>No trailer available</p>
+                                        </div>
                                     )}
                                 </div>
                                 <div className="modal-body">
                                     <h2 className="modal-title">{modalData.name || modalData.title}</h2>
                                     <div className="modal-genres">
-                                        {modalData.genres?.map(g => (
+                                        {modalData.genres?.slice(0, 4).map(g => (
                                             <span key={g.id} className="genre-tag">{g.name}</span>
                                         ))}
                                     </div>
-                                    <p className="modal-overview">{modalData.overview}</p>
+                                    <p className="modal-overview">{modalData.overview || 'No summary available.'}</p>
                                     <a
                                         className="tmdb-link"
-                                        href={`https://www.themoviedb.org/${modalData.title ? 'movie' : 'tv'}/${modalData.id}`}
+                                        href={`https://www.themoviedb.org/${modalData.__type || (modalData.title ? 'movie' : 'tv')}/${modalData.id}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                    >View full details on TMDB</a>
+                                    >View full details on TMDB <i className="fas fa-external-link-alt" aria-hidden="true"></i></a>
                                 </div>
                             </div>
                         )}

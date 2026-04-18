@@ -483,19 +483,32 @@
 
     let allPosts = [], activeFilter = 'all', searchQ = '';
 
+    // HTML escape to prevent XSS on AI-generated content
+    function escapeHtml(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     async function init() {
       const urlParams = new URLSearchParams(window.location.search);
       const postId = urlParams.get('id');
 
+      try {
+        const res = await fetch('/blogs-index.json');
+        if (res.ok) {
+          allPosts = await res.json();
+          allPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+      } catch (e) { allPosts = []; }
+
       if (postId) {
         showPost(postId);
       } else {
-        const grid = document.getElementById('blog-grid');
-        try {
-          const res = await fetch('/blogs-index.json');
-          allPosts = await res.json();
-          allPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
-        } catch (e) { allPosts = []; }
         render();
       }
     }
@@ -505,39 +518,56 @@
       document.querySelector('.controls').style.display = 'none';
       document.getElementById('blog-grid').style.display = 'none';
       document.getElementById('post-viewer').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'instant' });
 
       try {
-        const res = await fetch(`/content/blogs/${id}.json`);
+        const res = await fetch(`/content/blogs/${encodeURIComponent(id)}.json`);
         if (!res.ok) throw new Error('Post not found');
         const post = await res.json();
 
         document.title = `${post.title} | PickMyBinge Blog`;
 
         const cat = post.category || detectCat(post.title, post.content);
+        const safeTitle = escapeHtml(post.title);
+        // Escape body then convert newlines and placeholders
+        const safeBody = escapeHtml(post.content || '')
+          .replace(/\n/g, '<br>')
+          .replace(/\[Official Poster Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-film"></i> Official Artwork Incoming</div>')
+          .replace(/\[Trailer Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-play-circle"></i> Trailer Available on TMDB</div>');
 
         document.getElementById('post-content').innerHTML = `
                 <div class="card-meta" style="font-size: 1rem; margin-bottom: 20px;">
-                    <span><i class="fas fa-calendar-alt"></i> ${fmtDate(post.date)}</span>
-                    <span><i class="fas fa-clock"></i> ${readTime(post.content)} read</span>
-                    <span class="card-cat-badge" style="position:static;">${catLabel[cat] || 'Article'}</span>
+                    <span><i class="fas fa-calendar-alt"></i> ${escapeHtml(fmtDate(post.date))}</span>
+                    <span><i class="fas fa-clock"></i> ${escapeHtml(readTime(post.content))} read</span>
+                    <span class="card-cat-badge" style="position:static;">${escapeHtml(catLabel[cat] || 'Article')}</span>
                 </div>
-                <h1 style="font-size: 3rem; margin-bottom: 30px; line-height: 1.1;">${post.title}</h1>
-                <div style="font-size: 1.2rem; line-height: 1.8; color: #d1d1e0;">
-                    ${post.content
-            .replace(/\n/g, '<br>')
-            .replace(/\[Official Poster Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-film"></i> Official Artwork Incoming</div>')
-            .replace(/\[Trailer Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-play-circle"></i> Trailer Available on TMDB</div>')
-          }
-                </div>
+                <h1 style="font-size: 3rem; margin-bottom: 30px; line-height: 1.1;">${safeTitle}</h1>
+                <div style="font-size: 1.2rem; line-height: 1.8; color: #d1d1e0;">${safeBody}</div>
             `;
       } catch (e) {
-        document.getElementById('post-content').innerHTML = `<h2>Error</h2><p>Article not found.</p>`;
+        document.getElementById('post-content').innerHTML = `<h2>Article not found</h2><p>This post may have been removed or the link is incorrect.</p>`;
       }
     }
 
-    document.getElementById('back-btn').addEventListener('click', () => {
+    document.getElementById('back-btn').addEventListener('click', (e) => {
+      e.preventDefault();
       window.history.replaceState({}, '', '/blog.html');
-      location.reload();
+      document.querySelector('.hero').style.display = '';
+      document.querySelector('.controls').style.display = '';
+      document.getElementById('blog-grid').style.display = '';
+      document.getElementById('post-viewer').style.display = 'none';
+      document.title = 'Blog | PickMyBinge';
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      if (!allPosts.length) {
+        // Index wasn't loaded before (user deep-linked to a post), fetch it now
+        fetch('/blogs-index.json').then(r => r.ok ? r.json() : []).then(posts => {
+          allPosts = posts;
+          allPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+          render();
+        }).catch(() => render());
+      } else {
+        render();
+      }
     });
 
     function render() {
@@ -551,26 +581,27 @@
       });
 
       if (!filtered.length) {
-        grid.innerHTML = `<div class="empty"><i class="fas fa-newspaper"></i><h3>${allPosts.length ? 'No matching articles' : 'More articles coming soon!'}</h3><p>${allPosts.length ? 'Try a different filter.' : 'Our AI publishes new content daily.'}</p></div>`;
+        grid.innerHTML = `<div class="empty"><i class="fas fa-newspaper"></i><h3>${escapeHtml(allPosts.length ? 'No matching articles' : 'More articles coming soon!')}</h3><p>${escapeHtml(allPosts.length ? 'Try a different filter.' : 'Our AI publishes new content daily.')}</p></div>`;
         return;
       }
 
       grid.innerHTML = filtered.map((p, i) => {
         const cat = p.category || detectCat(p.title, p.excerpt);
+        const safeLink = p.link && /^(https?:\/\/|\/)/.test(p.link) ? escapeHtml(p.link) : '#';
         return `
-          <a href="${p.link || '#'}" class="blog-card" style="animation:fadeUp 0.4s ${i * 0.06}s both ease">
+          <a href="${safeLink}" class="blog-card" style="animation:fadeUp 0.4s ${i * 0.06}s both ease">
             <div class="card-thumb">
               <div class="card-thumb-overlay"></div>
               <span style="position:relative;z-index:1">${catEmoji[cat] || '🎬'}</span>
-              <span class="card-cat-badge">${catLabel[cat] || 'Article'}</span>
+              <span class="card-cat-badge">${escapeHtml(catLabel[cat] || 'Article')}</span>
             </div>
             <div class="card-body">
               <div class="card-meta">
-                <span><i class="fas fa-calendar-alt"></i> ${fmtDate(p.date)}</span>
-                <span><i class="fas fa-clock"></i> ${readTime(p.content)} read</span>
+                <span><i class="fas fa-calendar-alt"></i> ${escapeHtml(fmtDate(p.date))}</span>
+                <span><i class="fas fa-clock"></i> ${escapeHtml(readTime(p.content))} read</span>
               </div>
-              <h3 class="card-title">${p.title}</h3>
-              <p class="card-excerpt">${p.excerpt || ''}</p>
+              <h3 class="card-title">${escapeHtml(p.title)}</h3>
+              <p class="card-excerpt">${escapeHtml(p.excerpt || '')}</p>
               <div class="card-footer"><span class="read-more">Read More <i class="fas fa-arrow-right"></i></span></div>
             </div>
           </a>`;

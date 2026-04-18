@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { pathToFileURL } from 'url';
 
 const DOMAIN = 'https://www.pickmybinge.com';
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
@@ -46,7 +47,7 @@ ${pages.map(page => `  <url>
     console.log(`Sitemap generated successfully at ${OUTPUT_FILE}`);
 }
 
-// Run if called directly
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('generate-sitemap.js')) {
+// Run if called directly (cross-platform: pathToFileURL normalizes Windows paths)
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
     generateSitemap();
 }

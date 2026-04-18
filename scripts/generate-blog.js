@@ -2,12 +2,12 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Autonomous Blog Generation Pipeline v2
- * - Richer TMDB data (cast, genres, tagline, runtime)
- * - Upgraded model: llama-3.3-70b-versatile
- * - Longer, structured prompts (1200+ words enforced)
- * - Auto-publishes to blogs-index.json and public/content/blogs/
- * - Correct YYYY-MM-DD date in filenames
+ * PickMyBinge Blog Generation Pipeline v3
+ * - Persona-based drafting (THE BINGER / THE CRITIC / THE NOSTALGIA TRAP)
+ * - Multi-stage audit: Fact-Check Sanitizer → Editorial Polish
+ * - Regex post-processing to remove AI artifacts
+ * - Robust JSON parser with character-level state machine
+ * - Smart rate-limit-aware retry with Groq's advised wait time
  */
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -16,6 +16,42 @@ const BLOG_DIR = path.join(process.cwd(), 'public/content/blogs');
 const DRAFTS_DIR = path.join(process.cwd(), 'public/content/1st draft');
 const BLOGS_INDEX = path.join(process.cwd(), 'public/blogs-index.json');
 const MANIFEST_PATH = path.join(process.cwd(), 'public/content/blogs/manifest.json');
+
+// ─── Persona Definitions ───────────────────────────────────────────────────────
+
+const PERSONAS = [
+    {
+        id: 'BINGER',
+        name: 'THE BINGER',
+        voice: `You write like a passionate friend texting their group chat at midnight about a show they can't stop watching. 
+Your tone is warm, excited, and deeply relatable. You use phrases like "if this doesn't hook you in episode 1, I'll eat my remote", 
+"absolute comfort watch", "the cast chemistry is INSANE". You speak directly to the reader as "you". 
+You focus on: binge-worthiness, emotional payoff, pacing, and rewatchability. Avoid academic language.`,
+        style: 'conversational, enthusiastic, relatable'
+    },
+    {
+        id: 'CRITIC',
+        name: 'THE CRITIC',
+        voice: `You write like a seasoned entertainment journalist with a Letterboxd account and strong opinions. 
+Your tone is sharp, analytical, and authoritative. You dissect cinematography, narrative structure, thematic subtext, 
+and directorial choices. Use precise film vocabulary: mise-en-scène, diegetic sound, narrative economy, character foil. 
+You are not afraid to call out weaknesses. You back every claim with specific scene references.`,
+        style: 'analytical, authoritative, precise'
+    },
+    {
+        id: 'NOSTALGIA',
+        name: 'THE NOSTALGIA TRAP',
+        voice: `You write through the lens of pop-culture history. Everything new reminds you of something classic from the golden age.
+Your tone is nostalgic, wry, and deeply comparative. You say things like "This gives us the same unhinged energy that [classic] had in [year]" 
+or "If [old show] and [other show] had a baby watching Netflix at 2am, this would be it". 
+You connect new titles to beloved classics and explain what old fans of those shows will love about these new ones.`,
+        style: 'nostalgic, comparative, warm'
+    }
+];
+
+function pickPersona() {
+    return PERSONAS[Math.floor(Math.random() * PERSONAS.length)];
+}
 
 // ─── Groq Helpers ─────────────────────────────────────────────────────────────
 
@@ -50,12 +86,11 @@ async function callGroqWithRetry(model, prompt, retries = 3) {
         } catch (e) {
             console.error(`  Attempt ${i + 1} failed: ${e.message}`);
             if (i === retries - 1) throw e;
-            // Parse Groq's suggested wait time from the error message, e.g.:
-            // "Please try again in 36.43s."
+            // Parse Groq's suggested wait time, e.g. "Please try again in 36.43s."
             const match = e.message.match(/try again in ([\d.]+)s/i);
             const waitMs = match
-                ? Math.ceil(parseFloat(match[1]) * 1000) + 2000 // advised wait + 2s buffer
-                : 60000; // fallback: 60s
+                ? Math.ceil(parseFloat(match[1]) * 1000) + 2000
+                : 60000;
             console.log(`  ⏳ Rate limit hit — waiting ${(waitMs / 1000).toFixed(1)}s before retry...`);
             await new Promise(r => setTimeout(r, waitMs));
         }
@@ -76,20 +111,13 @@ async function fetchFromTMDB(endpoint, params = {}) {
     return res.json();
 }
 
-/**
- * Fetch full details + credits for a single TMDB item.
- * Returns enriched object with cast, genres, tagline, runtime.
- */
 async function fetchEnrichedItem(id, type) {
     const [details, credits] = await Promise.all([
         fetchFromTMDB(`${type}/${id}`, { append_to_response: 'keywords' }),
         fetchFromTMDB(`${type}/${id}/credits`)
     ]);
 
-    const topCast = (credits.cast || [])
-        .slice(0, 3)
-        .map(a => a.name);
-
+    const topCast = (credits.cast || []).slice(0, 3).map(a => a.name);
     const genres = (details.genres || []).map(g => g.name);
 
     return {
@@ -119,10 +147,6 @@ async function fetchEnrichedItem(id, type) {
 /**
  * Robustly parses a JSON object that may contain literal (unescaped) newlines,
  * carriage returns, or tabs inside string values — a common LLM output artifact.
- *
- * Strategy: walk character-by-character; when inside a JSON string, replace any
- * raw control character with its proper JSON escape sequence. Already-escaped
- * sequences (e.g. the two characters `\` + `n`) are left completely untouched.
  */
 function sanitizeJsonString(raw) {
     let result = '';
@@ -132,7 +156,6 @@ function sanitizeJsonString(raw) {
         const ch = raw[i];
         if (inString) {
             if (ch === '\\') {
-                // Consume the escape sequence as-is (e.g. \n, \", \\, \uXXXX)
                 result += ch + (raw[i + 1] || '');
                 i += 2;
                 continue;
@@ -146,7 +169,7 @@ function sanitizeJsonString(raw) {
             } else if (ch === '\t') {
                 result += '\\t';
             } else if (ch < ' ') {
-                // Other control characters: drop them silently
+                // drop other control characters
             } else {
                 result += ch;
             }
@@ -172,6 +195,45 @@ function parseJson(str) {
     }
 }
 
+// ─── HTML Post-Processing ─────────────────────────────────────────────────────
+
+/**
+ * Cleans up common LLM HTML artifacts from the content field.
+ */
+function cleanHtml(html) {
+    let out = html;
+
+    // Remove generic opener paragraphs
+    out = out.replace(
+        /<p[^>]*>\s*(In the world of|As we step into|Welcome to the world of|In today's|It's no secret that)[^<]*<\/p>/gi,
+        ''
+    );
+
+    // Remove filler phrases inline
+    const fillerPhrases = [
+        /It'?s worth noting that\s*/gi,
+        /In conclusion[,.]?\s*/gi,
+        /To summarize[,.]?\s*/gi,
+        /Dive into\s*/gi,
+        /Without further ado[,.]?\s*/gi,
+        /At the end of the day[,.]?\s*/gi,
+        /Needless to say[,.]?\s*/gi,
+        /I'?m not going to lie[,.]?\s*/gi,
+    ];
+    fillerPhrases.forEach(re => { out = out.replace(re, ''); });
+
+    // Ensure all <img> tags have loading="lazy"
+    out = out.replace(/<img\b(?![^>]*loading=)/gi, '<img loading="lazy"');
+
+    // Remove empty paragraphs
+    out = out.replace(/<p[^>]*>\s*<\/p>/gi, '');
+
+    // Remove inline style attributes (LLM sometimes sneaks them in)
+    out = out.replace(/\s*style="[^"]*"/gi, '');
+
+    return out.trim();
+}
+
 // ─── Index Helpers ────────────────────────────────────────────────────────────
 
 function updateBlogsIndex(newEntry) {
@@ -179,7 +241,6 @@ function updateBlogsIndex(newEntry) {
     if (fs.existsSync(BLOGS_INDEX)) {
         try { index = JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8')); } catch { }
     }
-    // Remove any existing entry with the same id, then prepend
     index = index.filter(p => p.id !== newEntry.id);
     index.unshift(newEntry);
     fs.writeFileSync(BLOGS_INDEX, JSON.stringify(index, null, 4));
@@ -189,7 +250,14 @@ function updateBlogsIndex(newEntry) {
 function updateManifest(fileName) {
     let manifest = [];
     if (fs.existsSync(MANIFEST_PATH)) {
-        try { manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8')); } catch { }
+        try {
+            manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'));
+            if (!Array.isArray(manifest)) throw new Error('manifest.json is not an array');
+        } catch (err) {
+            // Bail out so we don't overwrite a corrupted manifest and nuke history
+            console.error(`  ✗ manifest.json unreadable — aborting manifest update: ${err.message}`);
+            return;
+        }
     }
     if (!manifest.includes(fileName)) {
         manifest.unshift(fileName);
@@ -250,10 +318,14 @@ async function runPipeline(nicheHint = 'Sci-Fi Thrillers') {
         const category = nicheHint === 'K-Dramas' ? 'korean' : 'movies';
         const nicheLabel = nicheHint === 'K-Dramas' ? 'K-Drama' : 'Sci-Fi Thriller';
 
-        // ── STEP 3: AI Writing pass ───────────────────────────────────────────
-        console.log('\n[STEP 3] Generating article (writing pass)...');
+        // ── STEP 3: Persona-based AI writing pass ─────────────────────────────
+        const persona = pickPersona();
+        console.log(`\n[STEP 3] Generating article (persona: ${persona.name})...`);
 
-        const writingPrompt = `You are the Lead Editor at PickMyBinge, a premium entertainment blog. Write a viral, deeply researched ${nicheLabel} feature article.
+        const writingPrompt = `${persona.voice}
+
+You are writing for PickMyBinge, a premium entertainment recommendation blog. 
+Write a viral, deeply researched ${nicheLabel} feature article in YOUR DISTINCTIVE VOICE (${persona.style}).
 
 SOURCE DATA (you MUST use all 5 titles, do not invent others):
 ${JSON.stringify(enrichedContent, null, 2)}
@@ -265,57 +337,104 @@ ARTICLE STRUCTURE — follow this exactly:
    - <img src="[poster URL from data]" alt="[title] poster" class="blog-image"> — REQUIRED for every title. Use the exact poster URL from the source data. Do NOT skip or use placeholder text.
    - Cast callout: "Starring [cast names]"
    - Tagline in an HTML <blockquote>
-   - 3–4 paragraphs: plot analysis, what makes it special, themes, why PickMyBinge readers will love it
+   - 3–4 paragraphs: plot analysis, what makes it special, themes, why PickMyBinge readers will love it — WRITTEN IN YOUR PERSONA'S VOICE
    - A <span class="verdict-badge">PickMyBinge Verdict: X/10</span> rating
 3. A "PickMyBinge Quick Picks" HTML <table> summarising all 5 titles (columns: Title, Genre, Rating, Must-Watch Factor)
 4. A "Watch If You Liked" section with 2-3 similar recommendations
 5. A CTA paragraph: "Ready to find your next binge?" linking to https://www.pickmybinge.com
 
 RULES:
-- Output ONLY a JSON object with exactly these keys: "title", "excerpt", "content"
+- Output ONLY a JSON object with exactly these keys: "title", "excerpt", "content", "persona"
 - "title": catchy SEO headline (max 70 chars)
 - "excerpt": 1-2 sentence hook (max 160 chars, good for meta description)
 - "content": the full article as a single HTML string (NO <html>/<body>/<style> tags)
+- "persona": the persona id you used ("BINGER", "CRITIC", or "NOSTALGIA")
 - NO inline CSS or style attributes anywhere
 - Minimum 1200 words in the article body
 - All <img> tags must use the real poster URLs from the source data
-- Enthusiastic yet authoritative tone`;
+- Write ENTIRELY in your persona's voice and style`;
 
         const draftRaw = await callGroqWithRetry(MODEL, writingPrompt);
         const draft = parseJson(draftRaw);
+        console.log(`  → Draft written by persona: ${draft.persona || persona.id}`);
 
-        // ── STEP 4: Hostile editorial refinement ──────────────────────────────
-        console.log('\n[STEP 4] Refining article (hostile editor pass)...');
+        // ── STEP 4: Fact-Check & Data Sanitizer ───────────────────────────────
+        console.log('\n[STEP 4] Fact-checking & sanitizing data...');
 
-        const refinerPrompt = `You are a Hostile Senior Editor at PickMyBinge. Critically audit this draft article and return the polished version.
+        const sanitizerPrompt = `You are a meticulous data fact-checker for PickMyBinge. 
+Your job is to silently verify and fix this article draft against the authoritative source data.
 
 DRAFT:
 ${JSON.stringify(draft)}
 
-SOURCE TITLES TO VERIFY AGAINST:
+AUTHORITATIVE TMDB SOURCE DATA:
+${JSON.stringify(enrichedContent.map(t => ({
+            title: t.title,
+            release_date: t.release_date,
+            rating: t.rating,
+            cast: t.cast,
+            runtime: t.runtime,
+            poster: t.poster,
+            tmdb_link: t.tmdb_link,
+            genres: t.genres
+        })))}
+
+YOUR CHECKLIST — silently fix every issue you find, DO NOT add commentary:
+1. TITLES: Are all 5 title names exactly correct per source data? Fix any misspellings.
+2. YEARS: Do all release years match source data exactly? Fix any wrong years.
+3. CAST: Are all cast names spelled correctly and matching source data? Fix any errors.
+4. RATINGS: Do all TMDB ratings match source data exactly? Fix any discrepancies.
+5. POSTERS: Does every <img src="..."> use the exact poster URL from source data? Fix or add if missing.
+6. LINKS: Do all <a href="..."> links to TMDB use the exact tmdb_link from source data?
+7. HALLUCINATIONS: Remove any titles, facts, quotes, or protocols NOT in the source data.
+8. HTML: Ensure all HTML tags are properly closed and nested.
+9. Keep the persona voice intact — only fix factual errors, not the writing style.
+
+Return ONLY the corrected JSON object with keys: "title", "excerpt", "content", "persona". Output ONLY the JSON, no explanation.`;
+
+        const sanitizedRaw = await callGroqWithRetry(MODEL, sanitizerPrompt);
+        const sanitized = parseJson(sanitizedRaw);
+        console.log('  → Data sanitization complete.');
+
+        // ── STEP 5: Hostile Editorial Polish ─────────────────────────────────
+        console.log('\n[STEP 5] Hostile editorial polish...');
+
+        const refinerPrompt = `You are a Hostile Senior Editor at PickMyBinge. Critically audit this draft and return a polished version.
+
+DRAFT:
+${JSON.stringify(sanitized)}
+
+SOURCE TITLES:
 ${JSON.stringify(enrichedContent.map(t => ({ title: t.title, poster: t.poster, cast: t.cast, tmdb_link: t.tmdb_link })))}
 
 YOUR CHECKLIST — fix every issue you find:
-1. Hook: Is the opening NON-GENERIC? If it starts with "In the world of..." or "As we step into...", rewrite it completely.
+1. Hook: Is the opening NON-GENERIC? Rewrite completely if it starts with "In the world of..." or "As we step into...".
 2. Coverage: Are ALL 5 titles covered with deep-dive <h2> sections? Add any that are missing.
-3. Images: Does EVERY title section have an <img class="blog-image" src="[real URL]">? If any is missing or uses placeholder text, add it using the poster URL from SOURCE TITLES.
-4. Verdict badges: Is <span class="verdict-badge"> present for every title? Add if missing.
+3. Images: Does EVERY title section have an <img class="blog-image" src="[real URL]">? Add if missing.
+4. Verdict badges: Is <span class="verdict-badge"> present for every title?
 5. Table: Is the Quick Picks <table> present and correctly formatted?
-6. Length: Is the article at least 1200 words? If short, expand plot analyses and themes.
-7. Tone: Remove any AI-sounding filler phrases ("It's worth noting", "In conclusion", "Dive into").
-8. SEO: Ensure the title is punchy and under 70 chars. Ensure the excerpt is under 160 chars.
+6. Length: Is the article at least 1200 words? Expand if short.
+7. AI-isms: Remove filler phrases ("It's worth noting", "In conclusion", "Dive into", "Needless to say").
+8. SEO: title must be punchy and under 70 chars. excerpt must be under 160 chars.
+9. Persona voice must remain consistent throughout.
 
-Return ONLY the corrected JSON object with keys: "title", "excerpt", "content". Output ONLY the JSON, no explanation.`;
+Return ONLY the corrected JSON with keys: "title", "excerpt", "content", "persona". Output ONLY the JSON.`;
 
         const polishedRaw = await callGroqWithRetry(MODEL, refinerPrompt);
-        const finalPost = parseJson(polishedRaw);
+        const polished = parseJson(polishedRaw);
+        console.log('  → Editorial polish complete.');
 
         // Validation
-        const missing = ['title', 'excerpt', 'content'].filter(k => !finalPost[k]);
+        const missing = ['title', 'excerpt', 'content'].filter(k => !polished[k]);
         if (missing.length > 0) throw new Error(`Polished post missing fields: ${missing.join(', ')}`);
 
-        // ── STEP 5: Build and save ────────────────────────────────────────────
-        console.log('\n[STEP 5] Saving files...');
+        // ── STEP 6: Local post-processing ─────────────────────────────────────
+        console.log('\n[STEP 6] Cleaning HTML artifacts...');
+        polished.content = cleanHtml(polished.content);
+        console.log('  → HTML cleaned.');
+
+        // ── STEP 7: Build and save ────────────────────────────────────────────
+        console.log('\n[STEP 7] Saving files...');
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -332,29 +451,26 @@ Return ONLY the corrected JSON object with keys: "title", "excerpt", "content". 
         const newPost = {
             id: fileId,
             date: `${year}-${month}-${day}`,
-            title: finalPost.title,
-            excerpt: finalPost.excerpt,
+            title: polished.title,
+            excerpt: polished.excerpt,
+            persona: polished.persona || persona.id,
             category,
             tags,
-            readTimeMinutes: estimateReadTime(finalPost.content),
-            content: finalPost.content,
+            readTimeMinutes: estimateReadTime(polished.content),
+            content: polished.content,
             link: `/blog.html?id=${fileId}`
         };
 
-        // Save to draft folder
         const draftPath = path.join(DRAFTS_DIR, fileName);
         fs.writeFileSync(draftPath, JSON.stringify(newPost, null, 4));
         console.log(`  → Draft saved: public/content/1st draft/${fileName}`);
 
-        // Save to live blogs folder
         const livePath = path.join(BLOG_DIR, fileName);
         fs.writeFileSync(livePath, JSON.stringify(newPost, null, 4));
         console.log(`  → Live post saved: public/content/blogs/${fileName}`);
 
-        // Update manifest
         updateManifest(fileName);
 
-        // Update blogs-index.json (index entry is lightweight — no content field)
         const indexEntry = {
             id: fileId,
             date: newPost.date,
@@ -365,7 +481,7 @@ Return ONLY the corrected JSON object with keys: "title", "excerpt", "content". 
         };
         updateBlogsIndex(indexEntry);
 
-        console.log(`\n✅ Pipeline complete: ${fileId}`);
+        console.log(`\n✅ Pipeline complete: ${fileId} [persona: ${newPost.persona}]`);
         return true;
 
     } catch (error) {
@@ -379,7 +495,7 @@ Return ONLY the corrected JSON object with keys: "title", "excerpt", "content". 
 
 async function main() {
     const niches = ['Sci-Fi Thrillers', 'K-Dramas'];
-    console.log(`\nPickMyBinge Blog Pipeline v2`);
+    console.log(`\nPickMyBinge Blog Pipeline v3`);
     console.log(`Generating posts for: ${niches.join(', ')}\n`);
 
     const results = [];
@@ -387,8 +503,8 @@ async function main() {
         const ok = await runPipeline(niche);
         results.push({ niche, ok });
         if (niches.indexOf(niche) < niches.length - 1) {
-            console.log('\nPausing 3s before next niche...');
-            await new Promise(r => setTimeout(r, 3000));
+            console.log('\nPausing 5s before next niche...');
+            await new Promise(r => setTimeout(r, 5000));
         }
     }
 
