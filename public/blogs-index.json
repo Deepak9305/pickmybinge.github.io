@@ -1,5 +1,21 @@
 [
     {
+        "id": "2026-04-21-k-dramas",
+        "date": "2026-04-21",
+        "title": "K-Drama Fix",
+        "category": "korean",
+        "excerpt": "5 addictive K-Dramas with insane cast chemistry",
+        "link": "/blog.html?id=2026-04-21-k-dramas"
+    },
+    {
+        "id": "2026-04-21-sci-fi-thrillers",
+        "date": "2026-04-21",
+        "title": "5 Sci-Fi Thrillers",
+        "category": "movies",
+        "excerpt": "5 heart-pumping sci-fi thrillers",
+        "link": "/blog.html?id=2026-04-21-sci-fi-thrillers"
+    },
+    {
         "id": "2026-04-19-k-dramas",
         "date": "2026-04-19",
         "title": "K-Drama Frenzy",
