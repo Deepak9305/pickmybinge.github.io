@@ -1,5 +1,21 @@
 [
     {
+        "id": "2026-04-22-k-dramas",
+        "date": "2026-04-22",
+        "title": "K-Drama Frenzy",
+        "category": "korean",
+        "excerpt": "Binge the best K-Dramas of 2025",
+        "link": "/blog.html?id=2026-04-22-k-dramas"
+    },
+    {
+        "id": "2026-04-22-sci-fi-thrillers",
+        "date": "2026-04-22",
+        "title": "Sci-Fi Thrill Ride",
+        "category": "movies",
+        "excerpt": "Mind-bending sci-fi thrillers to keep you on the edge",
+        "link": "/blog.html?id=2026-04-22-sci-fi-thrillers"
+    },
+    {
         "id": "2026-04-21-k-dramas",
         "date": "2026-04-21",
         "title": "K-Drama Fix",
