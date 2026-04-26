@@ -234,6 +234,22 @@ function cleanHtml(html) {
     return out.trim();
 }
 
+// ─── Dedup Helpers ────────────────────────────────────────────────────────────
+
+function getUsedTmdbIds() {
+    const used = new Set();
+    if (!fs.existsSync(BLOGS_INDEX)) return used;
+    try {
+        const index = JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8'));
+        for (const entry of index) {
+            if (Array.isArray(entry.tmdb_ids)) {
+                entry.tmdb_ids.forEach(id => used.add(id));
+            }
+        }
+    } catch { }
+    return used;
+}
+
 // ─── Index Helpers ────────────────────────────────────────────────────────────
 
 function updateBlogsIndex(newEntry) {
@@ -285,31 +301,57 @@ async function runPipeline(nicheHint = 'Sci-Fi Thrillers') {
             if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
         });
 
-        // ── STEP 1: Discover titles from TMDB ────────────────────────────────
-        console.log('\n[STEP 1] Discovering titles from TMDB...');
-        const currentYear = new Date().getFullYear();
-        let discoverData;
+        // ── Same-day guard ────────────────────────────────────────────────────
+        const now = new Date();
+        const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const slug = nicheHint.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const fileId = `${formattedDate}-${slug}`;
+        const fileName = `${fileId}.json`;
 
-        if (nicheHint === 'K-Dramas') {
-            discoverData = await fetchFromTMDB('discover/tv', {
-                first_air_date_year: currentYear - 1,
-                with_original_language: 'ko',
-                sort_by: 'popularity.desc'
-            });
-        } else {
-            discoverData = await fetchFromTMDB('discover/movie', {
-                primary_release_year: currentYear,
-                with_genres: '878,53',
-                sort_by: 'popularity.desc'
-            });
+        if (fs.existsSync(path.join(BLOG_DIR, fileName))) {
+            console.log(`  ℹ️  Post for ${fileId} already exists — skipping.`);
+            return true;
         }
 
-        const topResults = discoverData.results.slice(0, 5);
-        if (topResults.length === 0) throw new Error('No content found on TMDB.');
+        // ── STEP 1: Discover titles from TMDB (skip already-covered IDs) ─────
+        console.log('\n[STEP 1] Discovering fresh titles from TMDB...');
+        const usedIds = getUsedTmdbIds();
+        console.log(`  → ${usedIds.size} previously used TMDB IDs loaded.`);
+
+        const currentYear = now.getFullYear();
+        const itemType = nicheHint === 'K-Dramas' ? 'tv' : 'movie';
+        const freshResults = [];
+        let page = 1;
+
+        while (freshResults.length < 5 && page <= 10) {
+            let pageData;
+            if (nicheHint === 'K-Dramas') {
+                pageData = await fetchFromTMDB('discover/tv', {
+                    first_air_date_year: currentYear - 1,
+                    with_original_language: 'ko',
+                    sort_by: 'popularity.desc',
+                    page
+                });
+            } else {
+                pageData = await fetchFromTMDB('discover/movie', {
+                    primary_release_year: currentYear,
+                    with_genres: '878,53',
+                    sort_by: 'popularity.desc',
+                    page
+                });
+            }
+
+            const fresh = (pageData.results || []).filter(item => !usedIds.has(item.id));
+            freshResults.push(...fresh);
+            if (!pageData.results || pageData.results.length === 0) break;
+            page++;
+        }
+
+        const topResults = freshResults.slice(0, 5);
+        if (topResults.length === 0) throw new Error('No fresh content found on TMDB — all top titles already covered.');
 
         // ── STEP 2: Enrich each title with full details ───────────────────────
         console.log('\n[STEP 2] Fetching enriched details for each title...');
-        const itemType = nicheHint === 'K-Dramas' ? 'tv' : 'movie';
         const enrichedContent = await Promise.all(
             topResults.map(item => fetchEnrichedItem(item.id, itemType))
         );
@@ -435,14 +477,9 @@ Return ONLY the corrected JSON with keys: "title", "excerpt", "content", "person
 
         // ── STEP 7: Build and save ────────────────────────────────────────────
         console.log('\n[STEP 7] Saving files...');
-        const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
-        const formattedDate = `${year}-${month}-${day}`;
-        const slug = nicheHint.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const fileId = `${formattedDate}-${slug}`;
-        const fileName = `${fileId}.json`;
 
         const tags = nicheHint === 'K-Dramas'
             ? ['k-drama', 'korean', 'tv-shows', 'streaming']
@@ -456,6 +493,7 @@ Return ONLY the corrected JSON with keys: "title", "excerpt", "content", "person
             persona: polished.persona || persona.id,
             category,
             tags,
+            tmdb_ids: enrichedContent.map(item => item.id),
             readTimeMinutes: estimateReadTime(polished.content),
             content: polished.content,
             link: `/blog.html?id=${fileId}`
@@ -477,6 +515,7 @@ Return ONLY the corrected JSON with keys: "title", "excerpt", "content", "person
             title: newPost.title,
             category,
             excerpt: newPost.excerpt,
+            tmdb_ids: newPost.tmdb_ids,
             link: newPost.link
         };
         updateBlogsIndex(indexEntry);
