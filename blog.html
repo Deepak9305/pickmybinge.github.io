@@ -251,6 +251,11 @@
       animation: shimmer 1.4s infinite;
     }
 
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     @keyframes shimmer {
       from {
         background-position: 200% 0;
@@ -449,16 +454,6 @@
           .replace(/\[Official Poster Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-film"></i> Official Artwork Incoming</div>')
           .replace(/\[Trailer Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-play-circle"></i> Trailer Available on TMDB</div>');
 
-        const titleEl = document.createElement('h1');
-        titleEl.textContent = post.title;
-        titleEl.style.cssText = 'font-size: 3rem; margin-bottom: 30px; line-height: 1.1;';
-
-        const content = post.content || '';
-        const bodyHtml = content
-          .replace(/\n/g, '<br>')
-          .replace(/\[Official Poster Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-film"></i> Official Artwork Incoming</div>')
-          .replace(/\[Trailer Placeholder\]/g, '<div class="blog-media-fallback"><i class="fas fa-play-circle"></i> Trailer Available on TMDB</div>');
-
         const container = document.getElementById('post-content');
         container.innerHTML = `
                 <div class="card-meta" style="font-size: 1rem; margin-bottom: 20px;">
@@ -469,7 +464,6 @@
                 <h1 style="font-size: 3rem; margin-bottom: 30px; line-height: 1.1;">${safeTitle}</h1>
                 <div style="font-size: 1.2rem; line-height: 1.8; color: #d1d1e0;">${safeBody}</div>
             `;
-        container.insertBefore(titleEl, container.children[1]);
       } catch (e) {
         document.getElementById('post-content').innerHTML = `<h2>Article not found</h2><p>This post may have been removed or the link is incorrect.</p>`;
       }
@@ -545,9 +539,6 @@
 
     document.getElementById('search').addEventListener('input', e => { searchQ = e.target.value; render(); });
 
-    const style = document.createElement('style');
-    style.textContent = '@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }';
-    document.head.appendChild(style);
 
     init();
   </script>

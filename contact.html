@@ -250,6 +250,9 @@
                     </div>
 
                     <button type="submit">Send Message</button>
+                    <div id="form-success" style="display:none; margin-top:16px; padding:12px 16px; background:#d4edda; color:#155724; border:1px solid #c3e6cb; border-radius:6px; font-weight:600;">
+                        Thanks for your message! We'll get back to you soon.
+                    </div>
                 </form>
             </div>
         </div>
@@ -264,8 +267,10 @@
     <script>
         document.getElementById('contactForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            alert('Thanks for your message! We\'ll get back to you soon.');
+            const successMsg = document.getElementById('form-success');
+            successMsg.style.display = 'block';
             this.reset();
+            setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
         });
     </script>
 </body>

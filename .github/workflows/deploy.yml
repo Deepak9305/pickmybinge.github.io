@@ -43,14 +43,6 @@ jobs:
           VITE_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
         run: npm run build
 
-      - name: Post-build Patching
-        env:
-          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-        run: |
-          # Inject keys into static pages that Vite just copied/bundled without replacement
-          sed -i "s|__TMDB_API_KEY__|${TMDB_API_KEY}|g" dist/cringe.html
-          # Add any other static pages here if needed
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

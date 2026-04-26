@@ -419,6 +419,9 @@
                 <h2 class="section-title" id="results-title">Our Worst Movie Picks</h2>
                 <div class="recommendation-cards" id="results" role="list" aria-live="polite"></div>
                 <button class="load-more" id="load-more">Load More</button>
+                <p id="end-of-results" style="display:none; text-align:center; color:var(--gray); margin-top:20px; font-size:0.9rem;">
+                    You've seen them all! Try a different category.
+                </p>
             </section>
 
             <div class="no-results" id="no-results">
@@ -504,6 +507,7 @@
                 resultsContainer.innerHTML = '';
                 noResultsElement.style.display = 'none';
                 loadMoreBtn.style.display = 'none';
+                document.getElementById('end-of-results').style.display = 'none';
 
                 const TMDB_API_URL = 'https://api.themoviedb.org/3/discover/movie';
                 const pagePromises = [];
@@ -597,7 +601,13 @@
                 });
 
                 displayedCount += moviesToShow.length;
-                loadMoreBtn.style.display = displayedCount < allFetchedMovies.length ? 'block' : 'none';
+                if (displayedCount < allFetchedMovies.length) {
+                    loadMoreBtn.style.display = 'block';
+                    document.getElementById('end-of-results').style.display = 'none';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                    document.getElementById('end-of-results').style.display = 'block';
+                }
             }
 
             loadMoreBtn.addEventListener('click', displayMoreResults);
@@ -615,6 +625,7 @@
                 modalOverlay.classList.add('show');
                 document.body.classList.add('modal-open');
                 modalLoader.style.display = 'flex';
+                modalLoader.innerHTML = '<i class="fas fa-spinner fa-spin"></i> &nbsp; Loading...';
                 modalContent.style.display = 'none';
 
                 // Always clear previous trailer src so stale trailers don't flash
@@ -653,7 +664,8 @@
 
                 } catch (error) {
                     console.error("Failed to fetch details:", error);
-                    closeDetailsModal();
+                    modalLoader.innerHTML = '<i class="fas fa-exclamation-triangle"></i>&nbsp; Failed to load details. Please try again.';
+                    setTimeout(() => closeDetailsModal(), 2500);
                 }
             }
 

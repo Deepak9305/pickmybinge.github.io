@@ -61,6 +61,7 @@ function App() {
         } catch (err) {
             console.error("Failed to load blogs:", err);
             setBlogs([]);
+            showToast("Couldn't load blogs.");
         }
     }, []);
 
