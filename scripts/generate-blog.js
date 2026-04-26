@@ -495,27 +495,18 @@ Return ONLY the corrected JSON with keys: "title", "excerpt", "content", "person
 
 async function main() {
     const niches = ['Sci-Fi Thrillers', 'K-Dramas'];
+    const niche = process.env.BLOG_NICHE || niches[Math.floor(Math.random() * niches.length)];
+
     console.log(`\nPickMyBinge Blog Pipeline v3`);
-    console.log(`Generating posts for: ${niches.join(', ')}\n`);
+    console.log(`Generating 1 post for: ${niche}\n`);
 
-    const results = [];
-    for (const niche of niches) {
-        const ok = await runPipeline(niche);
-        results.push({ niche, ok });
-        if (niches.indexOf(niche) < niches.length - 1) {
-            console.log('\nPausing 5s before next niche...');
-            await new Promise(r => setTimeout(r, 5000));
-        }
-    }
+    const ok = await runPipeline(niche);
 
-    console.log('\n─── Final Results ───');
-    results.forEach(({ niche, ok }) => {
-        console.log(`  ${ok ? '✅' : '❌'} ${niche}`);
-    });
-    console.log('─────────────────────\n');
+    console.log('\n─── Final Result ───');
+    console.log(`  ${ok ? '✅' : '❌'} ${niche}`);
+    console.log('────────────────────\n');
 
-    const anyFailed = results.some(r => !r.ok);
-    process.exit(anyFailed ? 1 : 0);
+    process.exit(ok ? 0 : 1);
 }
 
 main();
