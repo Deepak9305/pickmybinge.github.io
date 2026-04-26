@@ -55,9 +55,9 @@ function pickPersona() {
 
 // ─── Groq Helpers ─────────────────────────────────────────────────────────────
 
-async function callGroq(model, prompt) {
+async function callGroq(model, prompt, maxTokens = 8000) {
     if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY is missing from environment.');
-    console.log(`  → Calling Groq (${model})...`);
+    console.log(`  → Calling Groq (${model}, max_tokens=${maxTokens})...`);
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -67,8 +67,9 @@ async function callGroq(model, prompt) {
         body: JSON.stringify({
             model,
             messages: [{ role: 'user', content: prompt }],
-            temperature: 0.72,
-            max_tokens: 4096
+            temperature: 0.85,
+            max_tokens: maxTokens,
+            response_format: { type: 'json_object' }
         })
     });
     const data = await response.json();
@@ -79,10 +80,10 @@ async function callGroq(model, prompt) {
     return data.choices[0].message.content;
 }
 
-async function callGroqWithRetry(model, prompt, retries = 3) {
+async function callGroqWithRetry(model, prompt, retries = 3, maxTokens = 8000) {
     for (let i = 0; i < retries; i++) {
         try {
-            return await callGroq(model, prompt);
+            return await callGroq(model, prompt, maxTokens);
         } catch (e) {
             console.error(`  Attempt ${i + 1} failed: ${e.message}`);
             if (i === retries - 1) throw e;
@@ -364,107 +365,86 @@ async function runPipeline(nicheHint = 'Sci-Fi Thrillers') {
         const persona = pickPersona();
         console.log(`\n[STEP 3] Generating article (persona: ${persona.name})...`);
 
+        // Slim source data — send only what's needed for writing, not raw TMDB blobs
+        const sourceSummary = enrichedContent.map((t, i) => `
+TITLE ${i + 1}: ${t.title} (${(t.release_date || '').substring(0, 4)})
+- Genres: ${t.genres.join(', ')}
+- Cast: ${t.cast.join(', ')}
+- Rating: ${t.rating}/10
+- Runtime: ${t.runtime}
+- Tagline: "${t.tagline || 'N/A'}"
+- Overview: ${t.overview}
+- Poster URL: ${t.poster}
+- TMDB Link: ${t.tmdb_link}
+`.trim()).join('\n\n');
+
         const writingPrompt = `${persona.voice}
 
-You are writing for PickMyBinge, a premium entertainment recommendation blog. 
-Write a viral, deeply researched ${nicheLabel} feature article in YOUR DISTINCTIVE VOICE (${persona.style}).
+You are writing a feature article for PickMyBinge, a premium entertainment blog. Write in YOUR DISTINCTIVE VOICE: ${persona.style}.
 
-SOURCE DATA (you MUST use all 5 titles, do not invent others):
-${JSON.stringify(enrichedContent, null, 2)}
+SOURCE DATA — you MUST cover all 5 titles below. Do NOT invent any titles, cast names, or facts not listed here:
 
-ARTICLE STRUCTURE — follow this exactly:
-1. HOOK introduction (2-3 punchy paragraphs). NO generic "In the world of cinema..." openers.
-2. For EACH of the 5 titles, a deep-dive section with:
-   - <h2> heading containing the title and release year (link to tmdb_link)
-   - <img src="[poster URL from data]" alt="[title] poster" class="blog-image"> — REQUIRED for every title. Use the exact poster URL from the source data. Do NOT skip or use placeholder text.
-   - Cast callout: "Starring [cast names]"
-   - Tagline in an HTML <blockquote>
-   - 3–4 paragraphs: plot analysis, what makes it special, themes, why PickMyBinge readers will love it — WRITTEN IN YOUR PERSONA'S VOICE
-   - A <span class="verdict-badge">PickMyBinge Verdict: X/10</span> rating
-3. A "PickMyBinge Quick Picks" HTML <table> summarising all 5 titles (columns: Title, Genre, Rating, Must-Watch Factor)
-4. A "Watch If You Liked" section with 2-3 similar recommendations
-5. A CTA paragraph: "Ready to find your next binge?" linking to https://www.pickmybinge.com
+${sourceSummary}
 
-RULES:
-- Output ONLY a JSON object with exactly these keys: "title", "excerpt", "content", "persona"
-- "title": catchy SEO headline (max 70 chars)
-- "excerpt": 1-2 sentence hook (max 160 chars, good for meta description)
-- "content": the full article as a single HTML string (NO <html>/<body>/<style> tags)
-- "persona": the persona id you used ("BINGER", "CRITIC", or "NOSTALGIA")
-- NO inline CSS or style attributes anywhere
-- Minimum 1200 words in the article body
-- All <img> tags must use the real poster URLs from the source data
-- Write ENTIRELY in your persona's voice and style`;
+ARTICLE STRUCTURE (follow exactly):
+1. HOOK — 2 punchy paragraphs that open with a specific, bold observation about this genre right now. NO "In the world of...", "Buckle up", or "As we step into..." openers. Start with something unexpected.
+2. For EACH of the 5 titles write a section with:
+   - <h2><a href="[tmdb_link]">[Title] ([Year])</a></h2>
+   - <img loading="lazy" src="[exact poster URL]" alt="[Title] poster" class="blog-image">
+   - <p><strong>Starring:</strong> [cast names]</p>
+   - <blockquote>[tagline — if none, write a one-line characterisation of the film's feel]</blockquote>
+   - 3 paragraphs: (a) what the film is actually about and what's surprising about it, (b) what makes it technically or narratively distinctive — be SPECIFIC to THIS film, (c) who will love it and one flaw to be honest about
+   - <p><span class="verdict-badge">PickMyBinge Verdict: [X]/10</span></p>
+3. <h2>PickMyBinge Quick Picks</h2> — an HTML <table> with columns: Title | Genre | Rating | Must-Watch Factor
+4. <h2>Watch If You Liked…</h2> — 2 specific recommendations (can be films not in the source list)
+5. <p>Ready to find your next binge? <a href="https://www.pickmybinge.com">PickMyBinge</a> has you covered.</p>
 
-        const draftRaw = await callGroqWithRetry(MODEL, writingPrompt);
+STRICT RULES:
+- Output ONLY a valid JSON object: { "title": "...", "excerpt": "...", "content": "...", "persona": "..." }
+- "title": specific, punchy SEO headline under 70 chars — NOT generic (e.g. "5 Sci-Fi Thrillers That Actually Deliver" not "Sci-Fi Thrill Ride")
+- "excerpt": vivid 1-sentence hook under 160 chars that makes someone want to read
+- "content": full article as a single HTML string — no <html>/<body>/<style> tags, no inline style attributes
+- "persona": the persona id ("BINGER", "CRITIC", or "NOSTALGIA")
+- Minimum 1500 words in the content
+- Every section covering a title MUST use DIFFERENT sentence openers and DIFFERENT observations — never repeat the same structure or phrase across sections
+- BANNED PHRASES: "will keep you on the edge of your seat", "in the world of", "buckle up", "it's worth noting", "delve into", "dive into", "needless to say", "in conclusion", "at the end of the day"
+- Use the EXACT poster URLs and TMDB links from the source data — never substitute or omit`;
+
+        const draftRaw = await callGroqWithRetry(MODEL, writingPrompt, 3, 8000);
         const draft = parseJson(draftRaw);
         console.log(`  → Draft written by persona: ${draft.persona || persona.id}`);
 
-        // ── STEP 4: Fact-Check & Data Sanitizer ───────────────────────────────
-        console.log('\n[STEP 4] Fact-checking & sanitizing data...');
+        // ── STEP 4: Fact-Check + Editorial Polish (single combined pass) ───────
+        console.log('\n[STEP 4] Fact-check & editorial polish...');
 
-        const sanitizerPrompt = `You are a meticulous data fact-checker for PickMyBinge. 
-Your job is to silently verify and fix this article draft against the authoritative source data.
+        const reviewPrompt = `You are a Senior Editor at PickMyBinge. You have two jobs: fix factual errors and raise quality.
 
 DRAFT:
 ${JSON.stringify(draft)}
 
-AUTHORITATIVE TMDB SOURCE DATA:
-${JSON.stringify(enrichedContent.map(t => ({
-            title: t.title,
-            release_date: t.release_date,
-            rating: t.rating,
-            cast: t.cast,
-            runtime: t.runtime,
-            poster: t.poster,
-            tmdb_link: t.tmdb_link,
-            genres: t.genres
-        })))}
+AUTHORITATIVE SOURCE DATA (ground truth — fix any mismatches):
+${sourceSummary}
 
-YOUR CHECKLIST — silently fix every issue you find, DO NOT add commentary:
-1. TITLES: Are all 5 title names exactly correct per source data? Fix any misspellings.
-2. YEARS: Do all release years match source data exactly? Fix any wrong years.
-3. CAST: Are all cast names spelled correctly and matching source data? Fix any errors.
-4. RATINGS: Do all TMDB ratings match source data exactly? Fix any discrepancies.
-5. POSTERS: Does every <img src="..."> use the exact poster URL from source data? Fix or add if missing.
-6. LINKS: Do all <a href="..."> links to TMDB use the exact tmdb_link from source data?
-7. HALLUCINATIONS: Remove any titles, facts, quotes, or protocols NOT in the source data.
-8. HTML: Ensure all HTML tags are properly closed and nested.
-9. Keep the persona voice intact — only fix factual errors, not the writing style.
+FACT-CHECK (fix silently, no commentary):
+1. Title names, release years, cast names, ratings — must match source data exactly
+2. Every <img src> must use the exact poster URL from source data
+3. Every TMDB link must use the exact tmdb_link from source data
+4. Remove any facts, titles, or claims NOT in the source data
 
-Return ONLY the corrected JSON object with keys: "title", "excerpt", "content", "persona". Output ONLY the JSON, no explanation.`;
+QUALITY AUDIT (fix silently):
+5. Title — is it specific and punchy? Rewrite if it's generic (e.g. "Sci-Fi Thrill Ride" is too generic)
+6. Excerpt — is it a vivid hook under 160 chars? Rewrite if bland
+7. Hook paragraphs — does the article open with something bold and specific? Rewrite if generic
+8. Repetition — are different phrases used in each film section? Rewrite any section that re-uses the same sentence structure or ending as another
+9. Banned phrases to remove: "will keep you on the edge of your seat", "in the world of", "it's worth noting", "delve into", "needless to say"
+10. Verify every film section has: <h2>, <img>, <blockquote>, 3 paragraphs, verdict-badge
+11. Verify Quick Picks <table> and Watch If You Liked section exist
 
-        const sanitizedRaw = await callGroqWithRetry(MODEL, sanitizerPrompt);
-        const sanitized = parseJson(sanitizedRaw);
-        console.log('  → Data sanitization complete.');
+Return ONLY the corrected JSON: { "title": "...", "excerpt": "...", "content": "...", "persona": "..." }`;
 
-        // ── STEP 5: Hostile Editorial Polish ─────────────────────────────────
-        console.log('\n[STEP 5] Hostile editorial polish...');
-
-        const refinerPrompt = `You are a Hostile Senior Editor at PickMyBinge. Critically audit this draft and return a polished version.
-
-DRAFT:
-${JSON.stringify(sanitized)}
-
-SOURCE TITLES:
-${JSON.stringify(enrichedContent.map(t => ({ title: t.title, poster: t.poster, cast: t.cast, tmdb_link: t.tmdb_link })))}
-
-YOUR CHECKLIST — fix every issue you find:
-1. Hook: Is the opening NON-GENERIC? Rewrite completely if it starts with "In the world of..." or "As we step into...".
-2. Coverage: Are ALL 5 titles covered with deep-dive <h2> sections? Add any that are missing.
-3. Images: Does EVERY title section have an <img class="blog-image" src="[real URL]">? Add if missing.
-4. Verdict badges: Is <span class="verdict-badge"> present for every title?
-5. Table: Is the Quick Picks <table> present and correctly formatted?
-6. Length: Is the article at least 1200 words? Expand if short.
-7. AI-isms: Remove filler phrases ("It's worth noting", "In conclusion", "Dive into", "Needless to say").
-8. SEO: title must be punchy and under 70 chars. excerpt must be under 160 chars.
-9. Persona voice must remain consistent throughout.
-
-Return ONLY the corrected JSON with keys: "title", "excerpt", "content", "persona". Output ONLY the JSON.`;
-
-        const polishedRaw = await callGroqWithRetry(MODEL, refinerPrompt);
+        const polishedRaw = await callGroqWithRetry(MODEL, reviewPrompt, 3, 8000);
         const polished = parseJson(polishedRaw);
-        console.log('  → Editorial polish complete.');
+        console.log('  → Fact-check & polish complete.');
 
         // Validation
         const missing = ['title', 'excerpt', 'content'].filter(k => !polished[k]);
