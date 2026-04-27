@@ -1,1 +1,17 @@
-[]
+[
+    {
+        "id": "2026-04-27-sci-fi-thrillers",
+        "date": "2026-04-27",
+        "title": "Binge-Worthy Thrillers to Obsess Over",
+        "category": "movies",
+        "excerpt": "Get ready for a thrilling ride!",
+        "tmdb_ids": [
+            840464,
+            1265609,
+            1272837,
+            1236153,
+            1400940
+        ],
+        "link": "/blog.html?id=2026-04-27-sci-fi-thrillers"
+    }
+]
