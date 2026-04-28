@@ -1,5 +1,20 @@
 [
     {
+        "id": "2026-04-28-sci-fi-thrillers",
+        "date": "2026-04-28",
+        "title": "Rethinking Thrills: 5 Sci-Fi Films That Defy Expectations",
+        "category": "movies",
+        "excerpt": "Experience the future of sci-fi",
+        "tmdb_ids": [
+            1412598,
+            1275779,
+            1384216,
+            1101383,
+            1268053
+        ],
+        "link": "/blog.html?id=2026-04-28-sci-fi-thrillers"
+    },
+    {
         "id": "2026-04-27-sci-fi-thrillers",
         "date": "2026-04-27",
         "title": "Binge-Worthy Thrillers to Obsess Over",
