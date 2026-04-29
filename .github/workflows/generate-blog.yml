@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       niche:
-        description: 'Blog niche (e.g. Sci-Fi Thrillers, K-Dramas)'
+        description: 'Niche ID to generate (leave blank to auto-select next unused). e.g. psychological-thrillers, heist-movies, k-dramas, anime-series, horror-movies, crime-drama-series'
         required: false
         default: ''
 
