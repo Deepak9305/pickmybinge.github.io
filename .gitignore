@@ -2,5 +2,6 @@ node_modules
 /.env
 /dist
 /build
+graphify-out/
 .DS_Store
 *.log

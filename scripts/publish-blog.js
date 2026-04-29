@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const DRAFTS_DIR = path.join(process.cwd(), 'public/content/1st draft');
+const DRAFTS_DIR = path.join(process.cwd(), 'drafts');
 const BLOG_DIR = path.join(process.cwd(), 'public/content/blogs');
 const BLOGS_INDEX = path.join(process.cwd(), 'public/blogs-index.json');
 const MANIFEST_PATH = path.join(process.cwd(), 'public/content/blogs/manifest.json');
