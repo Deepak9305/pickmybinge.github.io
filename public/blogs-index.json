@@ -1,5 +1,20 @@
 [
     {
+        "id": "2026-04-29-sci-fi-thrillers",
+        "date": "2026-04-29",
+        "title": "5 Thrilling Sci-Fi Films to Add to Your Watchlist",
+        "category": "movies",
+        "excerpt": "Explore the latest sci-fi thrillers",
+        "tmdb_ids": [
+            1403676,
+            1647508,
+            1672375,
+            1439881,
+            1263532
+        ],
+        "link": "/blog.html?id=2026-04-29-sci-fi-thrillers"
+    },
+    {
         "id": "2026-04-28-sci-fi-thrillers",
         "date": "2026-04-28",
         "title": "Rethinking Thrills: 5 Sci-Fi Films That Defy Expectations",
