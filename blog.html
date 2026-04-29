@@ -529,9 +529,10 @@
 
   <script>
     // Nav toggle
-    document.getElementById('menu-btn').addEventListener('click', () => document.getElementById('main-nav').classList.toggle('show'));
-    document.getElementById('close-btn').addEventListener('click', () => document.getElementById('main-nav').classList.remove('show'));
-    document.addEventListener('click', e => { if (!document.getElementById('main-nav').contains(e.target)) document.getElementById('main-nav').classList.remove('show'); });
+    const mainNav = document.getElementById('main-nav');
+    document.getElementById('menu-btn').addEventListener('click', (e) => { e.stopPropagation(); mainNav.classList.toggle('show'); });
+    document.getElementById('close-btn').addEventListener('click', () => mainNav.classList.remove('show'));
+    window.addEventListener('click', (e) => { if (mainNav && !mainNav.contains(e.target)) mainNav.classList.remove('show'); });
 
     const catEmoji = { movies: '🎬', tv: '📺', korean: '🇰🇷', hidden: '💎' };
     const catLabel = { movies: 'Movie', tv: 'TV Show', korean: 'K-Drama', hidden: 'Hidden Gem' };

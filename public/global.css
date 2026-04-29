@@ -137,7 +137,8 @@ header {
     z-index: 1001;
   }
 
-  .nav-menu.show {
+  .nav-menu.show,
+  .main-nav.show .nav-menu {
     transform: translateX(0);
   }
 
