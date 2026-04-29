@@ -651,11 +651,12 @@
       grid.innerHTML = filtered.map((p, i) => {
         const cat = p.category || detectCat(p.title, p.excerpt);
         const safeLink = p.link && /^(https?:\/\/|\/)/.test(p.link) ? escapeHtml(p.link) : '#';
+        const safeThumbnail = p.thumbnail && /^https:\/\/image\.tmdb\.org\//.test(p.thumbnail) ? p.thumbnail : null;
         return `
           <a href="${safeLink}" class="blog-card" style="animation:fadeUp 0.4s ${i * 0.06}s both ease">
-            <div class="card-thumb">
+            <div class="card-thumb" ${safeThumbnail ? `style="background-image:url('${safeThumbnail}');background-size:cover;background-position:center top;"` : ''}>
               <div class="card-thumb-overlay"></div>
-              <span style="position:relative;z-index:1">${catEmoji[cat] || '🎬'}</span>
+              ${safeThumbnail ? '' : `<span style="position:relative;z-index:1">${catEmoji[cat] || '🎬'}</span>`}
               <span class="card-cat-badge">${escapeHtml(catLabel[cat] || 'Article')}</span>
             </div>
             <div class="card-body">

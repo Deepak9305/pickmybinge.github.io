@@ -982,6 +982,7 @@ Return ONLY the corrected JSON: { "title": "...", "excerpt": "...", "content": "
         polished.content = cleanHtml(polished.content);
 
         const now2 = now;
+        const firstThumb = tmdbImages.length > 0 ? tmdbImages[0].poster : null;
         const newPost = {
             id: fileId,
             date: `${now2.getFullYear()}-${String(now2.getMonth() + 1).padStart(2, '0')}-${String(now2.getDate()).padStart(2, '0')}`,
@@ -990,6 +991,7 @@ Return ONLY the corrected JSON: { "title": "...", "excerpt": "...", "content": "
             persona: polished.persona || persona.id,
             category: topic.category,
             tags: topic.tags,
+            thumbnail: firstThumb,
             tmdb_ids: tmdbImages.map(t => t.id),
             readTimeMinutes: estimateReadTime(polished.content),
             content: polished.content,
@@ -1194,6 +1196,7 @@ Return ONLY the corrected JSON: { "title": "...", "excerpt": "...", "content": "
             persona: polished.persona || persona.id,
             category: niche.category,
             tags: niche.tags,
+            thumbnail: enrichedContent.find(t => t.poster)?.poster || null,
             tmdb_ids: enrichedContent.map(item => item.id),
             readTimeMinutes: estimateReadTime(polished.content),
             content: polished.content,

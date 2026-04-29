@@ -42,12 +42,14 @@ let index = [];
 if (fs.existsSync(BLOGS_INDEX)) {
     try { index = JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8')); } catch { }
 }
+const thumbMatch = (post.content || '').match(/src="(https:\/\/image\.tmdb\.org\/[^"]+)"/);
 const entry = {
     id: post.id,
     date: post.date,
     title: post.title,
     category: post.category,
     excerpt: post.excerpt,
+    thumbnail: post.thumbnail || (thumbMatch ? thumbMatch[1] : null),
     tmdb_ids: post.tmdb_ids,
     link: post.link
 };
