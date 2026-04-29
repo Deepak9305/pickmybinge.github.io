@@ -643,12 +643,23 @@ const ALL_TOPICS = [...NICHES, ...DEEP_DIVES];
 
 function selectTopic(overrideId) {
     if (overrideId) {
+        // Check predefined catalogue first
         const found = ALL_TOPICS.find(t => t.id === overrideId || (t.label || '').toLowerCase() === overrideId.toLowerCase());
-        if (!found) {
-            const ids = ALL_TOPICS.map(t => t.id).join(', ');
-            throw new Error(`Unknown topic: "${overrideId}". Valid IDs: ${ids}`);
-        }
-        return found;
+        if (found) return found;
+
+        // Treat as free-form topic — build an ad-hoc deep-dive object
+        console.log(`  → "${overrideId}" not in catalogue — treating as custom topic.`);
+        const slug = overrideId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        return {
+            id: `custom-${slug}`,
+            type: 'deep-dive',
+            keyword: overrideId,
+            subject: overrideId,
+            franchise: 'Various',
+            subtopics: [],   // AI will decide its own structure
+            category: 'general',
+            tags: slug.split('-').filter(w => w.length > 2)
+        };
     }
 
     const usedIds = getUsedNicheIds();
@@ -877,7 +888,9 @@ async function runDeepDivePipeline(topic) {
         const persona = pickPersona();
         console.log(`\n[STEP 1] Writing article (persona: ${persona.name})...`);
 
-        const subtopicList = topic.subtopics.map((s, i) => `  ${i + 1}. ${s}`).join('\n');
+        const subtopicList = topic.subtopics.length > 0
+            ? `Cover each of these subtopics as separate <h2> sections:\n${topic.subtopics.map((s, i) => `  ${i + 1}. ${s}`).join('\n')}`
+            : `Choose 3–5 relevant <h2> sections yourself that best answer the topic. Pick angles a knowledgeable fan would want covered.`;
 
         const writingPrompt = `${persona.voice}
 
@@ -889,8 +902,7 @@ Franchise: ${topic.franchise}
 
 ARTICLE STRUCTURE (follow exactly):
 1. HOOK — 2 punchy paragraphs. Immediately give the reader a direct answer to "${topic.keyword}", then explain why the full story is more interesting than they think. NO generic openers.
-2. Cover each of these subtopics as separate <h2> sections:
-${subtopicList}
+2. ${subtopicList}
 3. <h2>The Verdict</h2> — 1-2 paragraphs with a clear definitive take + your personal rating of how well the franchise handles this concept
 4. <h2>Watch/Read Next</h2> — recommend 3 specific titles (with brief reasons) that fans of this topic will love
 
