@@ -309,8 +309,8 @@ async function runPipeline(nicheHint = 'Sci-Fi Thrillers') {
         const fileId = `${formattedDate}-${slug}`;
         const fileName = `${fileId}.json`;
 
-        if (fs.existsSync(path.join(BLOG_DIR, fileName))) {
-            console.log(`  ℹ️  Post for ${fileId} already exists — skipping.`);
+        if (fs.existsSync(path.join(DRAFTS_DIR, fileName))) {
+            console.log(`  ℹ️  Draft for ${fileId} already exists — skipping.`);
             return true;
         }
 
@@ -482,23 +482,7 @@ Return ONLY the corrected JSON: { "title": "...", "excerpt": "...", "content": "
         const draftPath = path.join(DRAFTS_DIR, fileName);
         fs.writeFileSync(draftPath, JSON.stringify(newPost, null, 4));
         console.log(`  → Draft saved: public/content/1st draft/${fileName}`);
-
-        const livePath = path.join(BLOG_DIR, fileName);
-        fs.writeFileSync(livePath, JSON.stringify(newPost, null, 4));
-        console.log(`  → Live post saved: public/content/blogs/${fileName}`);
-
-        updateManifest(fileName);
-
-        const indexEntry = {
-            id: fileId,
-            date: newPost.date,
-            title: newPost.title,
-            category,
-            excerpt: newPost.excerpt,
-            tmdb_ids: newPost.tmdb_ids,
-            link: newPost.link
-        };
-        updateBlogsIndex(indexEntry);
+        console.log(`  → To publish, run the "Publish Blog Draft" action with filename: ${fileName}`);
 
         console.log(`\n✅ Pipeline complete: ${fileId} [persona: ${newPost.persona}]`);
         return true;

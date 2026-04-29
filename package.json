@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "sitemap": "node scripts/generate-sitemap.js",
     "delete-blog": "node scripts/delete-blog.js",
-    "scan-blog": "node scripts/scan-blog.js"
+    "scan-blog": "node scripts/scan-blog.js",
+    "publish-blog": "node scripts/publish-blog.js"
   },
   "dependencies": {
     "react": "^19.2.4",

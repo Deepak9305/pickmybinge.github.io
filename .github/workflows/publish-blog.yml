@@ -1,0 +1,43 @@
+name: Publish Blog Draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      draft_filename:
+        description: 'Draft filename to publish (e.g. 2026-04-29-sci-fi-thrillers.json)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Publish draft to live
+        env:
+          DRAFT_FILENAME: ${{ github.event.inputs.draft_filename }}
+        run: node scripts/publish-blog.js
+
+      - name: Commit published post
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add public/content/blogs/ public/blogs-index.json
+          if git diff --staged --quiet; then
+            echo "Nothing to publish."
+          else
+            git commit -m "Publish: ${{ github.event.inputs.draft_filename }}"
+            git push
+          fi
