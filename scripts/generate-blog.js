@@ -885,12 +885,39 @@ async function runDeepDivePipeline(topic) {
             return true;
         }
 
+        // ── STEP 0: TMDB imagery (best-effort — skip gracefully if unavailable) ─
+        let tmdbImages = [];
+        if (TMDB_API_KEY) {
+            try {
+                console.log('\n[STEP 0] Searching TMDB for imagery...');
+                const searchRes = await fetchFromTMDB('search/multi', { query: topic.keyword, language: 'en-US', page: 1 });
+                const candidates = (searchRes.results || [])
+                    .filter(r => (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path)
+                    .slice(0, 5);
+                if (candidates.length > 0) {
+                    const enriched = await Promise.all(
+                        candidates.map(r => fetchEnrichedItem(r.id, r.media_type === 'movie' ? 'movie' : 'tv'))
+                    );
+                    tmdbImages = enriched.filter(t => t.poster);
+                    console.log(`  → ${tmdbImages.length} titles with posters found.`);
+                } else {
+                    console.log('  → No TMDB results with posters — proceeding without images.');
+                }
+            } catch (e) {
+                console.log(`  → TMDB imagery skipped: ${e.message}`);
+            }
+        }
+
         const persona = pickPersona();
         console.log(`\n[STEP 1] Writing article (persona: ${persona.name})...`);
 
         const subtopicList = topic.subtopics.length > 0
             ? `Cover each of these subtopics as separate <h2> sections:\n${topic.subtopics.map((s, i) => `  ${i + 1}. ${s}`).join('\n')}`
             : `Choose 3–5 relevant <h2> sections yourself that best answer the topic. Pick angles a knowledgeable fan would want covered.`;
+
+        const imageBlock = tmdbImages.length > 0
+            ? `\nTMDB REFERENCE IMAGES — for each title below that you mention in your article, embed its poster immediately after its <h2> heading using this exact HTML (no changes to the URL):\n<img loading="lazy" src="[exact URL]" alt="[Title] poster" class="blog-image">\n\n${tmdbImages.map(t => `Title: ${t.title} (${(t.release_date || '').substring(0, 4)})\nPoster URL: ${t.poster}\nTMDB Link: ${t.tmdb_link}`).join('\n\n')}\n`
+            : '';
 
         const writingPrompt = `${persona.voice}
 
@@ -899,7 +926,7 @@ You are writing a deep-dive feature article for PickMyBinge targeting this exact
 
 Subject: ${topic.subject}
 Franchise: ${topic.franchise}
-
+${imageBlock}
 ARTICLE STRUCTURE (follow exactly):
 1. HOOK — 2 punchy paragraphs. Immediately give the reader a direct answer to "${topic.keyword}", then explain why the full story is more interesting than they think. NO generic openers.
 2. ${subtopicList}
@@ -922,6 +949,10 @@ STRICT RULES:
 
         console.log('\n[STEP 2] Editorial polish...');
 
+        const imageAudit = tmdbImages.length > 0
+            ? `\nIMAGE AUDIT (fix silently):\n${tmdbImages.map((t, i) => `${i + 1}. If "${t.title}" appears in the article, its poster <img loading="lazy" src="${t.poster}" alt="${t.title} poster" class="blog-image"> must appear immediately after its <h2> heading. Add it if missing.`).join('\n')}\n`
+            : '';
+
         const reviewPrompt = `You are a Senior Editor at PickMyBinge. Raise the quality of this deep-dive article.
 
 DRAFT:
@@ -929,7 +960,7 @@ ${JSON.stringify(draft)}
 
 TARGET KEYWORD: "${topic.keyword}"
 SUBJECT: ${topic.subject}
-
+${imageAudit}
 QUALITY AUDIT (fix silently):
 1. Title — does it directly answer or strongly tease "${topic.keyword}"? Under 70 chars? Rewrite if not.
 2. Excerpt — vivid hook under 160 chars? Rewrite if bland.
@@ -959,7 +990,7 @@ Return ONLY the corrected JSON: { "title": "...", "excerpt": "...", "content": "
             persona: polished.persona || persona.id,
             category: topic.category,
             tags: topic.tags,
-            tmdb_ids: [],
+            tmdb_ids: tmdbImages.map(t => t.id),
             readTimeMinutes: estimateReadTime(polished.content),
             content: polished.content,
             link: `/blog.html?id=${fileId}`

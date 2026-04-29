@@ -15,6 +15,12 @@
   <style>
     /* Specific overrides for Blog page */
 
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
     /* Hero */
     .hero {
       padding: 60px 0 40px;
@@ -112,7 +118,7 @@
     /* Grid */
     .blog-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
       gap: 28px;
       padding-bottom: 80px;
     }
@@ -309,6 +315,146 @@
     footer a:hover {
       color: var(--secondary);
     }
+
+    /* ── Blog post content ───────────────────────────────────────────────── */
+    #post-content .blog-image {
+      display: block;
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      border-radius: 12px;
+      margin: 16px auto 24px;
+      object-fit: cover;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    #post-content blockquote {
+      border-left: 3px solid var(--secondary);
+      margin: 20px 0;
+      padding: 12px 20px;
+      background: rgba(0, 206, 203, 0.06);
+      border-radius: 0 8px 8px 0;
+      color: var(--gray);
+      font-style: italic;
+    }
+
+    #post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      display: block;
+    }
+
+    #post-content th,
+    #post-content td {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+
+    #post-content th {
+      background: rgba(0, 206, 203, 0.1);
+      color: var(--secondary);
+      font-weight: 700;
+    }
+
+    #post-content tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    #post-content a {
+      color: var(--secondary);
+      text-decoration: none;
+    }
+
+    #post-content a:hover {
+      text-decoration: underline;
+    }
+
+    .verdict-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent), var(--secondary));
+      color: var(--dark);
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+
+    .blog-media-fallback {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 20px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--gray);
+      font-size: 0.9rem;
+      margin: 16px 0;
+    }
+
+    /* ── Mobile breakpoints ──────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .blog-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 18px;
+      }
+
+      #post-viewer {
+        padding: 0 0 60px !important;
+        margin: 20px auto !important;
+      }
+
+      #post-content .blog-image {
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .wrap {
+        padding: 0 16px;
+      }
+
+      .blog-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .card-body {
+        padding: 16px;
+      }
+
+      .hero {
+        padding: 36px 0 24px;
+      }
+
+      .controls {
+        gap: 10px;
+        padding: 14px 0 24px;
+      }
+
+      .chips {
+        gap: 6px;
+      }
+
+      .chip {
+        padding: 7px 13px;
+        font-size: 0.78rem;
+      }
+
+      #post-content table {
+        font-size: 0.8rem;
+      }
+
+      #post-content th,
+      #post-content td {
+        padding: 8px 10px;
+      }
+    }
   </style>
 </head>
 
@@ -458,8 +604,8 @@
                     <span><i class="fas fa-clock"></i> ${escapeHtml(readTime(post.content))} read</span>
                     <span class="card-cat-badge" style="position:static;">${escapeHtml(catLabel[cat] || 'Article')}</span>
                 </div>
-                <h1 style="font-size: 3rem; margin-bottom: 30px; line-height: 1.1;">${escapeHtml(post.title)}</h1>
-                <div style="font-size: 1.2rem; line-height: 1.8; color: #d1d1e0;">${postContent}</div>
+                <h1 style="font-size: clamp(1.6rem, 5vw, 3rem); margin-bottom: 30px; line-height: 1.15;">${escapeHtml(post.title)}</h1>
+                <div style="font-size: clamp(0.95rem, 2.5vw, 1.2rem); line-height: 1.8; color: #d1d1e0;">${postContent}</div>
             `;
       } catch (e) {
         document.getElementById('post-content').innerHTML = `<h2>Article not found</h2><p>This post may have been removed or the link is incorrect.</p>`;

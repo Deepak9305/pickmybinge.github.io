@@ -105,6 +105,10 @@ header {
   color: var(--light);
   font-size: 1.5rem;
   cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn {
@@ -114,7 +118,7 @@ header {
 /* --- Mobile Menu --- */
 @media (max-width: 768px) {
   .menu-btn {
-    display: block;
+    display: flex;
   }
 
   .nav-menu {
@@ -180,6 +184,17 @@ footer a {
 
 footer a:hover {
   color: var(--light);
+}
+
+@media (max-width: 480px) {
+  .nav-menu {
+    padding: 70px 24px;
+    gap: 20px;
+  }
+
+  .container {
+    padding: 0 14px;
+  }
 }
 
 /* --- Gradients --- */
