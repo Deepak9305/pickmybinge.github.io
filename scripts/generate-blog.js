@@ -309,6 +309,271 @@ const NICHES = [
     }
 ];
 
+// ─── Deep-Dive Topic Catalogue ────────────────────────────────────────────────
+// type: 'deep-dive' — no TMDB needed, AI writes from knowledge.
+// These target specific long-tail questions fans actively Google.
+// subtopics: guiding H2 sections the AI should cover.
+
+const DEEP_DIVES = [
+    // ── Anime ──────────────────────────────────────────────────────────────────
+    {
+        id: 'frieren-himmel-hero-sword',
+        type: 'deep-dive',
+        keyword: 'why couldn\'t Himmel pull the hero sword Frieren',
+        subject: 'Himmel the Hero from Frieren: Beyond Journey\'s End',
+        franchise: 'Frieren: Beyond Journey\'s End',
+        subtopics: ['The criteria for pulling the hero sword', 'Why Himmel failed the sword\'s test', 'What Himmel\'s failure reveals about his character', 'The cruel irony — was Himmel truly not a hero?'],
+        category: 'anime',
+        tags: ['frieren', 'anime', 'himmel', 'character-analysis', 'manga']
+    },
+    {
+        id: 'sukuna-true-power',
+        type: 'deep-dive',
+        keyword: 'how powerful is Ryomen Sukuna Jujutsu Kaisen',
+        subject: 'Ryomen Sukuna\'s true power in Jujutsu Kaisen',
+        franchise: 'Jujutsu Kaisen',
+        subtopics: ['Sukuna\'s cursed energy capacity', 'Shrine and Malevolent Kitchen techniques', 'His 20-finger vs 15-finger power gap', 'How he compares to Gojo and other special grade sorcerers'],
+        category: 'anime',
+        tags: ['jujutsu-kaisen', 'anime', 'sukuna', 'power-levels', 'manga']
+    },
+    {
+        id: 'gear-5-luffy-explained',
+        type: 'deep-dive',
+        keyword: 'Luffy Gear 5 powers explained One Piece',
+        subject: 'Luffy\'s Gear 5 and the Sun God Nika awakening',
+        franchise: 'One Piece',
+        subtopics: ['What is Gear 5 and the Mythical Zoan awakening', 'Why the World Government feared this power for 800 years', 'Gear 5\'s "cartoon logic" combat and its limits', 'How Gear 5 changes One Piece\'s power ceiling'],
+        category: 'anime',
+        tags: ['one-piece', 'anime', 'luffy', 'gear-5', 'devil-fruit', 'manga']
+    },
+    {
+        id: 'eren-yeager-motives',
+        type: 'deep-dive',
+        keyword: 'why did Eren start the Rumbling Attack on Titan',
+        subject: 'Eren Yeager\'s true motives and the Rumbling in Attack on Titan',
+        franchise: 'Attack on Titan',
+        subtopics: ['When Eren\'s ideology shifted', 'The paradox of freedom — was Eren ever free?', 'The "I was doing this all along" time loop theory', 'Was Eren a villain, a hero, or both?'],
+        category: 'anime',
+        tags: ['attack-on-titan', 'anime', 'eren', 'rumbling', 'character-analysis']
+    },
+    {
+        id: 'tanjiro-sun-breathing',
+        type: 'deep-dive',
+        keyword: 'why can Tanjiro use Sun-Breathing Demon Slayer',
+        subject: 'Tanjiro Kamado\'s connection to Yoriichi and Sun-Breathing',
+        franchise: 'Demon Slayer',
+        subtopics: ['The Hinokami Kagura and its true origin', 'The Kamado family\'s secret lineage', 'Why Tanjiro\'s Hanafuda earrings matter', 'How Sun-Breathing differs from all other styles'],
+        category: 'anime',
+        tags: ['demon-slayer', 'anime', 'tanjiro', 'sun-breathing', 'manga']
+    },
+    {
+        id: 'chainsaw-man-pochita-explained',
+        type: 'deep-dive',
+        keyword: 'who is Pochita and why is Chainsaw Man so powerful',
+        subject: 'Pochita the Chainsaw Devil and Denji\'s true power in Chainsaw Man',
+        franchise: 'Chainsaw Man',
+        subtopics: ['Why the Chainsaw Devil is feared by all other devils', 'The ability to erase concepts from existence', 'Pochita\'s relationship with Denji', 'What Chainsaw Man\'s power means for the story\'s future'],
+        category: 'anime',
+        tags: ['chainsaw-man', 'anime', 'pochita', 'denji', 'devil-powers', 'manga']
+    },
+    {
+        id: 'sung-jinwoo-power-levels',
+        type: 'deep-dive',
+        keyword: 'how powerful is Sung Jin-Woo Solo Leveling',
+        subject: 'Sung Jin-Woo\'s power progression and shadow army in Solo Leveling',
+        franchise: 'Solo Leveling',
+        subtopics: ['From E-rank to Shadow Monarch — the full journey', 'The true scope of the Shadow Army', 'Sung Jin-Woo vs the Monarchs', 'Is he the strongest being in the Solo Leveling universe?'],
+        category: 'anime',
+        tags: ['solo-leveling', 'anime', 'sung-jinwoo', 'shadow-monarch', 'power-levels']
+    },
+    {
+        id: 'hunter-x-hunter-nen-explained',
+        type: 'deep-dive',
+        keyword: 'HxH Nen system fully explained Hunter x Hunter',
+        subject: 'The Nen system in Hunter x Hunter — all 6 types explained',
+        franchise: 'Hunter x Hunter',
+        subtopics: ['The 6 Nen categories and their strengths', 'How Nen vows and limitations multiply power', 'The most broken Nen abilities in the series', 'Why Nen makes HxH\'s power system the best in anime'],
+        category: 'anime',
+        tags: ['hunter-x-hunter', 'anime', 'nen', 'power-system', 'manga']
+    },
+    {
+        id: 'mob-psycho-mob-true-power',
+        type: 'deep-dive',
+        keyword: 'how powerful is Mob Mob Psycho 100 true power explained',
+        subject: 'Shigeo "Mob" Kageyama\'s true psychic power in Mob Psycho 100',
+        subtopics: ['What happens when Mob reaches 100%', 'The ???% phenomenon — what triggers it', 'Mob vs Tatsumaki: who wins?', 'Why Mob\'s emotional suppression is the real plot device'],
+        franchise: 'Mob Psycho 100',
+        category: 'anime',
+        tags: ['mob-psycho', 'anime', 'mob', 'psychic-powers', 'esper']
+    },
+    {
+        id: 'bleach-ichigo-true-nature',
+        type: 'deep-dive',
+        keyword: 'Ichigo true nature and powers explained Bleach TYBW',
+        subject: 'Ichigo Kurosaki\'s true nature — Shinigami, Quincy, Hollow and Fullbring',
+        franchise: 'Bleach',
+        subtopics: ['The four natures of Ichigo\'s soul', 'Why Ichigo\'s Zanpakuto is actually two swords', 'The truth about his mother Masaki', 'Where Ichigo\'s power ceiling truly is in TYBW'],
+        category: 'anime',
+        tags: ['bleach', 'anime', 'ichigo', 'true-power', 'tybw', 'manga']
+    },
+    {
+        id: 'dragon-ball-ultra-instinct-explained',
+        type: 'deep-dive',
+        keyword: 'Ultra Instinct explained Dragon Ball Super',
+        subject: 'Ultra Instinct — what it is and why it\'s Dragon Ball\'s ultimate technique',
+        franchise: 'Dragon Ball Super',
+        subtopics: ['What Ultra Instinct actually does to the body', 'Why even Gods of Destruction can\'t master it', 'Goku\'s version vs the true Autonomous Ultra Instinct', 'How it compares to other God-tier transformations'],
+        category: 'anime',
+        tags: ['dragon-ball', 'anime', 'ultra-instinct', 'goku', 'power-levels']
+    },
+    {
+        id: 'jjk-gojo-infinity-explained',
+        type: 'deep-dive',
+        keyword: 'Gojo Infinity technique explained Jujutsu Kaisen',
+        subject: 'Satoru Gojo\'s Infinity — why it makes him virtually invincible',
+        franchise: 'Jujutsu Kaisen',
+        subtopics: ['How Infinity works mathematically (Zeno\'s paradox)', 'What can actually bypass Infinity', 'Hollow Purple and the Unlimited Void', 'Why Gojo is considered the strongest sorcerer alive'],
+        category: 'anime',
+        tags: ['jujutsu-kaisen', 'anime', 'gojo', 'infinity', 'cursed-technique']
+    },
+
+    // ── Marvel ─────────────────────────────────────────────────────────────────
+    {
+        id: 'knull-power-explained',
+        type: 'deep-dive',
+        keyword: 'how powerful is Knull God of Symbiotes Marvel',
+        subject: 'Knull the God of the Symbiotes — full power breakdown',
+        franchise: 'Marvel Comics',
+        subtopics: ['Knull\'s origin and the Void before creation', 'The King in Black — controlling all symbiotes', 'Necrosword: the weapon that killed Celestials', 'Where Knull ranks on Marvel\'s cosmic power scale'],
+        category: 'comics',
+        tags: ['marvel', 'knull', 'symbiotes', 'king-in-black', 'cosmic-entities', 'comics']
+    },
+    {
+        id: 'galactus-true-power',
+        type: 'deep-dive',
+        keyword: 'how powerful is Galactus Marvel true power',
+        subject: 'Galactus — the true scale of the Devourer of Worlds',
+        franchise: 'Marvel Comics',
+        subtopics: ['What Galactus actually is (not just a villain)', 'The Power Cosmic and what it can do', 'Why Galactus has never truly been defeated', 'Galactus vs Thanos, Knull, and the Celestials'],
+        category: 'comics',
+        tags: ['marvel', 'galactus', 'power-cosmic', 'cosmic-entities', 'comics']
+    },
+    {
+        id: 'molecule-man-strongest-marvel',
+        type: 'deep-dive',
+        keyword: 'is Molecule Man the strongest Marvel character',
+        subject: 'Owen Reece the Molecule Man — Marvel\'s most secretly broken character',
+        franchise: 'Marvel Comics',
+        subtopics: ['What Molecule Man can actually do at full power', 'His role in Secret Wars 2015 and the Multiverse', 'Why the Beyonders created him as a bomb', 'The case for Molecule Man being Marvel\'s most powerful being'],
+        category: 'comics',
+        tags: ['marvel', 'molecule-man', 'secret-wars', 'cosmic-power', 'comics']
+    },
+    {
+        id: 'darkseid-vs-thanos',
+        type: 'deep-dive',
+        keyword: 'Darkseid vs Thanos who wins who is stronger',
+        subject: 'Darkseid vs Thanos — the definitive breakdown',
+        franchise: 'DC & Marvel Comics',
+        subtopics: ['Darkseid\'s Omega Beams and the Anti-Life Equation', 'Thanos with and without the Infinity Gauntlet', 'True Form Darkseid vs Astral Regulator Thanos', 'Who wins in a straight fight — and why'],
+        category: 'comics',
+        tags: ['darkseid', 'thanos', 'dc', 'marvel', 'comics', 'versus', 'power-levels']
+    },
+    {
+        id: 'phoenix-force-explained',
+        type: 'deep-dive',
+        keyword: 'Phoenix Force explained Marvel Comics X-Men',
+        subject: 'The Phoenix Force — Marvel\'s most destructive cosmic entity explained',
+        franchise: 'Marvel Comics',
+        subtopics: ['What the Phoenix Force actually is', 'Why it keeps choosing Jean Grey', 'Dark Phoenix vs White Phoenix of the Crown', 'Every host ranked by power and stability'],
+        category: 'comics',
+        tags: ['marvel', 'phoenix-force', 'jean-grey', 'x-men', 'cosmic-entities', 'comics']
+    },
+    {
+        id: 'one-above-all-explained',
+        type: 'deep-dive',
+        keyword: 'who is the One Above All Marvel most powerful being',
+        subject: 'The One Above All — Marvel\'s omnipotent supreme being explained',
+        franchise: 'Marvel Comics',
+        subtopics: ['What the One Above All represents', 'The difference between One Above All and One-Above-All', 'Has anyone ever fought the One Above All?', 'Where they stand vs DC\'s The Presence'],
+        category: 'comics',
+        tags: ['marvel', 'one-above-all', 'omnipotent', 'cosmic-entities', 'comics']
+    },
+
+    // ── DC ─────────────────────────────────────────────────────────────────────
+    {
+        id: 'doctor-manhattan-powers-limits',
+        type: 'deep-dive',
+        keyword: 'Doctor Manhattan powers and limits explained Watchmen',
+        subject: 'Doctor Manhattan — every power explained and where his limits lie',
+        franchise: 'DC / Watchmen',
+        subtopics: ['Restructuring matter and his tachyon-based perception of time', 'Why Doctor Manhattan "lost" to Ozymandias', 'His role in Doomsday Clock and DC continuity', 'Is Doctor Manhattan truly omnipotent?'],
+        category: 'comics',
+        tags: ['dc', 'doctor-manhattan', 'watchmen', 'omnipotence', 'comics']
+    },
+    {
+        id: 'darkseid-anti-life-equation',
+        type: 'deep-dive',
+        keyword: 'what is the Anti-Life Equation Darkseid DC explained',
+        subject: 'The Anti-Life Equation — Darkseid\'s ultimate weapon explained',
+        franchise: 'DC Comics',
+        subtopics: ['What the Anti-Life Equation mathematically is', 'Why Darkseid has spent millennia searching for it', 'What happens when it\'s used on the entire universe', 'Every time the Anti-Life Equation appeared in DC history'],
+        category: 'comics',
+        tags: ['dc', 'darkseid', 'anti-life-equation', 'new-gods', 'comics']
+    },
+
+    // ── Movies / TV ────────────────────────────────────────────────────────────
+    {
+        id: 'inception-ending-explained',
+        type: 'deep-dive',
+        keyword: 'Inception ending explained is Cobb still dreaming',
+        subject: 'Inception\'s ending — definitive breakdown of what really happened',
+        franchise: 'Inception (2010)',
+        subtopics: ['The spinning top — what it actually proves', 'Cobb\'s wedding ring as the real tell', 'Christopher Nolan\'s intentional ambiguity', 'Why the answer might be "it doesn\'t matter"'],
+        category: 'movies',
+        tags: ['inception', 'christopher-nolan', 'ending-explained', 'theory', 'movies']
+    },
+    {
+        id: 'breaking-bad-walter-white-transformation',
+        type: 'deep-dive',
+        keyword: 'Walter White transformation from good to evil Breaking Bad',
+        subject: 'Walter White\'s transformation in Breaking Bad — when did he become Heisenberg?',
+        franchise: 'Breaking Bad',
+        subtopics: ['The Gray Matter wound as the real origin of Heisenberg', 'The exact moment Walt chose ego over family', 'Was Walt always Heisenberg, or did power create him?', 'Why "I did it for me" is the most honest line in TV history'],
+        category: 'tv',
+        tags: ['breaking-bad', 'walter-white', 'heisenberg', 'character-analysis', 'tv-shows']
+    },
+    {
+        id: 'dark-netflix-ending-explained',
+        type: 'deep-dive',
+        keyword: 'Dark Netflix ending explained season 3 time loop',
+        subject: 'Dark Season 3 ending — the knot, the origin, and what it all means',
+        franchise: 'Dark (Netflix)',
+        subtopics: ['The knot vs the origin world explained', 'Why Eva and Adam were both wrong', 'The paradox of the apocalypse causing itself', 'Who survived and why — the full breakdown'],
+        category: 'tv',
+        tags: ['dark', 'netflix', 'ending-explained', 'time-travel', 'tv-shows']
+    },
+    {
+        id: 'interstellar-ending-explained',
+        type: 'deep-dive',
+        keyword: 'Interstellar ending explained the tesseract Cooper',
+        subject: 'Interstellar\'s ending — the tesseract, gravity, and love as a dimension explained',
+        franchise: 'Interstellar (2014)',
+        subtopics: ['What the tesseract actually is and who built it', 'How Cooper communicates across time through gravity', 'The "they" reveal — future humans explained', 'Does Interstellar hold up scientifically?'],
+        category: 'movies',
+        tags: ['interstellar', 'christopher-nolan', 'ending-explained', 'sci-fi', 'movies']
+    },
+    {
+        id: 'game-of-thrones-dany-mad-queen',
+        type: 'deep-dive',
+        keyword: 'why did Daenerys go mad in Game of Thrones explained',
+        subject: 'Daenerys Targaryen\'s turn — was the Mad Queen arc earned or rushed?',
+        franchise: 'Game of Thrones',
+        subtopics: ['The foreshadowing the show planted from Season 1', 'What the books set up that the show skipped', 'The case for and against it being a good story decision', 'Why the execution failed even if the idea wasn\'t wrong'],
+        category: 'tv',
+        tags: ['game-of-thrones', 'daenerys', 'mad-queen', 'character-analysis', 'tv-shows']
+    }
+];
+
 // ─── Persona Definitions ───────────────────────────────────────────────────────
 
 const PERSONAS = [
@@ -374,20 +639,25 @@ function getUsedNicheIds() {
     return used;
 }
 
-function selectNiche(overrideId) {
+const ALL_TOPICS = [...NICHES, ...DEEP_DIVES];
+
+function selectTopic(overrideId) {
     if (overrideId) {
-        const found = NICHES.find(n => n.id === overrideId || n.label.toLowerCase() === overrideId.toLowerCase());
-        if (!found) throw new Error(`Unknown niche override: "${overrideId}". Valid IDs: ${NICHES.map(n => n.id).join(', ')}`);
+        const found = ALL_TOPICS.find(t => t.id === overrideId || (t.label || '').toLowerCase() === overrideId.toLowerCase());
+        if (!found) {
+            const ids = ALL_TOPICS.map(t => t.id).join(', ');
+            throw new Error(`Unknown topic: "${overrideId}". Valid IDs: ${ids}`);
+        }
         return found;
     }
 
     const usedIds = getUsedNicheIds();
-    console.log(`  → Used niche IDs so far: ${[...usedIds].join(', ') || 'none'}`);
+    console.log(`  → Topics used so far: ${usedIds.size}`);
 
-    let candidates = NICHES.filter(n => !usedIds.has(n.id));
+    let candidates = ALL_TOPICS.filter(t => !usedIds.has(t.id));
     if (candidates.length === 0) {
-        console.log('  → All niches covered — cycling from the beginning.');
-        candidates = NICHES;
+        console.log('  → All topics covered — cycling from the beginning.');
+        candidates = ALL_TOPICS;
     }
 
     return candidates[Math.floor(Math.random() * candidates.length)];
@@ -581,7 +851,122 @@ function estimateReadTime(content) {
     return Math.max(1, Math.round(words / 200));
 }
 
-// ─── Pipeline ─────────────────────────────────────────────────────────────────
+// ─── Deep-Dive Pipeline ───────────────────────────────────────────────────────
+
+async function runDeepDivePipeline(topic) {
+    const MODEL = 'llama-3.3-70b-versatile';
+
+    try {
+        console.log(`\n${'─'.repeat(60)}`);
+        console.log(`  Deep-Dive: ${topic.subject}`);
+        console.log(`  Keyword:   ${topic.keyword}`);
+        console.log(`${'─'.repeat(60)}`);
+
+        if (!fs.existsSync(DRAFTS_DIR)) fs.mkdirSync(DRAFTS_DIR, { recursive: true });
+
+        const now = new Date();
+        const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const fileName = `${formattedDate}-${topic.id}.json`;
+        const fileId = `${formattedDate}-${topic.id}`;
+
+        if (fs.existsSync(path.join(DRAFTS_DIR, fileName))) {
+            console.log(`  ℹ️  Draft for ${fileId} already exists — skipping.`);
+            return true;
+        }
+
+        const persona = pickPersona();
+        console.log(`\n[STEP 1] Writing article (persona: ${persona.name})...`);
+
+        const subtopicList = topic.subtopics.map((s, i) => `  ${i + 1}. ${s}`).join('\n');
+
+        const writingPrompt = `${persona.voice}
+
+You are writing a deep-dive feature article for PickMyBinge targeting this exact search query:
+"${topic.keyword}"
+
+Subject: ${topic.subject}
+Franchise: ${topic.franchise}
+
+ARTICLE STRUCTURE (follow exactly):
+1. HOOK — 2 punchy paragraphs. Immediately give the reader a direct answer to "${topic.keyword}", then explain why the full story is more interesting than they think. NO generic openers.
+2. Cover each of these subtopics as separate <h2> sections:
+${subtopicList}
+3. <h2>The Verdict</h2> — 1-2 paragraphs with a clear definitive take + your personal rating of how well the franchise handles this concept
+4. <h2>Watch/Read Next</h2> — recommend 3 specific titles (with brief reasons) that fans of this topic will love
+
+STRICT RULES:
+- Output ONLY a valid JSON object: { "title": "...", "excerpt": "...", "content": "...", "persona": "..." }
+- "title": punchy SEO title under 70 chars that directly targets the keyword — it must answer or tease the question
+- "excerpt": vivid 1-sentence hook under 160 chars — make someone desperate to read
+- "content": full article as HTML string — no <html>/<body>/<style> tags, no inline styles
+- "persona": the persona id ("BINGER", "CRITIC", or "NOSTALGIA")
+- Minimum 1200 words
+- Write from deep knowledge of the franchise — be specific, cite chapter/episode numbers where relevant, reference actual events
+- BANNED PHRASES: "will keep you on the edge of your seat", "in the world of", "buckle up", "it's worth noting", "delve into", "dive into", "needless to say", "in conclusion", "at the end of the day"`;
+
+        const draftRaw = await callGroqWithRetry(MODEL, writingPrompt, 3, 8000);
+        const draft = parseJson(draftRaw);
+        console.log(`  → Draft written by persona: ${draft.persona || persona.id}`);
+
+        console.log('\n[STEP 2] Editorial polish...');
+
+        const reviewPrompt = `You are a Senior Editor at PickMyBinge. Raise the quality of this deep-dive article.
+
+DRAFT:
+${JSON.stringify(draft)}
+
+TARGET KEYWORD: "${topic.keyword}"
+SUBJECT: ${topic.subject}
+
+QUALITY AUDIT (fix silently):
+1. Title — does it directly answer or strongly tease "${topic.keyword}"? Under 70 chars? Rewrite if not.
+2. Excerpt — vivid hook under 160 chars? Rewrite if bland.
+3. Hook — does it immediately answer the question then pull the reader deeper? Fix if generic.
+4. Specificity — are there real episode numbers, chapter references, character quotes, specific events? Add them where missing.
+5. Each H2 section — is it substantial (150+ words) with concrete analysis, not vague claims?
+6. Banned phrases to remove: "will keep you on the edge of your seat", "in the world of", "it's worth noting", "delve into", "needless to say"
+7. Verdict and Watch/Read Next sections — do they exist and are they strong?
+
+Return ONLY the corrected JSON: { "title": "...", "excerpt": "...", "content": "...", "persona": "..." }`;
+
+        const polishedRaw = await callGroqWithRetry(MODEL, reviewPrompt, 3, 8000);
+        const polished = parseJson(polishedRaw);
+        console.log('  → Polish complete.');
+
+        const missing = ['title', 'excerpt', 'content'].filter(k => !polished[k]);
+        if (missing.length > 0) throw new Error(`Polished post missing fields: ${missing.join(', ')}`);
+
+        polished.content = cleanHtml(polished.content);
+
+        const now2 = now;
+        const newPost = {
+            id: fileId,
+            date: `${now2.getFullYear()}-${String(now2.getMonth() + 1).padStart(2, '0')}-${String(now2.getDate()).padStart(2, '0')}`,
+            title: polished.title,
+            excerpt: polished.excerpt,
+            persona: polished.persona || persona.id,
+            category: topic.category,
+            tags: topic.tags,
+            tmdb_ids: [],
+            readTimeMinutes: estimateReadTime(polished.content),
+            content: polished.content,
+            link: `/blog.html?id=${fileId}`
+        };
+
+        fs.writeFileSync(path.join(DRAFTS_DIR, fileName), JSON.stringify(newPost, null, 4));
+        console.log(`  → Draft saved: drafts/${fileName}`);
+        console.log(`  → To publish: run "Publish Blog Draft" action with filename: ${fileName}`);
+
+        console.log(`\n✅ Deep-dive complete: ${fileId} [persona: ${newPost.persona}]`);
+        return true;
+
+    } catch (error) {
+        console.error(`\n❌ Deep-dive failed for "${topic.subject}":`, error.message);
+        return false;
+    }
+}
+
+// ─── Genre-Review Pipeline ────────────────────────────────────────────────────
 
 async function runPipeline(niche) {
     const MODEL = 'llama-3.3-70b-versatile';
@@ -789,15 +1174,18 @@ Return ONLY the corrected JSON: { "title": "...", "excerpt": "...", "content": "
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-    console.log('\nPickMyBinge Blog Pipeline v4');
+    console.log('\nPickMyBinge Blog Pipeline v5');
 
-    const niche = selectNiche(process.env.BLOG_NICHE || '');
-    console.log(`Generating 1 post for: ${niche.label} (${niche.id})\n`);
+    const topic = selectTopic(process.env.BLOG_NICHE || '');
+    const label = topic.label || topic.subject;
+    console.log(`Generating 1 post for: ${label} (${topic.id}) [type: ${topic.type || 'genre-review'}]\n`);
 
-    const ok = await runPipeline(niche);
+    const ok = topic.type === 'deep-dive'
+        ? await runDeepDivePipeline(topic)
+        : await runPipeline(topic);
 
     console.log('\n─── Final Result ───');
-    console.log(`  ${ok ? '✅' : '❌'} ${niche.label}`);
+    console.log(`  ${ok ? '✅' : '❌'} ${label}`);
     console.log('────────────────────\n');
 
     process.exit(ok ? 0 : 1);

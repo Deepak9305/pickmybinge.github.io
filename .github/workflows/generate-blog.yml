@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       niche:
-        description: 'Niche ID to generate (leave blank to auto-select next unused). e.g. psychological-thrillers, heist-movies, k-dramas, anime-series, horror-movies, crime-drama-series'
+        description: 'Topic ID to generate (leave blank to auto-select next unused). Genre reviews: psychological-thrillers, heist-movies, k-dramas, anime-series. Deep dives: frieren-himmel-hero-sword, knull-power-explained, sukuna-true-power, inception-ending-explained'
         required: false
         default: ''
 
