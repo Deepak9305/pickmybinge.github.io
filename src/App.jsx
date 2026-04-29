@@ -369,7 +369,7 @@ function App() {
                             <i className="fas fa-times" aria-hidden="true"></i>
                         </button>
                         <a href="/" className="active-nav" role="menuitem"><i className="fas fa-home" aria-hidden="true"></i> Home</a>
-                        <a href="/cringe.html" role="menuitem"><i className="fas fa-ghost" aria-hidden="true"></i> Worst Movies</a>
+                        <a href="/cringe.html" role="menuitem"><i className="fas fa-ghost" aria-hidden="true"></i> Cringe Movies</a>
                         <a href="/quiz.html" role="menuitem"><i className="fas fa-question-circle" aria-hidden="true"></i> Superhero Quiz</a>
                         <a href="/blog.html" role="menuitem"><i className="fas fa-newspaper" aria-hidden="true"></i> Blog</a>
                     </div>
