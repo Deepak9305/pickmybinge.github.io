@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
 :root {
   --primary: #FF5E5B;
   --secondary: #00CECB;
@@ -37,6 +39,12 @@ body.modal-open {
 }
 
 /* --- Navigation Header --- */
+header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 header {
   display: flex;
   justify-content: space-between;
