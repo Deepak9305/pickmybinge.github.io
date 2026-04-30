@@ -147,6 +147,16 @@
       justify-content: center;
       font-size: 4rem;
       position: relative;
+      overflow: hidden;
+    }
+
+    .card-thumb-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
     }
 
     .card-thumb-overlay {
@@ -652,9 +662,9 @@
         const safeThumbnail = p.thumbnail && /^https:\/\/image\.tmdb\.org\//.test(p.thumbnail) ? p.thumbnail : null;
         return `
           <a href="${safeLink}" class="blog-card" style="animation:fadeUp 0.4s ${i * 0.06}s both ease">
-            <div class="card-thumb" ${safeThumbnail ? `style="background-image:url('${safeThumbnail}');background-size:cover;background-position:center top;"` : ''}>
+            <div class="card-thumb">
+              ${safeThumbnail ? `<img src="${safeThumbnail}" alt="${escapeHtml(p.title)}" class="card-thumb-img" loading="lazy">` : `<span style="position:relative;z-index:1">${catEmoji[cat] || '🎬'}</span>`}
               <div class="card-thumb-overlay"></div>
-              ${safeThumbnail ? '' : `<span style="position:relative;z-index:1">${catEmoji[cat] || '🎬'}</span>`}
               <span class="card-cat-badge">${escapeHtml(catLabel[cat] || 'Article')}</span>
             </div>
             <div class="card-body">
