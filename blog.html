@@ -596,7 +596,28 @@
       try {
         const res = await fetch(`/content/blogs/${encodeURIComponent(id)}.json`);
         if (!res.ok) throw new Error('Post not found');
-        const post = await res.json();
+        const text = await res.text();
+
+        let post;
+        if (text.trimStart().startsWith('<')) {
+          // HTML format (primary): extract fields from document structure
+          const doc = new DOMParser().parseFromString(text, 'text/html');
+          post = {
+            title: doc.querySelector('h1')?.textContent?.trim() || doc.title.replace(/\s*\|.*/, '').trim(),
+            excerpt: doc.querySelector('meta[name="description"]')?.content || '',
+            date: doc.querySelector('meta[name="date"]')?.content || doc.querySelector('meta[property="article:published_time"]')?.content || '',
+            category: doc.querySelector('meta[name="category"]')?.content || 'general',
+            thumbnail: doc.querySelector('meta[property="og:image"]')?.content || null,
+            content: doc.querySelector('.blog-post-content')?.innerHTML
+                  || doc.querySelector('article')?.innerHTML
+                  || doc.querySelector('main')?.innerHTML
+                  || '',
+            readTimeMinutes: parseInt(doc.querySelector('meta[name="read-time"]')?.content) || 4
+          };
+        } else {
+          // JSON fallback
+          post = JSON.parse(text);
+        }
 
         document.title = `${post.title} | PickMyBinge Blog`;
 
