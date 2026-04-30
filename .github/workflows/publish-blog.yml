@@ -4,8 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       draft_filename:
-        description: 'Draft filename to publish (e.g. 2026-04-29-sci-fi-thrillers.json)'
+        description: 'Select a draft to publish'
         required: true
+        type: choice
+        options:
+          - 2026-04-30-custom-why-did-homelander-kill-firecracker.json
 
 permissions:
   contents: write
@@ -30,13 +33,32 @@ jobs:
           DRAFT_FILENAME: ${{ github.event.inputs.draft_filename }}
         run: node scripts/publish-blog.js
 
+      - name: Remove draft and sync choices
+        run: |
+          rm -f "drafts/${{ github.event.inputs.draft_filename }}"
+          python3 - <<'PYEOF'
+          import os, re
+          drafts = sorted([f for f in os.listdir('drafts') if f.endswith('.json')], reverse=True)
+          with open('.github/workflows/publish-blog.yml', 'r') as f:
+              content = f.read()
+          options_block = '\n'.join(f'          - {d}' for d in drafts) if drafts else '          - (no drafts)'
+          new_content = re.sub(
+              r'(        options:\n)(?:          - .+\n)*',
+              f'\\1{options_block}\n',
+              content
+          )
+          with open('.github/workflows/publish-blog.yml', 'w') as f:
+              f.write(new_content)
+          print(f"Remaining drafts: {drafts}")
+          PYEOF
+
       - name: Commit published post
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add public/content/blogs/ public/blogs-index.json
+          git add public/content/blogs/ public/blogs-index.json drafts/ .github/workflows/publish-blog.yml
           if git diff --staged --quiet; then
-            echo "Nothing to publish."
+            echo "Nothing to commit."
           else
             git commit -m "Publish: ${{ github.event.inputs.draft_filename }}"
             git push
