@@ -520,6 +520,7 @@
         <div class="skel-line" style="width: 100%; height: 20px;"></div>
         <div class="skel-line" style="width: 90%; height: 20px;"></div>
       </div>
+      <div id="you-may-like" style="display:none; margin-top: 60px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.1);"></div>
     </div>
   </div>
 
@@ -637,6 +638,38 @@
                 <h1 style="font-size: clamp(1.6rem, 5vw, 3rem); margin-bottom: 30px; line-height: 1.15;">${escapeHtml(post.title)}</h1>
                 <div style="font-size: clamp(0.95rem, 2.5vw, 1.2rem); line-height: 1.8; color: #d1d1e0;">${postContent}</div>
             `;
+
+        // "You May Like These Too" section
+        const likeDiv = document.getElementById('you-may-like');
+        const others = allPosts.filter(p => p.id !== id).slice(0, 3);
+        if (others.length > 0) {
+          likeDiv.innerHTML = `
+            <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 24px; color: var(--light);">You May Like These Too</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+              ${others.map(p => {
+                const pCat = p.category || detectCat(p.title, p.excerpt);
+                const safeLink = p.link && /^(https?:\/\/|\/)/.test(p.link) ? escapeHtml(p.link) : '#';
+                const safeThumb = p.thumbnail && /^https:\/\/image\.tmdb\.org\//.test(p.thumbnail) ? p.thumbnail : null;
+                return `
+                  <a href="${safeLink}" class="blog-card">
+                    <div class="card-thumb">
+                      ${safeThumb ? `<img src="${safeThumb}" alt="${escapeHtml(p.title)}" class="card-thumb-img" loading="lazy">` : `<span style="position:relative;z-index:1">${catEmoji[pCat] || '🎬'}</span>`}
+                      <div class="card-thumb-overlay"></div>
+                      <span class="card-cat-badge">${escapeHtml(catLabel[pCat] || 'Article')}</span>
+                    </div>
+                    <div class="card-body">
+                      <h3 class="card-title">${escapeHtml(p.title)}</h3>
+                      <p class="card-excerpt">${escapeHtml(p.excerpt || '')}</p>
+                      <div class="card-footer"><span class="read-more">Read More <i class="fas fa-arrow-right"></i></span></div>
+                    </div>
+                  </a>`;
+              }).join('')}
+            </div>`;
+          likeDiv.style.display = '';
+        } else {
+          likeDiv.style.display = 'none';
+          likeDiv.innerHTML = '';
+        }
       } catch (e) {
         document.getElementById('post-content').innerHTML = `<h2>Article not found</h2><p>This post may have been removed or the link is incorrect.</p>`;
       }
@@ -649,6 +682,9 @@
       document.querySelector('.controls').style.display = '';
       document.getElementById('blog-grid').style.display = '';
       document.getElementById('post-viewer').style.display = 'none';
+      const ld = document.getElementById('you-may-like');
+      ld.style.display = 'none';
+      ld.innerHTML = '';
       document.title = 'Blog | PickMyBinge';
       window.scrollTo({ top: 0, behavior: 'instant' });
       if (!allPosts.length) {
