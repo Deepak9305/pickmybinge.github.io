@@ -676,6 +676,20 @@ function selectTopic(overrideId) {
 
 // ─── Groq Helpers ─────────────────────────────────────────────────────────────
 
+async function extractFranchiseFromKeyword(keyword) {
+    try {
+        const raw = await callGroqWithRetry(
+            'llama-3.3-70b-versatile',
+            `What is the primary show, movie, or franchise this topic is about? Topic: "${keyword}"\nReturn JSON only: { "franchise": "<name>" }`,
+            2, 100
+        );
+        const parsed = parseJson(raw);
+        return parsed.franchise || null;
+    } catch {
+        return null;
+    }
+}
+
 async function callGroq(model, prompt, maxTokens = 8000) {
     if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY is missing from environment.');
     console.log(`  → Calling Groq (${model}, max_tokens=${maxTokens})...`);
@@ -890,7 +904,11 @@ async function runDeepDivePipeline(topic) {
         if (TMDB_API_KEY) {
             try {
                 console.log('\n[STEP 0] Searching TMDB for imagery...');
-                const searchRes = await fetchFromTMDB('search/multi', { query: topic.keyword, language: 'en-US', page: 1 });
+                let tmdbQuery = (topic.franchise && topic.franchise !== 'Various')
+                    ? topic.franchise
+                    : (await extractFranchiseFromKeyword(topic.keyword)) || topic.keyword;
+                console.log(`  → TMDB search query: "${tmdbQuery}"`);
+                const searchRes = await fetchFromTMDB('search/multi', { query: tmdbQuery, language: 'en-US', page: 1 });
                 const candidates = (searchRes.results || [])
                     .filter(r => (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path)
                     .slice(0, 5);
