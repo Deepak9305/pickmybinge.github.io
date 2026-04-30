@@ -1,0 +1,48 @@
+name: Patch Blog Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      blog_file:
+        description: 'Path to blog JSON (e.g. public/content/blogs/2026-04-30-custom-why-did-homelander-kill-firecracker.json)'
+        required: true
+      franchise:
+        description: 'Show or movie name to search on TMDB (e.g. The Boys)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Patch blog with TMDB images
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          BLOG_FILE: ${{ github.event.inputs.blog_file }}
+          FRANCHISE: ${{ github.event.inputs.franchise }}
+        run: node scripts/patch-blog-images.js
+
+      - name: Commit patched blog
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add ${{ github.event.inputs.blog_file }}
+          if git diff --staged --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Patch images: ${{ github.event.inputs.blog_file }}"
+            git push
+          fi
