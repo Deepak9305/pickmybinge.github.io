@@ -620,7 +620,7 @@ function getUsedNicheIds() {
         try {
             const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'));
             for (const fileName of manifest) {
-                const nicheSlug = fileName.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace('.json', '');
+                const nicheSlug = fileName.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.(json|html)$/, '');
                 used.add(nicheSlug);
             }
         } catch { }
@@ -629,8 +629,8 @@ function getUsedNicheIds() {
     // Check drafts folder
     if (fs.existsSync(DRAFTS_DIR)) {
         for (const file of fs.readdirSync(DRAFTS_DIR)) {
-            if (file.endsWith('.json')) {
-                const nicheSlug = file.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace('.json', '');
+            if (file.endsWith('.json') || file.endsWith('.html')) {
+                const nicheSlug = file.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.(json|html)$/, '');
                 used.add(nicheSlug);
             }
         }
@@ -855,6 +855,41 @@ function cleanHtml(html) {
     return out.trim();
 }
 
+// ─── HTML Draft Builder ───────────────────────────────────────────────────────
+
+function escapeAttr(str) {
+    return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+function buildHtmlDraft(post) {
+    const tmdbIds = (post.tmdb_ids || []).join(',');
+    const tags = (post.tags || []).join(',');
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeAttr(post.title)} | PickMyBinge</title>
+  <meta name="description" content="${escapeAttr(post.excerpt)}">
+  <meta name="date" content="${post.date}">
+  <meta name="category" content="${post.category}">
+  <meta name="tags" content="${escapeAttr(tags)}">
+  <meta name="id" content="${post.id}">
+  <meta name="read-time" content="${post.readTimeMinutes}">
+  <meta name="persona" content="${post.persona || ''}">
+  <meta name="tmdb-ids" content="${tmdbIds}">
+  <meta property="og:image" content="${escapeAttr(post.thumbnail || '')}">
+</head>
+<body>
+<article>
+  <h1>${post.title}</h1>
+  <div class="blog-post-content">
+${post.content}
+  </div>
+</article>
+</body>
+</html>`;
+}
+
 // ─── Dedup Helpers ────────────────────────────────────────────────────────────
 
 function getUsedTmdbIds() {
@@ -891,7 +926,7 @@ async function runDeepDivePipeline(topic) {
 
         const now = new Date();
         const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const fileName = `${formattedDate}-${topic.id}.json`;
+        const fileName = `${formattedDate}-${topic.id}.html`;
         const fileId = `${formattedDate}-${topic.id}`;
 
         if (fs.existsSync(path.join(DRAFTS_DIR, fileName))) {
@@ -1016,7 +1051,7 @@ Return ONLY the corrected JSON: { "title": "...", "excerpt": "...", "content": "
             link: `/blog.html?id=${fileId}`
         };
 
-        fs.writeFileSync(path.join(DRAFTS_DIR, fileName), JSON.stringify(newPost, null, 4));
+        fs.writeFileSync(path.join(DRAFTS_DIR, fileName), buildHtmlDraft(newPost));
         console.log(`  → Draft saved: drafts/${fileName}`);
         console.log(`  → To publish: run "Publish Blog Draft" action with filename: ${fileName}`);
 
@@ -1046,7 +1081,7 @@ async function runPipeline(niche) {
         // ── Same-day guard ────────────────────────────────────────────────────
         const now = new Date();
         const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const fileName = `${formattedDate}-${niche.id}.json`;
+        const fileName = `${formattedDate}-${niche.id}.html`;
         const fileId = `${formattedDate}-${niche.id}`;
 
         if (fs.existsSync(path.join(DRAFTS_DIR, fileName))) {
@@ -1221,7 +1256,7 @@ Return ONLY the corrected JSON: { "title": "...", "excerpt": "...", "content": "
             link: `/blog.html?id=${fileId}`
         };
 
-        fs.writeFileSync(path.join(DRAFTS_DIR, fileName), JSON.stringify(newPost, null, 4));
+        fs.writeFileSync(path.join(DRAFTS_DIR, fileName), buildHtmlDraft(newPost));
         console.log(`  → Draft saved: drafts/${fileName}`);
         console.log(`  → To publish: run "Publish Blog Draft" action with filename: ${fileName}`);
 

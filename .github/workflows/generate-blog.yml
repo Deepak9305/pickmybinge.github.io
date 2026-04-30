@@ -46,7 +46,7 @@ jobs:
         run: |
           python3 - <<'PYEOF'
           import os, re
-          drafts = sorted([f for f in os.listdir('drafts') if f.endswith('.json')], reverse=True)
+          drafts = sorted([f for f in os.listdir('drafts') if f.endswith('.json') or f.endswith('.html')], reverse=True)
           with open('.github/workflows/publish-blog.yml', 'r') as f:
               content = f.read()
           options_block = '\n'.join(f'          - {d}' for d in drafts) if drafts else '          - (no drafts)'

@@ -16,7 +16,6 @@ async function fetchTMDB(endpoint, params = {}) {
 
 function insertImagesAfterH2s(content, images) {
     let imgIdx = 0;
-    // Insert after the first N h2 closing tags, skip "The Verdict" and "Watch"
     return content.replace(/<\/h2>/g, (match, offset) => {
         if (imgIdx >= images.length) return match;
         const before = content.slice(0, offset + match.length);
@@ -35,7 +34,7 @@ async function main() {
     const blogPath = path.join(process.cwd(), BLOG_FILE);
     if (!fs.existsSync(blogPath)) { console.error(`File not found: ${blogPath}`); process.exit(1); }
 
-    const blog = JSON.parse(fs.readFileSync(blogPath, 'utf-8'));
+    const isHtml = BLOG_FILE.endsWith('.html');
 
     // 1. Find the show/movie on TMDB
     const searchRes = await fetchTMDB('search/multi', { query: FRANCHISE, language: 'en-US', page: 1 });
@@ -53,7 +52,6 @@ async function main() {
     const posters   = (imagesRes.posters   || []).slice(0, 4);
     const backdrops = (imagesRes.backdrops || []).slice(0, 4);
 
-    // Use backdrops in-content (cinematic), poster as thumbnail
     const inContent = backdrops.slice(0, 3).map(b => ({
         url: `https://image.tmdb.org/t/p/w780${b.file_path}`,
         alt: `${title} scene`
@@ -65,30 +63,72 @@ async function main() {
         })));
     }
 
-    // 3. Update thumbnail + tmdb_ids
-    if (posters.length > 0) {
-        blog.thumbnail = `https://image.tmdb.org/t/p/w500${posters[0].file_path}`;
-        console.log(`  thumbnail → ${blog.thumbnail}`);
-    }
-    blog.tmdb_ids = [id];
+    const newThumb = posters.length > 0 ? `https://image.tmdb.org/t/p/w500${posters[0].file_path}` : null;
 
-    // 4. Insert images into content after substantive H2s
-    blog.content = insertImagesAfterH2s(blog.content, inContent);
-    const insertedCount = (blog.content.match(/class="blog-image"/g) || []).length;
-    console.log(`  ${insertedCount} image(s) inserted into content`);
+    if (isHtml) {
+        let html = fs.readFileSync(blogPath, 'utf-8');
 
-    fs.writeFileSync(blogPath, JSON.stringify(blog, null, 4));
-    console.log(`✅ Patched: ${BLOG_FILE}`);
+        // 3. Update thumbnail meta tag
+        if (newThumb) {
+            html = html.replace(
+                /(<meta property="og:image" content=")[^"]*(")/,
+                `$1${newThumb}$2`
+            );
+            console.log(`  thumbnail → ${newThumb}`);
+        }
 
-    // 5. Also update blogs-index.json thumbnail so the card grid reflects the new image
-    const indexPath = path.join(process.cwd(), 'public/blogs-index.json');
-    if (fs.existsSync(indexPath) && blog.thumbnail) {
-        const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
-        const entry = index.find(p => p.id === blog.id);
-        if (entry) {
-            entry.thumbnail = blog.thumbnail;
-            fs.writeFileSync(indexPath, JSON.stringify(index, null, 4));
-            console.log(`✅ blogs-index.json thumbnail updated`);
+        // 4. Insert images into content after substantive H2s
+        html = insertImagesAfterH2s(html, inContent);
+        const insertedCount = (html.match(/class="blog-image"/g) || []).length;
+        console.log(`  ${insertedCount} image(s) inserted into content`);
+
+        fs.writeFileSync(blogPath, html);
+        console.log(`✅ Patched: ${BLOG_FILE}`);
+
+        // 5. Update blogs-index.json thumbnail
+        if (newThumb) {
+            const idMatch = html.match(/<meta name="id" content="([^"]*)"/);
+            const blogId = idMatch ? idMatch[1] : path.basename(BLOG_FILE, '.html');
+            const indexPath = path.join(process.cwd(), 'public/blogs-index.json');
+            if (fs.existsSync(indexPath)) {
+                const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+                const entry = index.find(p => p.id === blogId);
+                if (entry) {
+                    entry.thumbnail = newThumb;
+                    fs.writeFileSync(indexPath, JSON.stringify(index, null, 4));
+                    console.log(`✅ blogs-index.json thumbnail updated`);
+                }
+            }
+        }
+    } else {
+        // JSON path
+        const blog = JSON.parse(fs.readFileSync(blogPath, 'utf-8'));
+
+        // 3. Update thumbnail + tmdb_ids
+        if (newThumb) {
+            blog.thumbnail = newThumb;
+            console.log(`  thumbnail → ${blog.thumbnail}`);
+        }
+        blog.tmdb_ids = [id];
+
+        // 4. Insert images into content after substantive H2s
+        blog.content = insertImagesAfterH2s(blog.content, inContent);
+        const insertedCount = (blog.content.match(/class="blog-image"/g) || []).length;
+        console.log(`  ${insertedCount} image(s) inserted into content`);
+
+        fs.writeFileSync(blogPath, JSON.stringify(blog, null, 4));
+        console.log(`✅ Patched: ${BLOG_FILE}`);
+
+        // 5. Update blogs-index.json thumbnail
+        const indexPath = path.join(process.cwd(), 'public/blogs-index.json');
+        if (fs.existsSync(indexPath) && blog.thumbnail) {
+            const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+            const entry = index.find(p => p.id === blog.id);
+            if (entry) {
+                entry.thumbnail = blog.thumbnail;
+                fs.writeFileSync(indexPath, JSON.stringify(index, null, 4));
+                console.log(`✅ blogs-index.json thumbnail updated`);
+            }
         }
     }
 }

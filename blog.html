@@ -594,7 +594,8 @@
       window.scrollTo({ top: 0, behavior: 'instant' });
 
       try {
-        const res = await fetch(`/content/blogs/${encodeURIComponent(id)}.json`);
+        let res = await fetch(`/content/blogs/${encodeURIComponent(id)}.html`);
+        if (!res.ok) res = await fetch(`/content/blogs/${encodeURIComponent(id)}.json`);
         if (!res.ok) throw new Error('Post not found');
         const text = await res.text();
 
