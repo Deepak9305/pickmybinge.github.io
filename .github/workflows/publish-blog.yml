@@ -63,3 +63,8 @@ jobs:
             git commit -m "Publish: ${{ github.event.inputs.draft_filename }}"
             git push
           fi
+
+      - name: Trigger deploy
+        run: gh workflow run deploy.yml
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_TOKEN || secrets.GITHUB_TOKEN }}

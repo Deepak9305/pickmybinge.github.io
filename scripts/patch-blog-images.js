@@ -79,6 +79,18 @@ async function main() {
 
     fs.writeFileSync(blogPath, JSON.stringify(blog, null, 4));
     console.log(`✅ Patched: ${BLOG_FILE}`);
+
+    // 5. Also update blogs-index.json thumbnail so the card grid reflects the new image
+    const indexPath = path.join(process.cwd(), 'public/blogs-index.json');
+    if (fs.existsSync(indexPath) && blog.thumbnail) {
+        const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+        const entry = index.find(p => p.id === blog.id);
+        if (entry) {
+            entry.thumbnail = blog.thumbnail;
+            fs.writeFileSync(indexPath, JSON.stringify(index, null, 4));
+            console.log(`✅ blogs-index.json thumbnail updated`);
+        }
+    }
 }
 
 main().catch(e => { console.error(e.message); process.exit(1); });

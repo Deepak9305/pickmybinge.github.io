@@ -71,3 +71,8 @@ jobs:
             git commit -m "Draft: $(date +'%Y-%m-%d') [${{ github.event.inputs.niche || vars.BLOG_NICHE || 'Sci-Fi Thrillers' }}]"
             git push
           fi
+
+      - name: Trigger deploy
+        run: gh workflow run deploy.yml
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_TOKEN || secrets.GITHUB_TOKEN }}

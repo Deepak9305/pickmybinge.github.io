@@ -39,10 +39,15 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add ${{ github.event.inputs.blog_file }}
+          git add ${{ github.event.inputs.blog_file }} public/blogs-index.json
           if git diff --staged --quiet; then
             echo "No changes."
           else
             git commit -m "Patch images: ${{ github.event.inputs.blog_file }}"
             git push
           fi
+
+      - name: Trigger deploy
+        run: gh workflow run deploy.yml
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_TOKEN || secrets.GITHUB_TOKEN }}
