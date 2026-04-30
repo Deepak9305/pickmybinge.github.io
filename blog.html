@@ -590,6 +590,8 @@
     }
 
     async function showPost(id) {
+      // Legacy slug redirect: strip "custom-" prefix if file not found under old name
+      id = id.replace(/^(\d{4}-\d{2}-\d{2}-)custom-/, '$1');
       document.querySelector('.hero').style.display = 'none';
       document.querySelector('.controls').style.display = 'none';
       document.getElementById('blog-grid').style.display = 'none';
