@@ -651,7 +651,7 @@ function selectTopic(overrideId) {
         console.log(`  → "${overrideId}" not in catalogue — treating as custom topic.`);
         const slug = overrideId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         return {
-            id: `custom-${slug}`,
+            id: slug,
             type: 'deep-dive',
             keyword: overrideId,
             subject: overrideId,
