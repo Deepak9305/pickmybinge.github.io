@@ -646,8 +646,13 @@
                 <h1 style="font-size: clamp(1.6rem, 5vw, 3rem); margin-bottom: 30px; line-height: 1.15;">${escapeHtml(post.title)}</h1>
                 <div style="font-size: clamp(0.95rem, 2.5vw, 1.2rem); line-height: 1.8; color: #d1d1e0;">${postContent}</div>
             `;
+      } catch (e) {
+        document.getElementById('post-content').innerHTML = `<h2>Article not found</h2><p>This post may have been removed or the link is incorrect.</p>`;
+        return;
+      }
 
-        // "You May Like These Too" section
+      // "You May Like These Too" — separate try-catch so it cannot wipe post content
+      try {
         const likeDiv = document.getElementById('you-may-like');
         const others = allPosts.filter(p => p.id !== id).slice(0, 3);
         if (others.length > 0) {
@@ -678,8 +683,8 @@
           likeDiv.style.display = 'none';
           likeDiv.innerHTML = '';
         }
-      } catch (e) {
-        document.getElementById('post-content').innerHTML = `<h2>Article not found</h2><p>This post may have been removed or the link is incorrect.</p>`;
+      } catch (_) {
+        document.getElementById('you-may-like').style.display = 'none';
       }
     }
 
