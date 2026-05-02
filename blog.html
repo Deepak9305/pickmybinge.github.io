@@ -600,10 +600,16 @@
     }
 
     async function showPost(id) {
-      // Legacy slug redirect: strip "custom-" prefix and update address bar
+      // Legacy redirect: strip "custom-" prefix (old format)
       const cleanId = id.replace(/^(\d{4}-\d{2}-\d{2}-)custom-/, '$1');
       if (cleanId !== id) {
         id = cleanId;
+        window.history.replaceState({}, '', `/blog.html?id=${id}`);
+      }
+      // Legacy redirect: strip YYYY-MM-DD- date prefix from old IDs → clean slug URLs
+      const slugId = id.replace(/^\d{4}-\d{2}-\d{2}-/, '');
+      if (slugId !== id) {
+        id = slugId;
         window.history.replaceState({}, '', `/blog.html?id=${id}`);
       }
       document.querySelector('.hero').style.display = 'none';

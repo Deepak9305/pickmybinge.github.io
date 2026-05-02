@@ -37,14 +37,10 @@ if (process.env.GITHUB_ENV) {
 const normalizedFileName = fileName.replace(/\\/g, '/');
 const parts = normalizedFileName.split('/');
 const basename = parts[parts.length - 1];
-const relDir   = parts.slice(0, -1).join('/');  // e.g. "2026/05/02"
-const slug     = basename.replace(/\.(html|json)$/, '');
+const slug = basename.replace(/\.(html|json)$/, '');
 
-// Derive date-prefixed ID from folder structure (YYYY/MM/DD/slug → YYYY-MM-DD-slug)
-const dateParts = relDir.split('/').slice(-3);
-const fileId = dateParts.length === 3
-    ? `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}-${slug}`
-    : slug;
+// ID is just the slug — no date prefix — giving clean URLs like /blog.html?id=is-succession-worth-watching
+const fileId = slug;
 
 const draftPath = path.join(DRAFTS_DIR, normalizedFileName);
 if (!fs.existsSync(draftPath)) {
@@ -56,7 +52,7 @@ const destDir  = BLOG_DIR;
 if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
 
 const isHtml = basename.endsWith('.html');
-const outFileName = `${fileId}.${isHtml ? 'html' : 'json'}`;
+const outFileName = `${slug}.${isHtml ? 'html' : 'json'}`;
 let entry;
 
 if (isHtml) {
@@ -71,8 +67,9 @@ if (isHtml) {
     };
 
     const h1Match = text.match(/<h1[^>]*>([\s\S]*?)<\/h1>/);
-    const title     = h1Match ? h1Match[1].replace(/<[^>]+>/g, '').trim() : fileId;
-    const id        = getMeta('id') || fileId;
+    const title     = h1Match ? h1Match[1].replace(/<[^>]+>/g, '').trim() : slug;
+    // Always use the slug as the ID — clean URLs, no date in the link
+    const id        = slug;
     const date      = getMeta('date');
     const category  = getMeta('category') || 'general';
     const excerpt   = getMeta('description');
@@ -87,14 +84,15 @@ if (isHtml) {
     console.log(`✅ Published: public/content/blogs/${outFileName}`);
     const thumbMatch = (post.content || '').match(/src="(https:\/\/image\.tmdb\.org\/[^"]+)"/);
     entry = {
-        id: post.id,
+        // Use slug as ID for clean URLs — strip any date prefix from the JSON's own id field
+        id: slug,
         date: post.date,
         title: post.title,
         category: post.category,
         excerpt: post.excerpt,
         thumbnail: post.thumbnail || (thumbMatch ? thumbMatch[1] : null),
         tmdb_ids: post.tmdb_ids,
-        link: post.link
+        link: `/blog.html?id=${slug}`
     };
 }
 
