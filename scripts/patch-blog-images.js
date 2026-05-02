@@ -18,6 +18,8 @@ function insertImagesAfterH2s(content, images) {
     let imgIdx = 0;
     return content.replace(/<\/h2>/g, (match, offset) => {
         if (imgIdx >= images.length) return match;
+        const after = content.slice(offset + match.length, offset + match.length + 80);
+        if (after.includes('class="blog-image"')) return match;
         const before = content.slice(0, offset + match.length);
         const h2Text = (before.match(/<h2[^>]*>([^<]*)<\/h2>$/) || [])[1] || '';
         if (/verdict|watch|read next/i.test(h2Text)) return match;
@@ -109,7 +111,7 @@ async function main() {
             blog.thumbnail = newThumb;
             console.log(`  thumbnail → ${blog.thumbnail}`);
         }
-        blog.tmdb_ids = [id];
+        blog.tmdb_ids = [...new Set([...(blog.tmdb_ids || []), id])];
 
         // 4. Insert images into content after substantive H2s
         blog.content = insertImagesAfterH2s(blog.content, inContent);

@@ -44,18 +44,22 @@ jobs:
           node scripts/generate-blog.js
 
       - name: Commit draft
+        id: commit
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add drafts/
           if git diff --staged --quiet; then
             echo "No new draft generated."
+            echo "committed=false" >> $GITHUB_OUTPUT
           else
             git commit -m "Draft: $(date +'%Y-%m-%d') [${{ github.event.inputs.niche || vars.BLOG_NICHE || 'Sci-Fi Thrillers' }}]"
             git push
+            echo "committed=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Trigger deploy
+        if: steps.commit.outputs.committed == 'true'
         run: gh workflow run deploy.yml
         env:
           GH_TOKEN: ${{ secrets.DEPLOY_TOKEN || secrets.GITHUB_TOKEN }}

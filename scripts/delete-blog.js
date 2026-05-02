@@ -8,14 +8,16 @@ const BLOGS_INDEX = path.join(process.cwd(), 'public/blogs-index.json');
 function deleteBlog(slug) {
     console.log(`Deleting blog: ${slug}`);
 
-    const fileName = slug.endsWith('.json') ? slug : `${slug}.json`;
-    const baseSlug = slug.replace('.json', '');
-    const filePath = path.join(BLOG_DIR, fileName);
+    const baseSlug = slug.replace(/\.(html|json)$/, '');
+    const jsonFile = baseSlug + '.json';
+    const htmlFile = baseSlug + '.html';
 
-    if (!fs.existsSync(filePath)) {
-        console.error(`Error: File ${filePath} not found.`);
-        return;
-    }
+    let fileName;
+    if (fs.existsSync(path.join(BLOG_DIR, jsonFile))) fileName = jsonFile;
+    else if (fs.existsSync(path.join(BLOG_DIR, htmlFile))) fileName = htmlFile;
+    else { console.error(`Error: No file found for slug "${baseSlug}"`); process.exit(1); }
+
+    const filePath = path.join(BLOG_DIR, fileName);
 
     // 1. Delete the file
     fs.unlinkSync(filePath);
