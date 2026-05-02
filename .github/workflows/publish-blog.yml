@@ -4,9 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       draft_filename:
-        description: 'Relative path to draft (e.g. 2026/05/02/keyword-slug.html)'
+        description: 'Select a draft to publish'
         required: true
-        type: string
+        type: choice
+        options:
+          - (no drafts available)
 
 permissions:
   contents: write
@@ -32,14 +34,16 @@ jobs:
           DRAFT_FILENAME: ${{ github.event.inputs.draft_filename }}
         run: node scripts/publish-blog.js
 
-      - name: Remove draft
-        run: rm -f "drafts/${{ github.event.inputs.draft_filename }}"
+      - name: Remove draft and sync choices
+        run: |
+          rm -f "drafts/${{ github.event.inputs.draft_filename }}"
+          node scripts/sync-draft-choices.js
 
       - name: Commit published post
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add public/content/blogs/ public/blogs-index.json drafts/
+          git add public/content/blogs/ public/blogs-index.json drafts/ .github/workflows/publish-blog.yml
           if git diff --staged --quiet; then
             echo "Nothing to commit."
           else
