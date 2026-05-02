@@ -52,16 +52,17 @@ if (!fs.existsSync(draftPath)) {
     process.exit(1);
 }
 
-const destDir  = path.join(BLOG_DIR, relDir);
+const destDir  = BLOG_DIR;
 if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
 
 const isHtml = basename.endsWith('.html');
+const outFileName = `${fileId}.${isHtml ? 'html' : 'json'}`;
 let entry;
 
 if (isHtml) {
     const text = fs.readFileSync(draftPath, 'utf-8');
-    fs.writeFileSync(path.join(destDir, basename), text);
-    console.log(`✅ Published: public/content/blogs/${normalizedFileName}`);
+    fs.writeFileSync(path.join(destDir, outFileName), text);
+    console.log(`✅ Published: public/content/blogs/${outFileName}`);
 
     const getMeta = (name, isProp = false) => {
         const attr = isProp ? 'property' : 'name';
@@ -82,8 +83,8 @@ if (isHtml) {
     entry = { id, date, title, category, excerpt, thumbnail: thumbnail || null, tmdb_ids, link: `/blog.html?id=${id}` };
 } else {
     const post = JSON.parse(fs.readFileSync(draftPath, 'utf-8'));
-    fs.writeFileSync(path.join(destDir, basename), JSON.stringify(post, null, 4));
-    console.log(`✅ Published: public/content/blogs/${normalizedFileName}`);
+    fs.writeFileSync(path.join(destDir, outFileName), JSON.stringify(post, null, 4));
+    console.log(`✅ Published: public/content/blogs/${outFileName}`);
     const thumbMatch = (post.content || '').match(/src="(https:\/\/image\.tmdb\.org\/[^"]+)"/);
     entry = {
         id: post.id,
@@ -97,14 +98,14 @@ if (isHtml) {
     };
 }
 
-// Update manifest (stores relative paths like "2026/05/02/slug.html")
+// Update manifest (stores flattened paths)
 let manifest = [];
 if (fs.existsSync(MANIFEST_PATH)) {
     try { manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8')); } catch { }
     if (!Array.isArray(manifest)) manifest = [];
 }
-if (!manifest.includes(normalizedFileName)) {
-    manifest.unshift(normalizedFileName);
+if (!manifest.includes(outFileName)) {
+    manifest.unshift(outFileName);
     fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
     console.log('✅ manifest.json updated.');
 }
