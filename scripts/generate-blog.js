@@ -237,13 +237,15 @@ function getUsedDraftSlugs() {
         try {
             const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'));
             for (const f of manifest)
-                used.add(f.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.(json|html)$/, ''));
+                used.add(path.basename(f.toString()).replace(/\.(json|html)$/, ''));
         } catch {}
     }
     if (fs.existsSync(DRAFTS_DIR)) {
-        for (const f of fs.readdirSync(DRAFTS_DIR))
-            if (f.endsWith('.html') || f.endsWith('.json'))
-                used.add(f.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.(json|html)$/, ''));
+        for (const f of fs.readdirSync(DRAFTS_DIR, { recursive: true })) {
+            const base = path.basename(f.toString());
+            if (base.endsWith('.html') || base.endsWith('.json'))
+                used.add(base.replace(/\.(json|html)$/, ''));
+        }
     }
     return used;
 }
@@ -336,14 +338,18 @@ async function fetchTmdbImages(franchise) {
 async function generateBlog(keyword, tmdbResult) {
     console.log(`\n[STEP 3] Writing blog for: "${keyword.keyword}"...`);
 
-    if (!fs.existsSync(DRAFTS_DIR)) fs.mkdirSync(DRAFTS_DIR, { recursive: true });
-
     const now = new Date();
-    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const fileName = `${formattedDate}-${keyword.slug}.html`;
+    const year  = String(now.getFullYear());
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day   = String(now.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    const draftDayDir = path.join(DRAFTS_DIR, year, month, day);
+    const fileName = `${keyword.slug}.html`;
     const fileId   = `${formattedDate}-${keyword.slug}`;
 
-    if (fs.existsSync(path.join(DRAFTS_DIR, fileName))) {
+    if (!fs.existsSync(draftDayDir)) fs.mkdirSync(draftDayDir, { recursive: true });
+
+    if (fs.existsSync(path.join(draftDayDir, fileName))) {
         console.log(`  ℹ️  Draft already exists — skipping: ${fileName}`);
         return;
     }
@@ -394,9 +400,10 @@ Return JSON only — no markdown, no code fences:
         link: `/blog.html?id=${fileId}`
     };
 
-    fs.writeFileSync(path.join(DRAFTS_DIR, fileName), buildHtmlDraft(newPost));
-    console.log(`\n✅ Draft saved: drafts/${fileName}`);
-    console.log(`  → To publish: run "Publish Blog Draft" workflow with filename: ${fileName}`);
+    fs.writeFileSync(path.join(draftDayDir, fileName), buildHtmlDraft(newPost));
+    const relativePath = `${year}/${month}/${day}/${fileName}`;
+    console.log(`\n✅ Draft saved: drafts/${relativePath}`);
+    console.log(`  → To publish: run "Publish Blog Draft" with filename: ${relativePath}`);
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────

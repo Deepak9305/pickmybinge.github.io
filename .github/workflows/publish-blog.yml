@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       draft_filename:
-        description: 'Draft filename to publish (check the drafts/ folder for available files)'
+        description: 'Relative path to draft (e.g. 2026/05/02/keyword-slug.html)'
         required: true
         type: string
 

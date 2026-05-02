@@ -140,9 +140,10 @@ function main() {
         process.exit(1);
     }
 
-    // Collect all JSON post files (exclude manifest.json)
-    const files = fs.readdirSync(BLOG_DIR)
-        .filter(f => f.endsWith('.json') && f !== 'manifest.json')
+    // Collect all JSON post files recursively (exclude manifest.json)
+    const files = fs.readdirSync(BLOG_DIR, { recursive: true })
+        .map(f => f.toString())
+        .filter(f => f.endsWith('.json') && path.basename(f) !== 'manifest.json')
         .map(f => path.join(BLOG_DIR, f))
         .sort();
 
@@ -175,8 +176,9 @@ function main() {
         try {
             const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'));
             const actualFiles = files.map(f => path.basename(f));
-            const orphaned = manifest.filter(f => !actualFiles.includes(f));
-            const untracked = actualFiles.filter(f => !manifest.includes(f));
+            const manifestBases = manifest.map(f => path.basename(f.toString()));
+            const orphaned = manifestBases.filter(f => !actualFiles.includes(f));
+            const untracked = actualFiles.filter(f => !manifestBases.includes(f));
             if (orphaned.length > 0) {
                 console.log(`\n  ⚠  Orphaned manifest entries: ${orphaned.join(', ')}`);
             }
