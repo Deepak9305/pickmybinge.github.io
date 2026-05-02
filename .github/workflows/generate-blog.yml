@@ -42,32 +42,11 @@ jobs:
           fi
           node scripts/generate-blog.js
 
-      - name: Sync draft choices in publish workflow
-        run: |
-          python3 - <<'PYEOF'
-          import os, re
-          drafts = sorted([f for f in os.listdir('drafts') if f.endswith('.json') or f.endswith('.html')], reverse=True)
-          with open('.github/workflows/publish-blog.yml', 'r') as f:
-              content = f.read()
-          options_block = '\n'.join(f'          - {d}' for d in drafts) if drafts else '          - (no drafts)'
-          new_content = re.sub(
-              r'(        options:\n)(?:          - .+\n)*',
-              f'\\1{options_block}\n',
-              content
-          )
-          with open('.github/workflows/publish-blog.yml', 'w') as f:
-              f.write(new_content)
-          print(f"Updated choices: {drafts}")
-          PYEOF
-
       - name: Commit draft
-        env:
-          PUSH_TOKEN: ${{ secrets.DEPLOY_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git remote set-url origin https://x-access-token:${PUSH_TOKEN}@github.com/${{ github.repository }}
-          git add drafts/ .github/workflows/publish-blog.yml
+          git add drafts/
           if git diff --staged --quiet; then
             echo "No new draft generated."
           else
