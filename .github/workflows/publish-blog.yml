@@ -8,7 +8,8 @@ on:
         required: true
         type: choice
         options:
-          - (no drafts available)
+          - 2026/05/03/test.json
+          - 2026/05/02/is-succession-worth-watching.html
 
 permissions:
   contents: write
@@ -20,6 +21,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPLOY_TOKEN || github.token }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -31,12 +34,20 @@ jobs:
 
       - name: Publish draft to live
         env:
-          DRAFT_FILENAME: ${{ github.event.inputs.draft_filename }}
-        run: node scripts/publish-blog.js
+          DRAFT_FILENAME: ${{ inputs.draft_filename || github.event.inputs.draft_filename }}
+        run: |
+          if [ "$DRAFT_FILENAME" = "(no drafts available)" ]; then
+            echo "No drafts available to publish."
+            exit 0
+          fi
+          node scripts/publish-blog.js
 
       - name: Remove draft and sync choices
         run: |
-          rm -f "drafts/${{ github.event.inputs.draft_filename }}"
+          DRAFT_FILENAME="${{ inputs.draft_filename || github.event.inputs.draft_filename }}"
+          if [ "$DRAFT_FILENAME" != "(no drafts available)" ]; then
+            rm -f "drafts/$DRAFT_FILENAME"
+          fi
           node scripts/sync-draft-choices.js
 
       - name: Commit published post
@@ -47,7 +58,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "Nothing to commit."
           else
-            git commit -m "Publish: ${{ github.event.inputs.draft_filename }}"
+            git commit -m "Publish: ${{ inputs.draft_filename || github.event.inputs.draft_filename }}"
             git push
           fi
 
