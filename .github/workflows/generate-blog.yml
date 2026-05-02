@@ -61,9 +61,12 @@ jobs:
           PYEOF
 
       - name: Commit draft
+        env:
+          PUSH_TOKEN: ${{ secrets.DEPLOY_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git remote set-url origin https://x-access-token:${PUSH_TOKEN}@github.com/${{ github.repository }}
           git add drafts/ .github/workflows/publish-blog.yml
           if git diff --staged --quiet; then
             echo "No new draft generated."
