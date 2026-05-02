@@ -6,11 +6,32 @@ const BLOG_DIR     = path.join(process.cwd(), 'public/content/blogs');
 const BLOGS_INDEX  = path.join(process.cwd(), 'public/blogs-index.json');
 const MANIFEST_PATH = path.join(process.cwd(), 'public/content/blogs/manifest.json');
 
-// DRAFT_FILENAME is a relative path like "2026/05/02/keyword-slug.html"
-const fileName = process.env.DRAFT_FILENAME;
+// DRAFT_FILENAME is a relative path like "2026/05/02/keyword-slug.html" or "latest"
+let fileName = process.env.DRAFT_FILENAME;
 if (!fileName) {
-    console.error('Error: DRAFT_FILENAME env var is required (e.g. 2026/05/02/keyword-slug.html)');
+    console.error('Error: DRAFT_FILENAME env var is required (e.g. 2026/05/02/keyword-slug.html or latest)');
     process.exit(1);
+}
+
+if (fileName === 'latest') {
+    const drafts = fs.existsSync(DRAFTS_DIR)
+        ? fs.readdirSync(DRAFTS_DIR, { recursive: true })
+            .map(f => f.toString().replace(/\\/g, '/'))
+            .filter(f => f.endsWith('.html') || f.endsWith('.json'))
+            .sort()
+            .reverse()
+        : [];
+    if (drafts.length === 0) {
+        console.error('Error: No drafts found to publish.');
+        process.exit(1);
+    }
+    fileName = drafts[0];
+    console.log(`Resolved "latest" to draft: ${fileName}`);
+}
+
+// Export the resolved filename back to GitHub Actions environment
+if (process.env.GITHUB_ENV) {
+    fs.appendFileSync(process.env.GITHUB_ENV, `ACTUALLY_PUBLISHED=${fileName}\n`);
 }
 
 const normalizedFileName = fileName.replace(/\\/g, '/');

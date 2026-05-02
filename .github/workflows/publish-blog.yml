@@ -4,12 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       draft_filename:
-        description: 'Select a draft to publish'
+        description: 'Path to draft (e.g. 2026/05/02/is-succession-worth-watching.html) or "latest"'
         required: true
-        type: choice
-        options:
-          - 2026/05/03/test.json
-          - 2026/05/02/is-succession-worth-watching.html
+        type: string
+        default: 'latest'
 
 permissions:
   contents: write
@@ -35,30 +33,23 @@ jobs:
       - name: Publish draft to live
         env:
           DRAFT_FILENAME: ${{ inputs.draft_filename || github.event.inputs.draft_filename }}
-        run: |
-          if [ "$DRAFT_FILENAME" = "(no drafts available)" ]; then
-            echo "No drafts available to publish."
-            exit 0
-          fi
-          node scripts/publish-blog.js
+        run: node scripts/publish-blog.js
 
-      - name: Remove draft and sync choices
+      - name: Remove published draft
         run: |
-          DRAFT_FILENAME="${{ inputs.draft_filename || github.event.inputs.draft_filename }}"
-          if [ "$DRAFT_FILENAME" != "(no drafts available)" ]; then
-            rm -f "drafts/$DRAFT_FILENAME"
+          if [ -n "$ACTUALLY_PUBLISHED" ]; then
+            rm -f "drafts/$ACTUALLY_PUBLISHED"
           fi
-          node scripts/sync-draft-choices.js
 
       - name: Commit published post
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add public/content/blogs/ public/blogs-index.json drafts/ .github/workflows/publish-blog.yml
+          git add public/content/blogs/ public/blogs-index.json drafts/
           if git diff --staged --quiet; then
             echo "Nothing to commit."
           else
-            git commit -m "Publish: ${{ inputs.draft_filename || github.event.inputs.draft_filename }}"
+            git commit -m "Publish: ${ACTUALLY_PUBLISHED:-$DRAFT_FILENAME}"
             git push
           fi
 
