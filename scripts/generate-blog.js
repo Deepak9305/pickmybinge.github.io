@@ -252,21 +252,47 @@ function getUsedDraftSlugs() {
 
 // ─── Step 1: Keyword Research ─────────────────────────────────────────────────
 
+const CONTENT_CATEGORIES = [
+    'anime series (Naruto, Attack on Titan, Demon Slayer, Jujutsu Kaisen, One Piece, Chainsaw Man, Hunter x Hunter)',
+    'Studio Ghibli and animated movies (Spirited Away, Princess Mononoke, Your Name, Howl\'s Moving Castle)',
+    'psychological thriller movies (Parasite, Oldboy, Black Swan, Shutter Island, Gone Girl)',
+    'sci-fi movies (Dune, Interstellar, Arrival, Annihilation, The Matrix, Edge of Tomorrow)',
+    'horror movies (Hereditary, Midsommar, The Conjuring, It, A Quiet Place, Get Out)',
+    'crime and heist movies (Heat, Prisoners, No Country for Old Men, Sicario, Knives Out)',
+    'Korean dramas (Squid Game, Crash Landing on You, Vincenzo, My Mister, Extraordinary Attorney Woo)',
+    'fantasy and epic TV (Game of Thrones, House of the Dragon, The Witcher, Shadow and Bone)',
+    'prestige drama TV (Breaking Bad, Succession, Better Call Saul, Ozark, The Wire)',
+    'action movies (John Wick, Mad Max Fury Road, Mission Impossible, Top Gun Maverick)',
+    'superhero movies (Marvel MCU, DC Films — not TV shows)',
+    'Netflix originals (Stranger Things, Squid Game, Wednesday, Dark, Money Heist)',
+    'HBO and prestige limited series (Chernobyl, White Lotus, Mare of Easttown, The Last of Us)',
+    'coming-of-age and teen movies/shows (Euphoria, Skins, Perks of Being a Wallflower)',
+    'documentary series (Making a Murderer, Tiger King, Wild Wild Country, Don\'t F**k with Cats)',
+];
+
 async function researchKeyword() {
     const usedSlugs = getUsedDraftSlugs();
     console.log(`\n[STEP 1] Researching keyword (${usedSlugs.size} slugs already used)...`);
 
-    const usedList = usedSlugs.size > 0 ? [...usedSlugs].join(', ') : 'none yet';
+    // Pick a random category each run to force variety across content types
+    const category = CONTENT_CATEGORIES[Math.floor(Math.random() * CONTENT_CATEGORIES.length)];
+    console.log(`  → Category this run: ${category}`);
 
-    const prompt = `You are an SEO content strategist for PickMyBinge, a movie and TV show recommendation blog.
+    const usedList = usedSlugs.size > 0 ? [...usedSlugs].slice(-30).join(', ') : 'none yet';
 
-Generate 8 keyword opportunities for blog posts. Each keyword must be:
+    const prompt = `You are an SEO content strategist for PickMyBinge, a streaming recommendation blog.
+
+THIS RUN'S CONTENT CATEGORY: ${category}
+
+Generate 8 keyword opportunities STRICTLY within this category. Do NOT stray into other franchises or genres.
+
+Each keyword must be:
 - Mid to high search volume (thousands of monthly searches)
-- Low competition (not dominated by major publishers like IMDb, Screen Rant, or Wikipedia)
-- Specifically about movies or TV shows — audience questions, debates, explanations, rankings
-- In formats like: "why did [character] [action]", "best [genre] movies on [platform]", "is [title] worth watching", "[title] ending explained", "how powerful is [character]", "[title] vs [title]", "[title] season [N] explained"
+- Low competition (not dominated by IMDb, Screen Rant, Wikipedia, or major news sites)
+- A real question or search query fans actually type — not editorial titles
+- In formats like: "why did [character] [action]", "is [title] worth watching", "[title] ending explained", "best [type] like [title]", "how [character] [ability/event]", "[title] vs [title]", "[title] season [N] what happens"
 
-Already covered slugs to avoid repeating: ${usedList}
+Already covered (do not repeat these slugs): ${usedList}
 
 Return JSON only:
 {
@@ -275,7 +301,7 @@ Return JSON only:
       "keyword": "the exact search query to target",
       "slug": "kebab-case-slug-of-keyword",
       "franchise": "primary show or movie name to search on TMDB for images",
-      "category": "movies or tv",
+      "category": "movies or tv or anime",
       "rationale": "why this has volume and low competition"
     }
   ]
@@ -288,7 +314,9 @@ Return JSON only:
     if (keywords.length === 0) throw new Error('Keyword research returned no candidates.');
 
     const fresh = keywords.filter(k => k.slug && !usedSlugs.has(k.slug));
-    const chosen = fresh.length > 0 ? fresh[0] : keywords[0];
+    const pool = fresh.length > 0 ? fresh : keywords;
+    // Pick randomly from the pool (not always first) to avoid the model's popularity bias
+    const chosen = pool[Math.floor(Math.random() * Math.min(pool.length, 4))];
     console.log(`  → Chosen: "${chosen.keyword}" | slug: ${chosen.slug} | franchise: ${chosen.franchise}`);
     return chosen;
 }
