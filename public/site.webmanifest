@@ -1,0 +1,24 @@
+{
+  "name": "PickMyBinge",
+  "short_name": "PickMyBinge",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-48x48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#1E1E2E",
+  "background_color": "#1E1E2E",
+  "display": "standalone"
+}
