@@ -66,7 +66,7 @@ async function fetchFromTMDB(endpoint, params = {}) {
     return res.json();
 }
 
-async function fetchEnrichedItem(id, type) {
+async function _fetchEnrichedItem(id, type) {
     const [details, credits] = await Promise.all([
         fetchFromTMDB(`${type}/${id}`, { append_to_response: 'keywords' }),
         fetchFromTMDB(`${type}/${id}/credits`)
@@ -212,7 +212,7 @@ ${post.content}
 
 // ─── Dedup Helpers ────────────────────────────────────────────────────────────
 
-function getUsedTmdbIds() {
+function _getUsedTmdbIds() {
     const used = new Set();
     if (!fs.existsSync(BLOGS_INDEX)) return used;
     try {
@@ -222,7 +222,9 @@ function getUsedTmdbIds() {
                 entry.tmdb_ids.forEach(id => used.add(id));
             }
         }
-    } catch { }
+    } catch {
+        return used;
+    }
     return used;
 }
 
@@ -238,7 +240,9 @@ function getUsedDraftSlugs() {
             const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'));
             for (const f of manifest)
                 used.add(path.basename(f.toString()).replace(/\.(json|html)$/, ''));
-        } catch {}
+        } catch {
+            // Ignore malformed manifest and fall back to the drafts directory scan.
+        }
     }
     if (fs.existsSync(DRAFTS_DIR)) {
         for (const f of fs.readdirSync(DRAFTS_DIR, { recursive: true })) {

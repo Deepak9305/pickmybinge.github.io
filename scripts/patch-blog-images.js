@@ -5,6 +5,10 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const BLOG_FILE = process.env.BLOG_FILE;
 const FRANCHISE = process.env.FRANCHISE;
 
+function normalizeBlogId(id) {
+    return (id || '').replace(/^\d{4}-\d{2}-\d{2}-/, '');
+}
+
 async function fetchTMDB(endpoint, params = {}) {
     const url = new URL(`https://api.themoviedb.org/3/${endpoint}`);
     url.searchParams.append('api_key', TMDB_API_KEY);
@@ -90,7 +94,7 @@ async function main() {
         // 5. Update blogs-index.json thumbnail
         if (newThumb) {
             const idMatch = html.match(/<meta name="id" content="([^"]*)"/);
-            const blogId = idMatch ? idMatch[1] : path.basename(BLOG_FILE, '.html');
+            const blogId = normalizeBlogId(idMatch ? idMatch[1] : path.basename(BLOG_FILE, '.html'));
             const indexPath = path.join(process.cwd(), 'public/blogs-index.json');
             if (fs.existsSync(indexPath)) {
                 const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
@@ -125,7 +129,7 @@ async function main() {
         const indexPath = path.join(process.cwd(), 'public/blogs-index.json');
         if (fs.existsSync(indexPath) && blog.thumbnail) {
             const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
-            const entry = index.find(p => p.id === blog.id);
+            const entry = index.find(p => p.id === normalizeBlogId(blog.id));
             if (entry) {
                 entry.thumbnail = blog.thumbnail;
                 fs.writeFileSync(indexPath, JSON.stringify(index, null, 4));

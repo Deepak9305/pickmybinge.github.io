@@ -63,7 +63,7 @@ function App() {
             setBlogs([]);
             showToast("Couldn't load blogs.");
         }
-    }, []);
+    }, [showToast]);
 
     const shuffleArray = useCallback((array) => {
         const newArray = [...array];
@@ -106,7 +106,6 @@ function App() {
             const response = await fetch(`${url}?${params.toString()}`);
             if (!response.ok) return { results: [], total_results: 0 };
             const data = await response.json();
-            setTotalApiPages(data.total_pages);
             const results = data.results.map(item => ({
                 id: item.id,
                 type: type,
@@ -115,10 +114,10 @@ function App() {
                 poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/300x450/2D3047/8B8BA0?text=No+Image',
                 rating: (item.vote_average || 0).toFixed(1)
             }));
-            return { results, total_results: data.total_results };
+            return { results, total_results: data.total_results, total_pages: data.total_pages || 1 };
         } catch (error) {
             console.error('Failed to fetch data:', error);
-            return { results: [], total_results: 0 };
+            return { results: [], total_results: 0, total_pages: 1 };
         }
     }, [activeFilters]);
 
@@ -150,23 +149,28 @@ function App() {
         }
 
         try {
+            setTotalApiPages(Math.max(movieData.total_pages || 1, tvData.total_pages || 1));
+
             const combined = shuffleArray([...movieData.results, ...tvData.results]);
+            const getResultKey = (item) => `${item.type}:${item.id}`;
 
             if (isNewSearch) {
                 const seen = new Set();
                 const newResults = combined.filter(item => {
-                    if (seen.has(item.id)) return false;
-                    seen.add(item.id);
+                    const key = getResultKey(item);
+                    if (seen.has(key)) return false;
+                    seen.add(key);
                     return true;
                 });
                 setAllFetchedResults(newResults);
                 setDisplayedResultsCount(Math.min(newResults.length, RESULTS_PER_LOAD));
             } else {
                 setAllFetchedResults(prev => {
-                    const seen = new Set(prev.map(r => r.id));
+                    const seen = new Set(prev.map(getResultKey));
                     const uniqueNew = combined.filter(item => {
-                        if (seen.has(item.id)) return false;
-                        seen.add(item.id);
+                        const key = getResultKey(item);
+                        if (seen.has(key)) return false;
+                        seen.add(key);
                         return true;
                     });
                     setDisplayedResultsCount(count => count + Math.min(uniqueNew.length, RESULTS_PER_LOAD));

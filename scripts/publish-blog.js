@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { generateSitemap } from './generate-sitemap.js';
 
 const DRAFTS_DIR   = path.join(process.cwd(), 'drafts');
 const BLOG_DIR     = path.join(process.cwd(), 'public/content/blogs');
@@ -40,8 +41,6 @@ const basename = parts[parts.length - 1];
 const slug = basename.replace(/\.(html|json)$/, '');
 
 // ID is just the slug — no date prefix — giving clean URLs like /blog.html?id=is-succession-worth-watching
-const fileId = slug;
-
 const draftPath = path.join(DRAFTS_DIR, normalizedFileName);
 if (!fs.existsSync(draftPath)) {
     console.error(`Error: Draft not found at ${draftPath}`);
@@ -53,7 +52,14 @@ if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
 
 const isHtml = basename.endsWith('.html');
 const outFileName = `${slug}.${isHtml ? 'html' : 'json'}`;
+const alternateFileName = `${slug}.${isHtml ? 'json' : 'html'}`;
 let entry;
+
+const alternatePath = path.join(destDir, alternateFileName);
+if (fs.existsSync(alternatePath)) {
+    fs.unlinkSync(alternatePath);
+    console.log(`✅ Removed stale published variant: public/content/blogs/${alternateFileName}`);
+}
 
 if (isHtml) {
     const text = fs.readFileSync(draftPath, 'utf-8');
@@ -99,9 +105,14 @@ if (isHtml) {
 // Update manifest (stores flattened paths)
 let manifest = [];
 if (fs.existsSync(MANIFEST_PATH)) {
-    try { manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8')); } catch { }
+    try {
+        manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'));
+    } catch {
+        manifest = [];
+    }
     if (!Array.isArray(manifest)) manifest = [];
 }
+manifest = manifest.filter((file) => path.basename(file.toString()).replace(/\.(html|json)$/i, '') !== slug);
 if (!manifest.includes(outFileName)) {
     manifest.unshift(outFileName);
     fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
@@ -111,9 +122,15 @@ if (!manifest.includes(outFileName)) {
 // Update blogs-index.json
 let index = [];
 if (fs.existsSync(BLOGS_INDEX)) {
-    try { index = JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8')); } catch { }
+    try {
+        index = JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8'));
+    } catch {
+        index = [];
+    }
 }
 index = index.filter(p => p.id !== entry.id);
 index.unshift(entry);
 fs.writeFileSync(BLOGS_INDEX, JSON.stringify(index, null, 4));
+generateSitemap();
+console.log('✅ sitemap.xml regenerated.');
 console.log(`✅ blogs-index.json updated (${index.length} entries).`);

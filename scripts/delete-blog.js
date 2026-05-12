@@ -39,7 +39,7 @@ function deleteBlog(slug) {
     // 3. Update blogs-index.json
     if (fs.existsSync(BLOGS_INDEX)) {
         let index = JSON.parse(fs.readFileSync(BLOGS_INDEX, 'utf-8'));
-        index = index.filter(p => p.id !== clean);
+        index = index.filter(p => p.id !== baseSlug);
         fs.writeFileSync(BLOGS_INDEX, JSON.stringify(index, null, 4));
         console.log(`Updated blogs-index.json`);
     }
